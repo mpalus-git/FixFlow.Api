@@ -2,12 +2,12 @@ using System.Net;
 
 namespace FixFlow.Api.IntegrationTests.Health;
 
-public sealed class ReadinessTests(FixFlowApiFactory factory)
+public sealed class ReadinessTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
     [Fact]
     public async Task Should_Return_Healthy_When_Database_Is_Available()
     {
-        using var client = factory.CreateClient();
+        using var client = Factory.CreateClient();
 
         using var response = await client.GetAsync(new Uri("/health/ready", UriKind.Relative), TestContext.Current.CancellationToken);
 
