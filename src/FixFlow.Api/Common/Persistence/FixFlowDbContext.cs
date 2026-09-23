@@ -1,3 +1,4 @@
+using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -8,6 +9,8 @@ namespace FixFlow.Api.Common.Persistence;
 public sealed class FixFlowDbContext(DbContextOptions<FixFlowDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
