@@ -2,7 +2,7 @@ using System.Net;
 
 namespace FixFlow.Api.IntegrationTests.Health;
 
-public sealed class LivenessTests(FixFlowApiFactory factory) : IClassFixture<FixFlowApiFactory>
+public sealed class LivenessTests(FixFlowApiFactory factory)
 {
     [Fact]
     public async Task Should_Return_Healthy_When_Liveness_Endpoint_Is_Called()

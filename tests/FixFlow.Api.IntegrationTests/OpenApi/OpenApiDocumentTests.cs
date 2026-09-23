@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace FixFlow.Api.IntegrationTests.OpenApi;
 
-public sealed class OpenApiDocumentTests(FixFlowApiFactory factory) : IClassFixture<FixFlowApiFactory>
+public sealed class OpenApiDocumentTests(FixFlowApiFactory factory)
 {
     [Fact]
     public async Task Should_Expose_OpenApi_Document_When_V1_Is_Requested()
