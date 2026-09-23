@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
 builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<TimeProvider>(new DatabasePrecisionTimeProvider(TimeProvider.System));
 builder.Services.AddApplicationIdentity();
 builder.Services.AddJwtAuthentication();
 builder.Services.AddAuthRateLimiting();
