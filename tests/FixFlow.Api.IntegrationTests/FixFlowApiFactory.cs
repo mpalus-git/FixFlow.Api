@@ -14,6 +14,8 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
     private Respawner? _respawner;
 
+    public string DemoUsersPassword { get; } = $"Fx1!{Guid.NewGuid():N}";
+
     public async ValueTask InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -24,7 +26,7 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
         {
             DbAdapter = DbAdapter.Postgres,
             SchemasToInclude = ["public"],
-            TablesToIgnore = [new Respawn.Graph.Table("__ef_migrations_history")],
+            TablesToIgnore = [new Respawn.Graph.Table("__ef_migrations_history"), new Respawn.Graph.Table("roles")],
         });
     }
 
@@ -45,6 +47,10 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Database", _postgres.GetConnectionString());
+        builder.UseSetting("Seed:DemoUsers:Enabled", "true");
+        builder.UseSetting("Seed:DemoUsers:AdminPassword", DemoUsersPassword);
+        builder.UseSetting("Seed:DemoUsers:DispatcherPassword", DemoUsersPassword);
+        builder.UseSetting("Seed:DemoUsers:TechnicianPassword", DemoUsersPassword);
     }
 
     private async Task<NpgsqlConnection> OpenDatabaseConnectionAsync()

@@ -21,7 +21,7 @@ app.MapApiDocumentation();
 
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {
-    await app.MigrateDatabaseAsync();
+    await app.InitializeDatabaseAsync();
 }
 
 await app.RunAsync();
