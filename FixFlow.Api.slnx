@@ -4,5 +4,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FixFlow.Api.IntegrationTests/FixFlow.Api.IntegrationTests.csproj" />
+    <Project Path="tests/FixFlow.Api.UnitTests/FixFlow.Api.UnitTests.csproj" />
   </Folder>
 </Solution>

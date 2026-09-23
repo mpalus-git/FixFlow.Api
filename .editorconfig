@@ -83,3 +83,6 @@ dotnet_naming_rule.locals_and_parameters_camel.severity = warning
 [tests/**/*.cs]
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1515.severity = none
+
+[src/FixFlow.Api/Common/Persistence/Migrations/*.cs]
+generated_code = true

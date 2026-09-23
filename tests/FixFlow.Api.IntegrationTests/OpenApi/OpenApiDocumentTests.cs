@@ -3,12 +3,12 @@ using System.Text.Json;
 
 namespace FixFlow.Api.IntegrationTests.OpenApi;
 
-public sealed class OpenApiDocumentTests(FixFlowApiFactory factory)
+public sealed class OpenApiDocumentTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
     [Fact]
     public async Task Should_Expose_OpenApi_Document_When_V1_Is_Requested()
     {
-        using var client = factory.CreateClient();
+        using var client = Factory.CreateClient();
 
         using var response = await client.GetAsync(new Uri("/openapi/v1.json", UriKind.Relative), TestContext.Current.CancellationToken);
 

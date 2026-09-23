@@ -6,7 +6,11 @@ services:
       context: .
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Database: Host=postgres;Port=5432;Database=fixflow;Username=fixflow;Password=${POSTGRES_PASSWORD:-fixflow}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+      Seed__DemoUsers__AdminPassword: ${DEMO_ADMIN_PASSWORD:?Set DEMO_ADMIN_PASSWORD in .env}
+      Seed__DemoUsers__DispatcherPassword: ${DEMO_DISPATCHER_PASSWORD:?Set DEMO_DISPATCHER_PASSWORD in .env}
+      Seed__DemoUsers__TechnicianPassword: ${DEMO_TECHNICIAN_PASSWORD:?Set DEMO_TECHNICIAN_PASSWORD in .env}
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=fixflow;Username=fixflow;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "8080:8080"
     depends_on:
@@ -22,7 +26,7 @@ services:
     environment:
       POSTGRES_DB: fixflow
       POSTGRES_USER: fixflow
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fixflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "5432:5432"
     volumes:
