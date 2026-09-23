@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Verify OpenAPI document
+        run: |
+          if [ -n "$(git status --porcelain -- openapi)" ]; then
+            git status --porcelain -- openapi
+            git diff -- openapi
+            echo "::error::openapi/v1.json is out of date. Build locally and commit the generated file."
+            exit 1
+          fi
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
