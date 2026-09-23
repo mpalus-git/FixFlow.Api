@@ -179,6 +179,83 @@
           }
         ]
       }
+    },
+    "/api/v1/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a user account",
+        "description": "Creates an account with the given role and initial password. Only administrators can create accounts; there is no public registration.",
+        "operationId": "CreateUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -212,6 +289,29 @@
           }
         },
         "description": "Access and refresh tokens issued for an authenticated session."
+      },
+      "CreateUserRequest": {
+        "required": [
+          "email",
+          "password",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address used as the login of the new account."
+          },
+          "password": {
+            "type": "string",
+            "description": "Initial password. At least 8 characters with an uppercase letter, a lowercase letter, a digit and a non-alphanumeric character."
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the new account: Admin, Dispatcher or Technician."
+          }
+        },
+        "description": "Data of a new user account created by an administrator."
       },
       "HttpValidationProblemDetails": {
         "type": "object",
@@ -341,6 +441,30 @@
           }
         },
         "description": "Refresh token received from the last login or refresh."
+      },
+      "UserResponse": {
+        "required": [
+          "id",
+          "email",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the user account.",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the user account."
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the user account."
+          }
+        },
+        "description": "User account."
       }
     },
     "securitySchemes": {
@@ -355,6 +479,9 @@
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "Users"
     }
   ]
 }

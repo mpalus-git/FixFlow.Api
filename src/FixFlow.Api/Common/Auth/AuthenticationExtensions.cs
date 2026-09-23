@@ -30,7 +30,7 @@ public static class AuthenticationExtensions
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
             });
-        services.AddAuthorization();
+        services.AddApplicationAuthorization();
         services.AddSingleton<AccessTokenIssuer>();
 
         return services;
