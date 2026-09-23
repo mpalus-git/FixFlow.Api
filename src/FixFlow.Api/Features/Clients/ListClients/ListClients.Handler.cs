@@ -15,7 +15,7 @@ public sealed class ListClientsHandler(FixFlowDbContext dbContext)
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var pattern = LikePattern.Contains(request.Search.Trim());
-            query = query.Where(client => EF.Functions.ILike(client.Name, pattern));
+            query = query.Where(client => EF.Functions.ILike(client.Name, pattern, LikePattern.EscapeCharacter));
         }
 
         return query
