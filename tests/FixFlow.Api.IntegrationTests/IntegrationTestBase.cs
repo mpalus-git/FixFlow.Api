@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using FixFlow.Api.Domain.Users;
+using FixFlow.Api.IntegrationTests.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,6 +33,15 @@ public abstract class IntegrationTestBase(FixFlowApiFactory factory) : IAsyncLif
         (await userManager.AddToRoleAsync(user, role)).Succeeded.ShouldBeTrue();
 
         return new TestUser(user.Id, email, password);
+    }
+
+    protected async Task<HttpClient> CreateAuthenticatedClientAsync(string role)
+    {
+        var user = await CreateUserAsync(role);
+        var client = Factory.CreateClient();
+        var tokens = await client.LoginAsync(user);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        return client;
     }
 }
 
