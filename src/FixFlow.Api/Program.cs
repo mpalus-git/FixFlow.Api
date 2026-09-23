@@ -9,7 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddApplicationIdentity();
+builder.Services.AddJwtAuthentication();
 builder.Services.AddProblemDetails();
 builder.Services.AddApplicationHealthChecks();
 builder.Services.AddApiDocumentation();
@@ -19,6 +21,8 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseSerilogRequestLogging();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthEndpoints();
 app.MapApiDocumentation();
 

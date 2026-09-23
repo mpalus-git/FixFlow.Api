@@ -6,6 +6,7 @@ services:
       context: .
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
       Seed__DemoUsers__AdminPassword: ${DEMO_ADMIN_PASSWORD:?Set DEMO_ADMIN_PASSWORD in .env}
       Seed__DemoUsers__DispatcherPassword: ${DEMO_DISPATCHER_PASSWORD:?Set DEMO_DISPATCHER_PASSWORD in .env}
       Seed__DemoUsers__TechnicianPassword: ${DEMO_TECHNICIAN_PASSWORD:?Set DEMO_TECHNICIAN_PASSWORD in .env}

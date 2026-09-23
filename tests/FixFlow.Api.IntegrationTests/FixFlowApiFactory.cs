@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Npgsql;
@@ -13,6 +14,8 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
     private Respawner? _respawner;
+
+    public string SigningKey { get; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
 
     public string DemoUsersPassword { get; } = $"Fx1!{Guid.NewGuid():N}";
 
@@ -47,6 +50,7 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Database", _postgres.GetConnectionString());
+        builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("Seed:DemoUsers:Enabled", "true");
         builder.UseSetting("Seed:DemoUsers:AdminPassword", DemoUsersPassword);
         builder.UseSetting("Seed:DemoUsers:DispatcherPassword", DemoUsersPassword);

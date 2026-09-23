@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +19,7 @@ public static class PersistenceExtensions
             .Validate(
                 options => !options.Enabled || options.HasAllPasswords(),
                 "Demo user passwords are required when demo users seeding is enabled.")
-            .ValidateOnStart();
+            .ValidateOnStartOutsideBuildTimeGeneration();
         services.AddScoped<IdentitySeeder>();
 
         return services;
