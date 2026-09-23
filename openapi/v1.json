@@ -109,6 +109,56 @@
           }
         }
       }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log out and revoke the current session",
+        "description": "Revokes the submitted refresh token together with every token of its session. The access token stays valid until it expires. The response is 204 also when the refresh token is unknown or belongs to another user.",
+        "operationId": "Logout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -208,6 +258,19 @@
         },
         "description": "Credentials of an existing user account."
       },
+      "LogoutRequest": {
+        "required": [
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh token of the current session."
+          }
+        },
+        "description": "Refresh token of the session to end."
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -258,6 +321,14 @@
           }
         },
         "description": "Refresh token received from the last login or refresh."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Access token returned by the login or refresh endpoint.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },

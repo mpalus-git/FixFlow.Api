@@ -47,7 +47,7 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
         using var rotatedTokenResponse = await client.PostRefreshAsync(rotatedTokens.RefreshToken);
 
         await reuseResponse.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Reused.Code);
-        await rotatedTokenResponse.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Reused.Code);
+        await rotatedTokenResponse.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Revoked.Code);
         await using var scope = Factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
         (await dbContext.RefreshTokens.AllAsync(token => token.RevokedAt != null, TestContext.Current.CancellationToken)).ShouldBeTrue();

@@ -19,12 +19,14 @@ public static class ApiDocumentationExtensions
                 options.GroupNameFormat = "'v'VVV";
                 options.SubstituteApiVersionInUrl = true;
             })
-            .AddOpenApi(options => options.Document.AddDocumentTransformer((document, _, _) =>
-            {
-                document.Info.Title = "FixFlow API";
-                document.Info.Description = "Field service work order management API for dispatchers and technicians.";
-                return Task.CompletedTask;
-            }));
+            .AddOpenApi(options => options.Document
+                .AddBearerSecurity()
+                .AddDocumentTransformer((document, _, _) =>
+                {
+                    document.Info.Title = "FixFlow API";
+                    document.Info.Description = "Field service work order management API for dispatchers and technicians.";
+                    return Task.CompletedTask;
+                }));
 
         return services;
     }

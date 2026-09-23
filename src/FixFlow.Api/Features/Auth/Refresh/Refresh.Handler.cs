@@ -38,7 +38,7 @@ public sealed class RefreshHandler(
         {
             if (rotation.FirstError == RefreshTokenErrors.Reused)
             {
-                await RevokeTokenFamilyAsync(currentToken.FamilyId, now, cancellationToken);
+                await dbContext.RevokeRefreshTokenFamilyAsync(currentToken.FamilyId, now, cancellationToken);
             }
 
             return rotation.Errors;
@@ -52,26 +52,12 @@ public sealed class RefreshHandler(
         catch (DbUpdateConcurrencyException)
         {
             dbContext.ChangeTracker.Clear();
-            await RevokeTokenFamilyAsync(currentToken.FamilyId, now, cancellationToken);
+            await dbContext.RevokeRefreshTokenFamilyAsync(currentToken.FamilyId, now, cancellationToken);
             return RefreshTokenErrors.Reused;
         }
 
         var accessToken = accessTokenIssuer.Issue(user, await userManager.GetRolesAsync(user));
 
         return new AuthTokensResponse(accessToken.Value, accessToken.ExpiresAt, replacementSecret, rotation.Value.ExpiresAt);
-    }
-
-    private async Task RevokeTokenFamilyAsync(Guid familyId, DateTimeOffset now, CancellationToken cancellationToken)
-    {
-        var activeFamilyTokens = await dbContext.RefreshTokens
-            .Where(token => token.FamilyId == familyId && token.RevokedAt == null)
-            .ToListAsync(cancellationToken);
-
-        foreach (var token in activeFamilyTokens)
-        {
-            token.Revoke(now);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

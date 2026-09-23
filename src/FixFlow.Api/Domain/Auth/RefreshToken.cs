@@ -35,7 +35,7 @@ public sealed class RefreshToken
     {
         if (IsRevoked)
         {
-            return RefreshTokenErrors.Reused;
+            return ReplacedByTokenId is null ? RefreshTokenErrors.Revoked : RefreshTokenErrors.Reused;
         }
 
         if (now >= ExpiresAt)

@@ -56,6 +56,18 @@ public sealed class RefreshTokenTests
     }
 
     [Fact]
+    public void Should_Reject_Rotation_As_Revoked_When_Token_Was_Revoked_Without_Replacement()
+    {
+        var token = RefreshToken.Issue(UserId, "hash-1", IssuedAt, Lifetime);
+        token.Revoke(IssuedAt.AddHours(1));
+
+        var result = token.Rotate("hash-2", IssuedAt.AddHours(2), Lifetime);
+
+        result.IsError.ShouldBeTrue();
+        result.FirstError.ShouldBe(RefreshTokenErrors.Revoked);
+    }
+
+    [Fact]
     public void Should_Reject_Rotation_When_Token_Is_Expired()
     {
         var token = RefreshToken.Issue(UserId, "hash-1", IssuedAt, Lifetime);

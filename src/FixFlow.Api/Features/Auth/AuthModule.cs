@@ -1,4 +1,5 @@
 using FixFlow.Api.Features.Auth.Login;
+using FixFlow.Api.Features.Auth.Logout;
 using FixFlow.Api.Features.Auth.Refresh;
 using FluentValidation;
 
@@ -12,6 +13,8 @@ public static class AuthModule
         services.AddSingleton<IValidator<LoginRequest>, LoginRequestValidator>();
         services.AddScoped<RefreshHandler>();
         services.AddSingleton<IValidator<RefreshRequest>, RefreshRequestValidator>();
+        services.AddScoped<LogoutHandler>();
+        services.AddSingleton<IValidator<LogoutRequest>, LogoutRequestValidator>();
 
         return services;
     }
@@ -25,6 +28,7 @@ public static class AuthModule
 
         group.MapLogin();
         group.MapRefresh();
+        group.MapLogout();
 
         return app;
     }
