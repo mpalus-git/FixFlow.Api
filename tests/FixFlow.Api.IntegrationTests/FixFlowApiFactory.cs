@@ -51,6 +51,7 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Database", _postgres.GetConnectionString());
         builder.UseSetting("Jwt:SigningKey", SigningKey);
+        builder.UseSetting("RateLimiting:Auth:PermitLimit", "10000");
         builder.UseSetting("Seed:DemoUsers:Enabled", "true");
         builder.UseSetting("Seed:DemoUsers:AdminPassword", DemoUsersPassword);
         builder.UseSetting("Seed:DemoUsers:DispatcherPassword", DemoUsersPassword);

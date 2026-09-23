@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
 using FixFlow.Api.Common.Errors;
 
@@ -14,11 +15,13 @@ public static class LoginEndpoint
             })
             .WithName("Login")
             .WithSummary("Log in with email and password")
-            .WithDescription("Returns a short-lived JWT access token and a refresh token that starts a new session. Wrong credentials and locked out accounts return the same 401 response, so the endpoint does not reveal whether an account exists.")
+            .WithDescription("Returns a short-lived JWT access token and a refresh token that starts a new session. Wrong credentials and locked out accounts return the same 401 response, so the endpoint does not reveal whether an account exists. Requests are rate limited per client IP address.")
             .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName)
             .WithRequestValidation<LoginRequest>()
             .Produces<AuthTokensResponse>()
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         return group;
     }

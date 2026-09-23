@@ -12,7 +12,7 @@
           "Auth"
         ],
         "summary": "Log in with email and password",
-        "description": "Returns a short-lived JWT access token and a refresh token that starts a new session. Wrong credentials and locked out accounts return the same 401 response, so the endpoint does not reveal whether an account exists.",
+        "description": "Returns a short-lived JWT access token and a refresh token that starts a new session. Wrong credentials and locked out accounts return the same 401 response, so the endpoint does not reveal whether an account exists. Requests are rate limited per client IP address.",
         "operationId": "Login",
         "requestBody": {
           "content": {
@@ -54,6 +54,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -64,7 +74,7 @@
           "Auth"
         ],
         "summary": "Exchange a refresh token for a new token pair",
-        "description": "Rotates the refresh token: the submitted token is revoked and a new access token and refresh token are returned. Submitting a refresh token that was already used revokes every token of that session, which forces the user to log in again.",
+        "description": "Rotates the refresh token: the submitted token is revoked and a new access token and refresh token are returned. Submitting a refresh token that was already used revokes every token of that session, which forces the user to log in again. Requests are rate limited per client IP address.",
         "operationId": "RefreshTokens",
         "requestBody": {
           "content": {
@@ -99,6 +109,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
             "content": {
               "application/problem+json": {
                 "schema": {

@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
 using FixFlow.Api.Common.Errors;
 
@@ -14,11 +15,13 @@ public static class RefreshEndpoint
             })
             .WithName("RefreshTokens")
             .WithSummary("Exchange a refresh token for a new token pair")
-            .WithDescription("Rotates the refresh token: the submitted token is revoked and a new access token and refresh token are returned. Submitting a refresh token that was already used revokes every token of that session, which forces the user to log in again.")
+            .WithDescription("Rotates the refresh token: the submitted token is revoked and a new access token and refresh token are returned. Submitting a refresh token that was already used revokes every token of that session, which forces the user to log in again. Requests are rate limited per client IP address.")
             .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName)
             .WithRequestValidation<RefreshRequest>()
             .Produces<AuthTokensResponse>()
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         return group;
     }
