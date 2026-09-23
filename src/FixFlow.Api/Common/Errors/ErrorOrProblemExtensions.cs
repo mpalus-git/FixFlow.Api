@@ -1,0 +1,35 @@
+using ErrorOr;
+
+namespace FixFlow.Api.Common.Errors;
+
+public static class ErrorOrProblemExtensions
+{
+    public const string ErrorCodeExtension = "errorCode";
+
+    public static IResult ToProblem(this IReadOnlyList<Error> errors)
+    {
+        if (errors.Count > 0 && errors.All(error => error.Type == ErrorType.Validation))
+        {
+            return TypedResults.ValidationProblem(errors
+                .GroupBy(error => error.Code)
+                .ToDictionary(group => group.Key, group => group.Select(error => error.Description).ToArray()));
+        }
+
+        var firstError = errors.Count > 0 ? errors[0] : Error.Unexpected();
+
+        return TypedResults.Problem(
+            detail: firstError.Description,
+            statusCode: ToStatusCode(firstError.Type),
+            extensions: new Dictionary<string, object?> { [ErrorCodeExtension] = firstError.Code });
+    }
+
+    private static int ToStatusCode(ErrorType errorType) => errorType switch
+    {
+        ErrorType.Validation => StatusCodes.Status400BadRequest,
+        ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
+        ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+        ErrorType.NotFound => StatusCodes.Status404NotFound,
+        ErrorType.Conflict => StatusCodes.Status409Conflict,
+        _ => StatusCodes.Status500InternalServerError,
+    };
+}
