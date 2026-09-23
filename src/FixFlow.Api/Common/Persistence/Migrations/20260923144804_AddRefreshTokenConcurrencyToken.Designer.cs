@@ -2,6 +2,7 @@ using System;
 using FixFlow.Api.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FixFlow.Api.Common.Persistence.Migrations
 {
     [DbContext(typeof(FixFlowDbContext))]
-    partial class FixFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260923144804_AddRefreshTokenConcurrencyToken")]
+    partial class AddRefreshTokenConcurrencyToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

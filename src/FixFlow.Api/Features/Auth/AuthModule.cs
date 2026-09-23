@@ -1,4 +1,5 @@
 using FixFlow.Api.Features.Auth.Login;
+using FixFlow.Api.Features.Auth.Refresh;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Auth;
@@ -9,6 +10,8 @@ public static class AuthModule
     {
         services.AddScoped<LoginHandler>();
         services.AddSingleton<IValidator<LoginRequest>, LoginRequestValidator>();
+        services.AddScoped<RefreshHandler>();
+        services.AddSingleton<IValidator<RefreshRequest>, RefreshRequestValidator>();
 
         return services;
     }
@@ -21,6 +24,7 @@ public static class AuthModule
             .WithTags("Auth");
 
         group.MapLogin();
+        group.MapRefresh();
 
         return app;
     }
