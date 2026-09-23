@@ -6,6 +6,7 @@ services:
       context: .
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=fixflow;Username=fixflow;Password=${POSTGRES_PASSWORD:-fixflow}
     ports:
       - "8080:8080"
     depends_on:
