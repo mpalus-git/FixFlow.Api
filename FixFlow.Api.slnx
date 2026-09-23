@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FixFlow.Api/FixFlow.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FixFlow.Api.IntegrationTests/FixFlow.Api.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

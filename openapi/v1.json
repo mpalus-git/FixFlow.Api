@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "FixFlow API",
+    "description": "Field service work order management API for dispatchers and technicians.",
+    "version": "1"
+  },
+  "paths": { }
+}
