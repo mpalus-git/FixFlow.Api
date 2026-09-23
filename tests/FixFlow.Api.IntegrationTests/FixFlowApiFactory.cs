@@ -12,6 +12,8 @@ namespace FixFlow.Api.IntegrationTests;
 
 public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    public const string AllowedClientOrigin = "https://client.fixflow.test";
+
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
     private Respawner? _respawner;
 
@@ -52,6 +54,7 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
         builder.UseSetting("ConnectionStrings:Database", _postgres.GetConnectionString());
         builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("RateLimiting:Auth:PermitLimit", "10000");
+        builder.UseSetting("Cors:AllowedOrigins:0", AllowedClientOrigin);
         builder.UseSetting("Seed:DemoUsers:Enabled", "true");
         builder.UseSetting("Seed:DemoUsers:AdminPassword", DemoUsersPassword);
         builder.UseSetting("Seed:DemoUsers:DispatcherPassword", DemoUsersPassword);
