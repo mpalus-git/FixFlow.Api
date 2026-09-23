@@ -463,6 +463,163 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Update a client",
+        "description": "Replaces the name, address and contact details of an active client. Archived clients cannot be modified. Available to dispatchers and administrators.",
+        "operationId": "UpdateClient",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/clients/{clientId}/archive": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Archive a client",
+        "description": "Hides the client from lists while keeping it and its history available by identifier. Archiving an already archived client has no effect. Available to dispatchers and administrators.",
+        "operationId": "ArchiveClient",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     }
   },
@@ -815,6 +972,41 @@
           }
         },
         "description": "Refresh token received from the last login or refresh."
+      },
+      "UpdateClientRequest": {
+        "required": [
+          "name",
+          "address",
+          "contactPerson",
+          "phone"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Company or person name."
+          },
+          "address": {
+            "description": "Postal address.",
+            "$ref": "#/components/schemas/ClientAddress"
+          },
+          "contactPerson": {
+            "type": "string",
+            "description": "Contact person at the client."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone number."
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional contact email address."
+          }
+        },
+        "description": "New data of an existing client. All fields are replaced."
       },
       "UserResponse": {
         "required": [
