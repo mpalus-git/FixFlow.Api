@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Health;
 using FixFlow.Api.Common.Logging;
 using FixFlow.Api.Common.OpenApi;
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddApplicationIdentity();
 builder.Services.AddApplicationHealthChecks();
 builder.Services.AddApiDocumentation();
 

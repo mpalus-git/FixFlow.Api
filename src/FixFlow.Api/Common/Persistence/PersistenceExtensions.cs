@@ -7,7 +7,9 @@ public static class PersistenceExtensions
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<FixFlowDbContext>(options => options
-            .UseNpgsql(configuration.GetConnectionString("Database"))
+            .UseNpgsql(
+                configuration.GetConnectionString("Database"),
+                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history"))
             .UseSnakeCaseNamingConvention());
 
         return services;
