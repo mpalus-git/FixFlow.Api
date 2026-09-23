@@ -256,6 +256,131 @@
           }
         ]
       }
+    },
+    "/api/v1/clients": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Create a client",
+        "description": "Creates a client with a postal address and contact details. Available to dispatchers and administrators.",
+        "operationId": "CreateClient",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/clients/{clientId}": {
+      "get": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Get a client",
+        "description": "Returns a client by identifier, including archived clients so that historical work orders keep their client details.",
+        "operationId": "GetClient",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -289,6 +414,126 @@
           }
         },
         "description": "Access and refresh tokens issued for an authenticated session."
+      },
+      "ClientAddress": {
+        "required": [
+          "street",
+          "buildingNumber",
+          "postalCode",
+          "city"
+        ],
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string",
+            "description": "Street name."
+          },
+          "buildingNumber": {
+            "type": "string",
+            "description": "Building number, optionally with a letter or apartment, for example 12A or 12/4."
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Polish postal code in the NN-NNN format."
+          },
+          "city": {
+            "type": "string",
+            "description": "City."
+          }
+        },
+        "description": "Postal address of a client."
+      },
+      "ClientResponse": {
+        "required": [
+          "id",
+          "name",
+          "address",
+          "contactPerson",
+          "phone",
+          "email",
+          "createdAt",
+          "archivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the client.",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Company or person name."
+          },
+          "address": {
+            "description": "Postal address.",
+            "$ref": "#/components/schemas/ClientAddress"
+          },
+          "contactPerson": {
+            "type": "string",
+            "description": "Contact person at the client."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone number."
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Contact email address."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the client was created.",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the client was archived; null for active clients.",
+            "format": "date-time"
+          }
+        },
+        "description": "Client of the service company."
+      },
+      "CreateClientRequest": {
+        "required": [
+          "name",
+          "address",
+          "contactPerson",
+          "phone"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Company or person name."
+          },
+          "address": {
+            "description": "Postal address.",
+            "$ref": "#/components/schemas/ClientAddress"
+          },
+          "contactPerson": {
+            "type": "string",
+            "description": "Contact person at the client."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone number."
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional contact email address."
+          }
+        },
+        "description": "Data of a new client."
       },
       "CreateUserRequest": {
         "required": [
@@ -482,6 +727,9 @@
     },
     {
       "name": "Users"
+    },
+    {
+      "name": "Clients"
     }
   ]
 }

@@ -5,6 +5,7 @@ using FixFlow.Api.Common.Logging;
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Features.Auth;
+using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Users;
 using Serilog;
 
@@ -22,6 +23,7 @@ builder.Services.AddApplicationHealthChecks();
 builder.Services.AddApiDocumentation();
 builder.Services.AddAuthFeatures();
 builder.Services.AddUsersFeatures();
+builder.Services.AddClientsFeatures();
 
 var app = builder.Build();
 
@@ -36,6 +38,7 @@ app.MapHealthEndpoints();
 app.MapApiDocumentation();
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
+app.MapClientsEndpoints();
 
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {
