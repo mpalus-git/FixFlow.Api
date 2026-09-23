@@ -1,5 +1,6 @@
 using FixFlow.Api.Features.Clients.CreateClient;
 using FixFlow.Api.Features.Clients.GetClient;
+using FixFlow.Api.Features.Clients.ListClients;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Clients;
@@ -11,6 +12,8 @@ public static class ClientsModule
         services.AddScoped<CreateClientHandler>();
         services.AddSingleton<IValidator<CreateClientRequest>, CreateClientRequestValidator>();
         services.AddScoped<GetClientHandler>();
+        services.AddScoped<ListClientsHandler>();
+        services.AddSingleton<IValidator<ListClientsRequest>, ListClientsRequestValidator>();
 
         return services;
     }
@@ -25,6 +28,7 @@ public static class ClientsModule
 
         group.MapCreateClient();
         group.MapGetClient();
+        group.MapListClients();
 
         return app;
     }
