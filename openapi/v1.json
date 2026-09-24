@@ -2187,10 +2187,182 @@
           }
         ]
       }
+    },
+    "/api/v1/work-orders/{workOrderId}/service-entries": {
+      "post": {
+        "tags": [
+          "ServiceEntries"
+        ],
+        "summary": "Add a service entry",
+        "description": "Adds a work entry or a correction entry to a work order in progress assigned to the calling technician. Parts used in a work entry are taken from stock at their current price and the entry is rejected if the stock would drop below zero. A correction returns parts to stock, at most the net quantity used on the work order, at the price of their last use. Entries cannot be changed or deleted. Work orders of other technicians are reported as not found. Available to technicians only.",
+        "operationId": "AddServiceEntry",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddServiceEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceEntryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AddServiceEntryRequest": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "description": "Description of the performed work or, for a correction, its reason."
+          },
+          "isCorrection": {
+            "type": "boolean",
+            "description": "True for a correction entry that returns parts to stock; false for a work entry.",
+            "default": false
+          },
+          "photoUrls": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Absolute http or https addresses of photos, at most 10."
+          },
+          "workStartedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Time when the work started; required for a work entry and not allowed for a correction. Cannot be earlier than the start of the work order.",
+            "format": "date-time"
+          },
+          "workFinishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Time when the work finished; required for a work entry and not allowed for a correction. Must be after the start and not in the future.",
+            "format": "date-time"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Latitude of the place where the work started, from -90 to 90; optional, given together with longitude and not allowed for a correction.",
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Longitude of the place where the work started, from -180 to 180; optional, given together with latitude and not allowed for a correction.",
+            "format": "double"
+          },
+          "parts": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ServiceEntryPartRequest"
+            },
+            "description": "Parts used in a work entry or returned in a correction, at most 20, each part at most once. Required for a correction."
+          }
+        },
+        "description": "New service entry of a work order in progress. A work entry records performed work and used parts; a correction entry returns wrongly recorded parts to stock and has no work time or location."
+      },
       "AssignTechnicianRequest": {
         "required": [
           "technicianId"
@@ -2972,6 +3144,162 @@
         },
         "description": "Delivery of units of a part to the warehouse."
       },
+      "ServiceEntryPartRequest": {
+        "required": [
+          "partId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "description": "Identifier of the part.",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of units, from 1 to 1000.",
+            "format": "int32"
+          }
+        },
+        "description": "Quantity of one part used or returned in a service entry."
+      },
+      "ServiceEntryPartResponse": {
+        "required": [
+          "partId",
+          "quantity",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "description": "Identifier of the part.",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of used or returned units.",
+            "format": "int32"
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Net unit price in PLN at the time the part was used; for a correction, the price of the last use on the work order.",
+            "format": "double"
+          }
+        },
+        "description": "Quantity of one part in a service entry with its unit price at the time of use."
+      },
+      "ServiceEntryResponse": {
+        "required": [
+          "id",
+          "workOrderId",
+          "technicianId",
+          "note",
+          "isCorrection",
+          "photoUrls",
+          "workStartedAt",
+          "workFinishedAt",
+          "latitude",
+          "longitude",
+          "parts",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the service entry.",
+            "format": "uuid"
+          },
+          "workOrderId": {
+            "type": "string",
+            "description": "Identifier of the work order.",
+            "format": "uuid"
+          },
+          "technicianId": {
+            "type": "string",
+            "description": "Identifier of the technician who added the entry.",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string",
+            "description": "Description of the performed work or the reason of the correction."
+          },
+          "isCorrection": {
+            "type": "boolean",
+            "description": "True for a correction entry whose parts were returned to stock."
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Addresses of attached photos."
+          },
+          "workStartedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the work started; null for a correction.",
+            "format": "date-time"
+          },
+          "workFinishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the work finished; null for a correction.",
+            "format": "date-time"
+          },
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Latitude of the place where the work started, if recorded.",
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "Longitude of the place where the work started, if recorded.",
+            "format": "double"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceEntryPartResponse"
+            },
+            "description": "Parts used in a work entry or returned in a correction."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the entry was added.",
+            "format": "date-time"
+          }
+        },
+        "description": "Service entry of a work order: performed work with used parts, or a correction returning parts to stock."
+      },
       "UpdateClientRequest": {
         "required": [
           "name",
@@ -3222,6 +3550,9 @@
     },
     {
       "name": "Parts"
+    },
+    {
+      "name": "ServiceEntries"
     }
   ]
 }

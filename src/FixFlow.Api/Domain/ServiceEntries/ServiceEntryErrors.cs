@@ -4,6 +4,8 @@ namespace FixFlow.Api.Domain.ServiceEntries;
 
 public static class ServiceEntryErrors
 {
+    public static readonly Error WorkTimeRequired = Error.Validation("WorkStartedAt", "A work entry requires work start and finish times.");
+
     public static readonly Error WorkStartedBeforeWorkOrder = Error.Validation("WorkStartedAt", "Work cannot start before the work order was started.");
 
     public static readonly Error WorkNotFinishedAfterStart = Error.Validation("WorkFinishedAt", "Work must finish after it starts.");
