@@ -1102,6 +1102,64 @@
           }
         ]
       }
+    },
+    "/api/v1/work-orders/{workOrderId}": {
+      "get": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Get a work order",
+        "description": "Returns a work order by identifier. Technicians can only get work orders assigned to them; other work orders are reported as not found.",
+        "operationId": "GetWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
