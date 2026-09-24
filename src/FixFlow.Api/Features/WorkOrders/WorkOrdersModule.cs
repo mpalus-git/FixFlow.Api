@@ -2,6 +2,7 @@ using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 using FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.Features.WorkOrders.GetWorkOrder;
+using FixFlow.Api.Features.WorkOrders.InvoiceWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 using FixFlow.Api.Features.WorkOrders.StartWork;
 using FixFlow.Api.Features.WorkOrders.UnassignTechnician;
@@ -26,6 +27,7 @@ public static class WorkOrdersModule
         services.AddScoped<UnassignTechnicianHandler>();
         services.AddScoped<StartWorkHandler>();
         services.AddScoped<CompleteWorkOrderHandler>();
+        services.AddScoped<InvoiceWorkOrderHandler>();
 
         return services;
     }
@@ -46,6 +48,7 @@ public static class WorkOrdersModule
         group.MapUnassignTechnician();
         group.MapStartWork();
         group.MapCompleteWorkOrder();
+        group.MapInvoiceWorkOrder();
 
         return app;
     }
