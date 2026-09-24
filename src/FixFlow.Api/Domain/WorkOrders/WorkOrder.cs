@@ -27,6 +27,10 @@ public sealed class WorkOrder
 
     public DateTimeOffset? StartedAt { get; private set; }
 
+    public DateTimeOffset? CompletedAt { get; private set; }
+
+    public DateTimeOffset? InvoicedAt { get; private set; }
+
     public static ErrorOr<WorkOrder> Create(
         Device device,
         string description,
@@ -58,6 +62,11 @@ public sealed class WorkOrder
 
     public ErrorOr<Updated> Update(string description, WorkOrderPriority priority, DateTimeOffset dueDate, DateTimeOffset now)
     {
+        if (Status is WorkOrderStatus.Completed or WorkOrderStatus.Invoiced)
+        {
+            return WorkOrderErrors.Closed;
+        }
+
         if (dueDate != DueDate && dueDate <= now)
         {
             return WorkOrderErrors.DueDateNotInFuture;
@@ -115,6 +124,37 @@ public sealed class WorkOrder
 
         Status = WorkOrderStatus.InProgress;
         StartedAt = now;
+
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> Complete(bool hasServiceEntries, DateTimeOffset now)
+    {
+        if (Status != WorkOrderStatus.InProgress)
+        {
+            return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.Completed);
+        }
+
+        if (!hasServiceEntries)
+        {
+            return WorkOrderErrors.NoServiceEntries;
+        }
+
+        Status = WorkOrderStatus.Completed;
+        CompletedAt = now;
+
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> Invoice(DateTimeOffset now)
+    {
+        if (Status != WorkOrderStatus.Completed)
+        {
+            return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.Invoiced);
+        }
+
+        Status = WorkOrderStatus.Invoiced;
+        InvoicedAt = now;
 
         return Result.Updated;
     }

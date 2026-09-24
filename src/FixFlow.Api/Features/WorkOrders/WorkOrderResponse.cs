@@ -13,7 +13,9 @@ public sealed record WorkOrderResponse(
     [property: Description("Identifier of the assigned technician; null when no technician is assigned.")] Guid? TechnicianId,
     [property: Description("UTC deadline of the work order.")] DateTimeOffset DueDate,
     [property: Description("UTC time when the work order was created.")] DateTimeOffset CreatedAt,
-    [property: Description("UTC time when the technician started the work; null before the work is started.")] DateTimeOffset? StartedAt)
+    [property: Description("UTC time when the technician started the work; null before the work is started.")] DateTimeOffset? StartedAt,
+    [property: Description("UTC time when the work order was completed; null before completion.")] DateTimeOffset? CompletedAt,
+    [property: Description("UTC time when the work order was invoiced; null before invoicing.")] DateTimeOffset? InvoicedAt)
 {
     public static WorkOrderResponse FromDomain(WorkOrder workOrder) => new(
         workOrder.Id,
@@ -24,5 +26,7 @@ public sealed record WorkOrderResponse(
         workOrder.TechnicianId,
         workOrder.DueDate,
         workOrder.CreatedAt,
-        workOrder.StartedAt);
+        workOrder.StartedAt,
+        workOrder.CompletedAt,
+        workOrder.InvoicedAt);
 }

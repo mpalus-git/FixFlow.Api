@@ -10,6 +10,15 @@ public static class SaveChangesConflicts
         "Persistence.ConcurrentModification",
         "The resource was changed by another request. Reload it and try again.");
 
+    public static void RejectSaveIfChangedConcurrently(this DbContext dbContext, object entity)
+    {
+        var entry = dbContext.Entry(entity);
+        if (entry.State == EntityState.Unchanged)
+        {
+            entry.State = EntityState.Modified;
+        }
+    }
+
     public static async Task<ErrorOr<Success>> SaveChangesOrConflictAsync(this DbContext dbContext, CancellationToken cancellationToken)
     {
         try

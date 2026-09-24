@@ -217,6 +217,93 @@ public sealed class WorkOrderTests
         result.FirstError.ShouldBe(WorkOrderErrors.NotAssignedToTechnician);
     }
 
+    [Fact]
+    public void Should_Complete_Work_Order_When_It_Is_In_Progress_And_Has_Service_Entry()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(WorkOrderStatus.Completed);
+        workOrder.CompletedAt.ShouldBe(Now.AddHours(3));
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_WorkOrder_When_No_ServiceEntry()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: false, Now.AddHours(3));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.NoServiceEntries);
+        workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
+        workOrder.CompletedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_It_Is_Not_In_Progress()
+    {
+        var result = CreateAssignedWorkOrder().Complete(hasServiceEntries: true, Now.AddHours(3));
+
+        result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
+    }
+
+    [Fact]
+    public void Should_Invoice_Work_Order_When_It_Is_Completed()
+    {
+        var workOrder = CreateCompletedWorkOrder();
+
+        var result = workOrder.Invoice(Now.AddDays(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(WorkOrderStatus.Invoiced);
+        workOrder.InvoicedAt.ShouldBe(Now.AddDays(1));
+    }
+
+    [Fact]
+    public void Should_Reject_Invoicing_Work_Order_When_It_Is_Not_Completed()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Invoice(Now.AddDays(1));
+
+        result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
+        workOrder.InvoicedAt.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Should_Reject_Update_When_Work_Order_Is_Completed_Or_Invoiced(bool invoiced)
+    {
+        var workOrder = CreateCompletedWorkOrder();
+        if (invoiced)
+        {
+            workOrder.Invoice(Now.AddDays(1));
+        }
+
+        var result = workOrder.Update("Leak and noisy fan", WorkOrderPriority.Critical, DueDate, Now.AddDays(1));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.Closed);
+        workOrder.Description.ShouldBe("Air conditioner is leaking");
+    }
+
+    [Fact]
+    public void Should_Reject_Service_Entry_When_Work_Order_Is_Completed()
+    {
+        var result = CreateCompletedWorkOrder().EnsureCanAddServiceEntry(TechnicianId);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.NotInProgress);
+    }
+
+    private static WorkOrder CreateCompletedWorkOrder()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        workOrder.Complete(hasServiceEntries: true, Now.AddHours(3));
+        return workOrder;
+    }
+
     private static Device CreateDevice()
     {
         var client = Client.Create("Klimat-Serwis", new Address("Marszałkowska", "10A", "00-590", "Warszawa"), "Anna Nowak", "+48 600 100 200", null, Now);

@@ -20,7 +20,6 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
         CancellationToken cancellationToken)
     {
         var workOrder = await dbContext.WorkOrders
-            .AsNoTracking()
             .VisibleTo(user)
             .SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
         if (workOrder is null)
@@ -61,6 +60,7 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
         }
 
         dbContext.ServiceEntries.Add(creation.Value);
+        dbContext.RejectSaveIfChangedConcurrently(workOrder);
         var saving = await dbContext.SaveChangesOrConflictAsync(
             PartConfiguration.StockQuantityCheckName,
             PartErrors.InsufficientStock,

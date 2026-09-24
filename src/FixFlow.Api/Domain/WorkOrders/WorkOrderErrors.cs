@@ -22,6 +22,14 @@ public static class WorkOrderErrors
         "WorkOrder.NotInProgress",
         "Service entries can be added only to a work order in progress.");
 
+    public static readonly Error NoServiceEntries = Error.Conflict(
+        "WorkOrder.NoServiceEntries",
+        "Work order cannot be completed without at least one service entry.");
+
+    public static readonly Error Closed = Error.Conflict(
+        "WorkOrder.Closed",
+        "Completed or invoiced work order cannot be modified.");
+
     public static Error InvalidStatusTransition(WorkOrderStatus from, WorkOrderStatus to) => Error.Conflict(
         "WorkOrder.InvalidStatusTransition",
         $"Work order status cannot change from {from} to {to}.");
