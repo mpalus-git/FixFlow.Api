@@ -1353,6 +1353,102 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Update a work order",
+        "description": "Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Available to dispatchers and administrators.",
+        "operationId": "UpdateWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/api/v1/work-orders/{workOrderId}/assign": {
@@ -2295,6 +2391,30 @@
           }
         },
         "description": "New data of an existing device. All fields are replaced; the owning client cannot be changed."
+      },
+      "UpdateWorkOrderRequest": {
+        "required": [
+          "description",
+          "priority",
+          "dueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "priority": {
+            "description": "Priority of the work order.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order; a changed deadline must be in the future, an unchanged one is accepted even when it has passed.",
+            "format": "date-time"
+          }
+        },
+        "description": "New details of an existing work order. All fields are replaced."
       },
       "UserResponse": {
         "required": [

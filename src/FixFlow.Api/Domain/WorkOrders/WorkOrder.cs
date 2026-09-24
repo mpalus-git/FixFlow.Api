@@ -56,6 +56,20 @@ public sealed class WorkOrder
         };
     }
 
+    public ErrorOr<Updated> Update(string description, WorkOrderPriority priority, DateTimeOffset dueDate, DateTimeOffset now)
+    {
+        if (dueDate != DueDate && dueDate <= now)
+        {
+            return WorkOrderErrors.DueDateNotInFuture;
+        }
+
+        Description = description;
+        Priority = priority;
+        DueDate = dueDate;
+
+        return Result.Updated;
+    }
+
     public ErrorOr<Updated> Assign(Guid technicianId)
     {
         if (Status != WorkOrderStatus.New)

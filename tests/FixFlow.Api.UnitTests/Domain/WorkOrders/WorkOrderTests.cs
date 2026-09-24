@@ -50,6 +50,43 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Change_Details_When_In_Progress_Work_Order_Is_Updated()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Update("Leak and noisy fan", WorkOrderPriority.Critical, DueDate.AddDays(1), Now.AddHours(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Description.ShouldBe("Leak and noisy fan");
+        workOrder.Priority.ShouldBe(WorkOrderPriority.Critical);
+        workOrder.DueDate.ShouldBe(DueDate.AddDays(1));
+        workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
+    }
+
+    [Fact]
+    public void Should_Accept_Unchanged_Past_Due_Date_When_Overdue_Work_Order_Is_Updated()
+    {
+        var workOrder = CreateWorkOrder();
+
+        var result = workOrder.Update("Air conditioner is leaking", WorkOrderPriority.Critical, DueDate, DueDate.AddDays(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Priority.ShouldBe(WorkOrderPriority.Critical);
+    }
+
+    [Fact]
+    public void Should_Reject_Update_When_Changed_Due_Date_Is_Not_In_Future()
+    {
+        var workOrder = CreateWorkOrder();
+
+        var result = workOrder.Update("Air conditioner is leaking", WorkOrderPriority.Low, Now.AddHours(1), Now.AddHours(2));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.DueDateNotInFuture);
+        workOrder.DueDate.ShouldBe(DueDate);
+        workOrder.Priority.ShouldBe(WorkOrderPriority.Normal);
+    }
+
+    [Fact]
     public void Should_Assign_Technician_When_Work_Order_Is_New()
     {
         var workOrder = CreateWorkOrder();
