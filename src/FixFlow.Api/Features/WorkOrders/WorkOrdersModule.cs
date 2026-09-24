@@ -1,5 +1,6 @@
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.Features.WorkOrders.GetWorkOrder;
+using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.WorkOrders;
@@ -11,6 +12,8 @@ public static class WorkOrdersModule
         services.AddScoped<CreateWorkOrderHandler>();
         services.AddSingleton<IValidator<CreateWorkOrderRequest>, CreateWorkOrderRequestValidator>();
         services.AddScoped<GetWorkOrderHandler>();
+        services.AddScoped<ListWorkOrdersHandler>();
+        services.AddSingleton<IValidator<ListWorkOrdersRequest>, ListWorkOrdersRequestValidator>();
 
         return services;
     }
@@ -25,6 +28,7 @@ public static class WorkOrdersModule
 
         group.MapCreateWorkOrder();
         group.MapGetWorkOrder();
+        group.MapListWorkOrders();
 
         return app;
     }
