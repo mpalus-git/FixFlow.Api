@@ -1,4 +1,5 @@
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
+using FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.Features.WorkOrders.GetWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
@@ -24,6 +25,7 @@ public static class WorkOrdersModule
         services.AddSingleton<IValidator<AssignTechnicianRequest>, AssignTechnicianRequestValidator>();
         services.AddScoped<UnassignTechnicianHandler>();
         services.AddScoped<StartWorkHandler>();
+        services.AddScoped<CompleteWorkOrderHandler>();
 
         return services;
     }
@@ -43,6 +45,7 @@ public static class WorkOrdersModule
         group.MapAssignTechnician();
         group.MapUnassignTechnician();
         group.MapStartWork();
+        group.MapCompleteWorkOrder();
 
         return app;
     }

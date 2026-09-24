@@ -1359,7 +1359,7 @@
           "WorkOrders"
         ],
         "summary": "Update a work order",
-        "description": "Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Available to dispatchers and administrators.",
+        "description": "Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Completed and invoiced work orders cannot be edited. Available to dispatchers and administrators.",
         "operationId": "UpdateWorkOrder",
         "parameters": [
           {
@@ -1669,6 +1669,74 @@
           },
           "403": {
             "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/complete": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Complete a work order",
+        "description": "Moves a work order from InProgress to Completed. The work order must have at least one service entry. After completion no service entries can be added and the work order cannot be edited. Available to the assigned technician and, as a fallback, to dispatchers and administrators; work orders of other technicians are reported as not found.",
+        "operationId": "CompleteWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -3517,7 +3585,9 @@
           "technicianId",
           "dueDate",
           "createdAt",
-          "startedAt"
+          "startedAt",
+          "completedAt",
+          "invoicedAt"
         ],
         "type": "object",
         "properties": {
@@ -3567,6 +3637,22 @@
               "string"
             ],
             "description": "UTC time when the technician started the work; null before the work is started.",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the work order was completed; null before completion.",
+            "format": "date-time"
+          },
+          "invoicedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the work order was invoiced; null before invoicing.",
             "format": "date-time"
           }
         },

@@ -15,7 +15,7 @@ public static class UpdateWorkOrderEndpoint
             })
             .WithName("UpdateWorkOrder")
             .WithSummary("Update a work order")
-            .WithDescription("Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Available to dispatchers and administrators.")
+            .WithDescription("Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Completed and invoiced work orders cannot be edited. Available to dispatchers and administrators.")
             .RequireAuthorization(AuthorizationPolicies.DispatcherOrAdmin)
             .WithRequestValidation<UpdateWorkOrderRequest>()
             .Produces<WorkOrderResponse>()
