@@ -3,6 +3,7 @@ using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
+using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
@@ -51,6 +52,15 @@ public static class WorkOrderRequests
             TestContext.Current.CancellationToken);
         return page.ShouldNotBeNull();
     }
+
+    public static Task<HttpResponseMessage> PostAssignAsync(this HttpClient client, Guid workOrderId, Guid technicianId) =>
+        client.PostAsJsonAsync(
+            new Uri($"/api/v1/work-orders/{workOrderId}/assign", UriKind.Relative),
+            new AssignTechnicianRequest(technicianId),
+            TestContext.Current.CancellationToken);
+
+    public static Task<HttpResponseMessage> PostTransitionAsync(this HttpClient client, Guid workOrderId, string transition) =>
+        client.PostAsync(new Uri($"/api/v1/work-orders/{workOrderId}/{transition}", UriKind.Relative), null, TestContext.Current.CancellationToken);
 
     public static async Task<WorkOrderResponse> ReadWorkOrderAsync(this HttpResponseMessage response)
     {

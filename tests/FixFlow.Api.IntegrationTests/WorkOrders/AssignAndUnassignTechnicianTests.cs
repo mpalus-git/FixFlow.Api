@@ -1,0 +1,118 @@
+using System.Net;
+using FixFlow.Api.Domain.Users;
+using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.WorkOrders;
+
+namespace FixFlow.Api.IntegrationTests.WorkOrders;
+
+public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
+{
+    [Theory]
+    [InlineData(Roles.Dispatcher)]
+    [InlineData(Roles.Admin)]
+    public async Task Should_Assign_Technician_And_Make_Work_Order_Visible_To_Technician_When_Dispatcher_Or_Admin_Assigns(string role)
+    {
+        using var client = await CreateAuthenticatedClientAsync(role);
+        var workOrder = await CreateWorkOrderAsync(client);
+        var technician = await CreateUserAsync(Roles.Technician);
+
+        using var response = await client.PostAssignAsync(workOrder.Id, technician.Id);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var assignedWorkOrder = await response.ReadWorkOrderAsync();
+        assignedWorkOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
+        assignedWorkOrder.TechnicianId.ShouldBe(technician.Id);
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+        (await technicianClient.GetWorkOrderAsync(workOrder.Id)).ShouldBe(assignedWorkOrder);
+    }
+
+    [Fact]
+    public async Task Should_Return_Not_Found_Problem_When_Assigned_User_Is_Not_Technician()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(client);
+        var dispatcher = await CreateUserAsync(Roles.Dispatcher);
+
+        using var notTechnicianResponse = await client.PostAssignAsync(workOrder.Id, dispatcher.Id);
+        using var missingUserResponse = await client.PostAssignAsync(workOrder.Id, Guid.CreateVersion7());
+
+        await notTechnicianResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.TechnicianNotFound.Code);
+        await missingUserResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.TechnicianNotFound.Code);
+    }
+
+    [Fact]
+    public async Task Should_Return_Conflict_Problem_When_Work_Order_Is_Already_Assigned()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(client);
+        var technician = await CreateUserAsync(Roles.Technician);
+        var otherTechnician = await CreateUserAsync(Roles.Technician);
+        using var firstResponse = await client.PostAssignAsync(workOrder.Id, technician.Id);
+
+        using var response = await client.PostAssignAsync(workOrder.Id, otherTechnician.Id);
+
+        firstResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
+        (await client.GetWorkOrderAsync(workOrder.Id)).TechnicianId.ShouldBe(technician.Id);
+    }
+
+    [Fact]
+    public async Task Should_Return_Forbidden_When_Technician_Assigns_Or_Unassigns()
+    {
+        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(dispatcherClient);
+        var technician = await CreateUserAsync(Roles.Technician);
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+
+        using var assignResponse = await technicianClient.PostAssignAsync(workOrder.Id, technician.Id);
+        using var unassignResponse = await technicianClient.PostTransitionAsync(workOrder.Id, "unassign");
+
+        assignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        unassignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Should_Return_Not_Found_Problem_When_Assigned_Work_Order_Does_Not_Exist()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var technician = await CreateUserAsync(Roles.Technician);
+
+        using var assignResponse = await client.PostAssignAsync(Guid.CreateVersion7(), technician.Id);
+        using var unassignResponse = await client.PostTransitionAsync(Guid.CreateVersion7(), "unassign");
+
+        await assignResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
+        await unassignResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
+    }
+
+    [Fact]
+    public async Task Should_Return_To_New_And_Hide_From_Technician_When_Dispatcher_Unassigns_Technician()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(client);
+        var technician = await CreateUserAsync(Roles.Technician);
+        using var assignResponse = await client.PostAssignAsync(workOrder.Id, technician.Id);
+
+        using var response = await client.PostTransitionAsync(workOrder.Id, "unassign");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var unassignedWorkOrder = await response.ReadWorkOrderAsync();
+        unassignedWorkOrder.Status.ShouldBe(WorkOrderStatus.New);
+        unassignedWorkOrder.TechnicianId.ShouldBeNull();
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+        (await technicianClient.ListWorkOrdersAsync()).TotalCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Should_Return_Conflict_Problem_When_Unassigning_New_Work_Order()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(client);
+
+        using var response = await client.PostTransitionAsync(workOrder.Id, "unassign");
+
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
+    }
+
+    private static async Task<WorkOrderResponse> CreateWorkOrderAsync(HttpClient client) =>
+        await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await client.CreateServicedDeviceAsync()));
+}
