@@ -1,0 +1,107 @@
+using ErrorOr;
+using FixFlow.Api.Domain.Devices;
+
+namespace FixFlow.Api.Domain.WorkOrders;
+
+public sealed class WorkOrder
+{
+    private WorkOrder()
+    {
+    }
+
+    public Guid Id { get; private set; }
+
+    public Guid DeviceId { get; private set; }
+
+    public string Description { get; private set; } = string.Empty;
+
+    public WorkOrderPriority Priority { get; private set; }
+
+    public DateTimeOffset DueDate { get; private set; }
+
+    public WorkOrderStatus Status { get; private set; }
+
+    public Guid? TechnicianId { get; private set; }
+
+    public DateTimeOffset CreatedAt { get; private set; }
+
+    public DateTimeOffset? StartedAt { get; private set; }
+
+    public static ErrorOr<WorkOrder> Create(
+        Device device,
+        string description,
+        WorkOrderPriority priority,
+        DateTimeOffset dueDate,
+        DateTimeOffset now)
+    {
+        if (device.IsArchived)
+        {
+            return WorkOrderErrors.DeviceArchived;
+        }
+
+        if (dueDate <= now)
+        {
+            return WorkOrderErrors.DueDateNotInFuture;
+        }
+
+        return new WorkOrder
+        {
+            Id = Guid.CreateVersion7(),
+            DeviceId = device.Id,
+            Description = description,
+            Priority = priority,
+            DueDate = dueDate,
+            Status = WorkOrderStatus.New,
+            CreatedAt = now,
+        };
+    }
+
+    public ErrorOr<Updated> Assign(Guid technicianId)
+    {
+        if (Status != WorkOrderStatus.New)
+        {
+            return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.Assigned);
+        }
+
+        TechnicianId = technicianId;
+        Status = WorkOrderStatus.Assigned;
+
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> Unassign()
+    {
+        if (Status != WorkOrderStatus.Assigned)
+        {
+            return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.New);
+        }
+
+        TechnicianId = null;
+        Status = WorkOrderStatus.New;
+
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> Start(Guid technicianId, bool technicianHasWorkInProgress, DateTimeOffset now)
+    {
+        if (Status != WorkOrderStatus.Assigned)
+        {
+            return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.InProgress);
+        }
+
+        if (TechnicianId != technicianId)
+        {
+            return WorkOrderErrors.NotAssignedToTechnician;
+        }
+
+        if (technicianHasWorkInProgress)
+        {
+            return WorkOrderErrors.TechnicianAlreadyHasWorkInProgress;
+        }
+
+        Status = WorkOrderStatus.InProgress;
+        StartedAt = now;
+
+        return Result.Updated;
+    }
+}

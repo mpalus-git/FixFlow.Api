@@ -1,0 +1,22 @@
+using ErrorOr;
+
+namespace FixFlow.Api.Domain.WorkOrders;
+
+public static class WorkOrderErrors
+{
+    public static readonly Error NotFound = Error.NotFound("WorkOrder.NotFound", "Work order was not found.");
+
+    public static readonly Error DeviceArchived = Error.Conflict("WorkOrder.DeviceArchived", "Work orders cannot be created for an archived device.");
+
+    public static readonly Error DueDateNotInFuture = Error.Validation("DueDate", "Due date must be in the future.");
+
+    public static readonly Error NotAssignedToTechnician = Error.Forbidden("WorkOrder.NotAssignedToTechnician", "Work order is not assigned to this technician.");
+
+    public static readonly Error TechnicianAlreadyHasWorkInProgress = Error.Conflict(
+        "WorkOrder.TechnicianAlreadyHasWorkInProgress",
+        "Technician already has another work order in progress.");
+
+    public static Error InvalidStatusTransition(WorkOrderStatus from, WorkOrderStatus to) => Error.Conflict(
+        "WorkOrder.InvalidStatusTransition",
+        $"Work order status cannot change from {from} to {to}.");
+}
