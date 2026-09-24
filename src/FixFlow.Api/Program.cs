@@ -1,4 +1,5 @@
 using FixFlow.Api.Common.Auth;
+using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Cors;
 using FixFlow.Api.Common.Health;
 using FixFlow.Api.Common.Logging;
@@ -14,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddApplicationCaching(builder.Configuration);
 builder.Services.AddSingleton<TimeProvider>(new DatabasePrecisionTimeProvider(TimeProvider.System));
 builder.Services.AddApplicationIdentity();
 builder.Services.AddJwtAuthentication();
