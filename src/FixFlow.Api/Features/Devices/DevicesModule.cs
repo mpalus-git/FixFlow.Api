@@ -1,3 +1,4 @@
+using FixFlow.Api.Features.Devices.ArchiveDevice;
 using FixFlow.Api.Features.Devices.CreateDevice;
 using FixFlow.Api.Features.Devices.GetDevice;
 using FixFlow.Api.Features.Devices.ListDevices;
@@ -17,6 +18,7 @@ public static class DevicesModule
         services.AddSingleton<IValidator<ListDevicesRequest>, ListDevicesRequestValidator>();
         services.AddScoped<UpdateDeviceHandler>();
         services.AddSingleton<IValidator<UpdateDeviceRequest>, UpdateDeviceRequestValidator>();
+        services.AddScoped<ArchiveDeviceHandler>();
 
         return services;
     }
@@ -33,6 +35,7 @@ public static class DevicesModule
         group.MapGetDevice();
         group.MapListDevices();
         group.MapUpdateDevice();
+        group.MapArchiveDevice();
 
         return app;
     }
