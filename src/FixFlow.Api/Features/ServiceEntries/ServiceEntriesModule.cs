@@ -1,4 +1,5 @@
 using FixFlow.Api.Features.ServiceEntries.AddServiceEntry;
+using FixFlow.Api.Features.ServiceEntries.ListServiceEntries;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.ServiceEntries;
@@ -9,6 +10,7 @@ public static class ServiceEntriesModule
     {
         services.AddScoped<AddServiceEntryHandler>();
         services.AddSingleton<IValidator<AddServiceEntryRequest>, AddServiceEntryRequestValidator>();
+        services.AddScoped<ListServiceEntriesHandler>();
 
         return services;
     }
@@ -22,6 +24,7 @@ public static class ServiceEntriesModule
             .RequireAuthorization();
 
         group.MapAddServiceEntry();
+        group.MapListServiceEntries();
 
         return app;
     }
