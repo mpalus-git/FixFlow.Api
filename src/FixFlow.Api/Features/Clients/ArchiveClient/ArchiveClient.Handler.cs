@@ -15,7 +15,17 @@ public sealed class ArchiveClientHandler(FixFlowDbContext dbContext, TimeProvide
             return ClientErrors.NotFound;
         }
 
-        client.Archive(timeProvider.GetUtcNow());
+        var now = timeProvider.GetUtcNow();
+        client.Archive(now);
+
+        var activeDevices = await dbContext.Devices
+            .Where(device => device.ClientId == clientId && device.ArchivedAt == null)
+            .ToListAsync(cancellationToken);
+        foreach (var device in activeDevices)
+        {
+            device.Archive(now);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result.Success;

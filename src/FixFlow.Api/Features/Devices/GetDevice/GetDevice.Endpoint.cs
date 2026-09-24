@@ -1,0 +1,23 @@
+using FixFlow.Api.Common.Errors;
+
+namespace FixFlow.Api.Features.Devices.GetDevice;
+
+public static class GetDeviceEndpoint
+{
+    public static RouteGroupBuilder MapGetDevice(this RouteGroupBuilder group)
+    {
+        group.MapGet("/{deviceId:guid}", async (Guid deviceId, GetDeviceHandler handler, CancellationToken cancellationToken) =>
+            {
+                var result = await handler.HandleAsync(deviceId, cancellationToken);
+                return result.Match<IResult>(device => TypedResults.Ok(device), errors => errors.ToProblem());
+            })
+            .WithName("GetDevice")
+            .WithSummary("Get a device")
+            .WithDescription("Returns a device by identifier, including archived devices so that historical work orders keep their device details.")
+            .Produces<DeviceResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        return group;
+    }
+}

@@ -567,11 +567,405 @@
           "Clients"
         ],
         "summary": "Archive a client",
-        "description": "Hides the client from lists while keeping it and its history available by identifier. Archiving an already archived client has no effect. Available to dispatchers and administrators.",
+        "description": "Hides the client from lists while keeping it and its history available by identifier. All active devices of the client are archived in the same operation and no new devices can be added to it. Archiving an already archived client has no effect. Available to dispatchers and administrators.",
         "operationId": "ArchiveClient",
         "parameters": [
           {
             "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/devices": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Create a device",
+        "description": "Registers a device of an active client. The serial number is trimmed, stored in upper case and must be unique, also among archived devices. Available to dispatchers and administrators.",
+        "operationId": "CreateDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "List active devices",
+        "description": "Returns one page of active devices ordered by serial number. Archived devices are not listed. The optional client filter limits the list to devices of one client, and the optional search matches a fragment of the serial number, model or manufacturer regardless of letter case.",
+        "operationId": "ListDevices",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, starting from 1.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of devices per page, from 1 to 100.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "clientId",
+            "in": "query",
+            "description": "Identifier of the client whose devices are listed.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive fragment of the serial number, model or manufacturer.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfDeviceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/devices/{deviceId}": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Get a device",
+        "description": "Returns a device by identifier, including archived devices so that historical work orders keep their device details.",
+        "operationId": "GetDevice",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Update a device",
+        "description": "Replaces the serial number, model, manufacturer and installation date of an active device. The owning client cannot be changed and archived devices cannot be modified. Available to dispatchers and administrators.",
+        "operationId": "UpdateDevice",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/devices/{deviceId}/archive": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Archive a device",
+        "description": "Hides the device from lists while keeping it and its history available by identifier. The serial number of an archived device stays reserved. Archiving an already archived device has no effect. Available to dispatchers and administrators.",
+        "operationId": "ArchiveDevice",
+        "parameters": [
+          {
+            "name": "deviceId",
             "in": "path",
             "required": true,
             "schema": {
@@ -775,6 +1169,41 @@
         },
         "description": "Data of a new client."
       },
+      "CreateDeviceRequest": {
+        "required": [
+          "clientId",
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate"
+        ],
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of an active client that owns the device.",
+            "format": "uuid"
+          },
+          "serialNumber": {
+            "type": "string",
+            "description": "Serial number, unique across all devices regardless of letter case and surrounding spaces."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed; cannot be in the future.",
+            "format": "date"
+          }
+        },
+        "description": "Data of a new device."
+      },
       "CreateUserRequest": {
         "required": [
           "email",
@@ -797,6 +1226,62 @@
           }
         },
         "description": "Data of a new user account created by an administrator."
+      },
+      "DeviceResponse": {
+        "required": [
+          "id",
+          "clientId",
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate",
+          "createdAt",
+          "archivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the device.",
+            "format": "uuid"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of the client that owns the device.",
+            "format": "uuid"
+          },
+          "serialNumber": {
+            "type": "string",
+            "description": "Unique serial number, stored trimmed and in upper case."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed.",
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the device was created.",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the device was archived; null for active devices.",
+            "format": "date-time"
+          }
+        },
+        "description": "Device installed at a client and serviced by the company."
       },
       "HttpValidationProblemDetails": {
         "type": "object",
@@ -922,6 +1407,52 @@
         },
         "description": "One page of a list."
       },
+      "PagedResponseOfDeviceResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceResponse"
+            },
+            "description": "Items on the requested page."
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page number, starting from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page size.",
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of items on all pages.",
+            "format": "int32"
+          }
+        },
+        "description": "One page of a list."
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -1008,6 +1539,35 @@
         },
         "description": "New data of an existing client. All fields are replaced."
       },
+      "UpdateDeviceRequest": {
+        "required": [
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate"
+        ],
+        "type": "object",
+        "properties": {
+          "serialNumber": {
+            "type": "string",
+            "description": "Serial number, unique across all devices regardless of letter case and surrounding spaces."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed; cannot be in the future.",
+            "format": "date"
+          }
+        },
+        "description": "New data of an existing device. All fields are replaced; the owning client cannot be changed."
+      },
       "UserResponse": {
         "required": [
           "id",
@@ -1051,6 +1611,9 @@
     },
     {
       "name": "Clients"
+    },
+    {
+      "name": "Devices"
     }
   ]
 }

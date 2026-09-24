@@ -1,5 +1,6 @@
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Clients;
+using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -13,6 +14,8 @@ public sealed class FixFlowDbContext(DbContextOptions<FixFlowDbContext> options)
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<Client> Clients => Set<Client>();
+
+    public DbSet<Device> Devices => Set<Device>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

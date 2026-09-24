@@ -4,6 +4,8 @@ using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Clients.UpdateClient;
+using FixFlow.Api.Features.Devices;
+using FixFlow.Api.IntegrationTests.Devices;
 
 namespace FixFlow.Api.IntegrationTests.Clients;
 
@@ -97,6 +99,51 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
         afterFirstArchive.ArchivedAt.ShouldNotBeNull();
         afterSecondArchive.ShouldNotBeNull();
         afterSecondArchive.ArchivedAt.ShouldBe(afterFirstArchive.ArchivedAt);
+    }
+
+    [Fact]
+    public async Task Should_Archive_Active_Devices_Of_Client_When_Client_Is_Archived()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var archivedClient = await client.CreateClientAsync(ClientRequests.NewClient("Archived client"));
+        var otherClient = await client.CreateClientAsync(ClientRequests.NewClient("Other client"));
+        var firstDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(archivedClient.Id, "SN-1"));
+        var secondDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(archivedClient.Id, "SN-2"));
+        var otherDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(otherClient.Id, "SN-3"));
+
+        using var response = await client.PostAsync(ArchiveUri(archivedClient.Id), null, TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var storedClient = await client.GetFromJsonAsync<ClientResponse>(ClientRequests.ClientUri(archivedClient.Id), TestContext.Current.CancellationToken);
+        storedClient.ShouldNotBeNull();
+        foreach (var deviceId in new[] { firstDevice.Id, secondDevice.Id })
+        {
+            var storedDevice = await client.GetFromJsonAsync<DeviceResponse>(DeviceRequests.DeviceUri(deviceId), TestContext.Current.CancellationToken);
+            storedDevice.ShouldNotBeNull();
+            storedDevice.ArchivedAt.ShouldBe(storedClient.ArchivedAt);
+        }
+
+        var storedOtherDevice = await client.GetFromJsonAsync<DeviceResponse>(DeviceRequests.DeviceUri(otherDevice.Id), TestContext.Current.CancellationToken);
+        storedOtherDevice.ShouldNotBeNull();
+        storedOtherDevice.ArchivedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_Keep_Earlier_Archive_Time_Of_Device_When_Its_Client_Is_Archived_Later()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var createdClient = await client.CreateClientAsync(ClientRequests.NewClient());
+        var device = await client.CreateDeviceAsync(DeviceRequests.NewDevice(createdClient.Id));
+        using var deviceArchiveResponse = await client.PostAsync(new Uri($"/api/v1/devices/{device.Id}/archive", UriKind.Relative), null, TestContext.Current.CancellationToken);
+        var archivedDevice = await client.GetFromJsonAsync<DeviceResponse>(DeviceRequests.DeviceUri(device.Id), TestContext.Current.CancellationToken);
+
+        using var clientArchiveResponse = await client.PostAsync(ArchiveUri(createdClient.Id), null, TestContext.Current.CancellationToken);
+
+        var storedDevice = await client.GetFromJsonAsync<DeviceResponse>(DeviceRequests.DeviceUri(device.Id), TestContext.Current.CancellationToken);
+        archivedDevice.ShouldNotBeNull();
+        storedDevice.ShouldNotBeNull();
+        clientArchiveResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        storedDevice.ArchivedAt.ShouldBe(archivedDevice.ArchivedAt);
     }
 
     [Fact]
