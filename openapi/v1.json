@@ -567,7 +567,7 @@
           "Clients"
         ],
         "summary": "Archive a client",
-        "description": "Hides the client from lists while keeping it and its history available by identifier. Archiving an already archived client has no effect. Available to dispatchers and administrators.",
+        "description": "Hides the client from lists while keeping it and its history available by identifier. All active devices of the client are archived in the same operation and no new devices can be added to it. Archiving an already archived client has no effect. Available to dispatchers and administrators.",
         "operationId": "ArchiveClient",
         "parameters": [
           {

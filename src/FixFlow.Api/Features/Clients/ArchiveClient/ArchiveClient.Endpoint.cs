@@ -14,7 +14,7 @@ public static class ArchiveClientEndpoint
             })
             .WithName("ArchiveClient")
             .WithSummary("Archive a client")
-            .WithDescription("Hides the client from lists while keeping it and its history available by identifier. Archiving an already archived client has no effect. Available to dispatchers and administrators.")
+            .WithDescription("Hides the client from lists while keeping it and its history available by identifier. All active devices of the client are archived in the same operation and no new devices can be added to it. Archiving an already archived client has no effect. Available to dispatchers and administrators.")
             .RequireAuthorization(AuthorizationPolicies.DispatcherOrAdmin)
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
