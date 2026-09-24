@@ -857,6 +857,102 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Update a device",
+        "description": "Replaces the serial number, model, manufacturer and installation date of an active device. The owning client cannot be changed and archived devices cannot be modified. Available to dispatchers and administrators.",
+        "operationId": "UpdateDevice",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     }
   },
@@ -1381,6 +1477,35 @@
           }
         },
         "description": "New data of an existing client. All fields are replaced."
+      },
+      "UpdateDeviceRequest": {
+        "required": [
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate"
+        ],
+        "type": "object",
+        "properties": {
+          "serialNumber": {
+            "type": "string",
+            "description": "Serial number, unique across all devices regardless of letter case and surrounding spaces."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed; cannot be in the future.",
+            "format": "date"
+          }
+        },
+        "description": "New data of an existing device. All fields are replaced; the owning client cannot be changed."
       },
       "UserResponse": {
         "required": [
