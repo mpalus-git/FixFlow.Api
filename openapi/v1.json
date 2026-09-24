@@ -1704,6 +1704,489 @@
           }
         ]
       }
+    },
+    "/api/v1/parts": {
+      "post": {
+        "tags": [
+          "Parts"
+        ],
+        "summary": "Create a part",
+        "description": "Adds a part to the warehouse catalog with an initial stock quantity. The catalog number is trimmed, stored in upper case and must be unique, also among archived parts. Available to dispatchers and administrators.",
+        "operationId": "CreatePart",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Parts"
+        ],
+        "summary": "List active parts",
+        "description": "Returns one page of active parts with their current stock quantities, ordered by name and catalog number. Archived parts are not listed. The optional search matches a fragment of the name or catalog number regardless of letter case.",
+        "operationId": "ListParts",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, starting from 1.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of parts per page, from 1 to 100.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive fragment of the name or catalog number.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfPartResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/parts/{partId}": {
+      "get": {
+        "tags": [
+          "Parts"
+        ],
+        "summary": "Get a part",
+        "description": "Returns a part with its current stock quantity by identifier, including archived parts so that historical service entries keep their part details.",
+        "operationId": "GetPart",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Parts"
+        ],
+        "summary": "Update a part",
+        "description": "Replaces the name, catalog number and unit price of an active part. The stock quantity is not changed and archived parts cannot be modified. A new price applies only to parts used afterwards. Available to dispatchers and administrators.",
+        "operationId": "UpdatePart",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/parts/{partId}/archive": {
+      "post": {
+        "tags": [
+          "Parts"
+        ],
+        "summary": "Archive a part",
+        "description": "Hides the part from lists and prevents it from being used in new service entries, while keeping it available by identifier. The catalog number of an archived part stays reserved and its stock can still be replenished. Archiving an already archived part has no effect. Available to dispatchers and administrators.",
+        "operationId": "ArchivePart",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/parts/{partId}/restock": {
+      "post": {
+        "tags": [
+          "Parts"
+        ],
+        "summary": "Register a part delivery",
+        "description": "Increases the stock quantity of a part by the number of delivered units, also for archived parts. A delivery registered at the same time as another stock change is rejected with a conflict and can be retried. Available to dispatchers and administrators.",
+        "operationId": "RestockPart",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestockPartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1906,6 +2389,44 @@
           }
         },
         "description": "Data of a new device."
+      },
+      "CreatePartRequest": {
+        "required": [
+          "name",
+          "catalogNumber",
+          "stockQuantity",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Part name."
+          },
+          "catalogNumber": {
+            "type": "string",
+            "description": "Catalog number, unique across all parts regardless of letter case and surrounding spaces."
+          },
+          "stockQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Initial number of units in stock, from 0 to 100000.",
+            "format": "int32"
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Net unit price in PLN with at most two decimal places.",
+            "format": "double"
+          }
+        },
+        "description": "Data of a new part."
       },
       "CreateUserRequest": {
         "required": [
@@ -2185,6 +2706,52 @@
         },
         "description": "One page of a list."
       },
+      "PagedResponseOfPartResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartResponse"
+            },
+            "description": "Items on the requested page."
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page number, starting from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page size.",
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of items on all pages.",
+            "format": "int32"
+          }
+        },
+        "description": "One page of a list."
+      },
       "PagedResponseOfUserResponse": {
         "required": [
           "items",
@@ -2277,6 +2844,65 @@
         },
         "description": "One page of a list."
       },
+      "PartResponse": {
+        "required": [
+          "id",
+          "name",
+          "catalogNumber",
+          "stockQuantity",
+          "unitPrice",
+          "createdAt",
+          "archivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the part.",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Part name."
+          },
+          "catalogNumber": {
+            "type": "string",
+            "description": "Unique catalog number, stored trimmed and in upper case."
+          },
+          "stockQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of units currently in stock.",
+            "format": "int32"
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Current net unit price in PLN.",
+            "format": "double"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the part was created.",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the part was archived; null for active parts.",
+            "format": "date-time"
+          }
+        },
+        "description": "Spare part from the warehouse catalog."
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -2327,6 +2953,24 @@
           }
         },
         "description": "Refresh token received from the last login or refresh."
+      },
+      "RestockPartRequest": {
+        "required": [
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of delivered units, from 1 to 100000.",
+            "format": "int32"
+          }
+        },
+        "description": "Delivery of units of a part to the warehouse."
       },
       "UpdateClientRequest": {
         "required": [
@@ -2391,6 +3035,34 @@
           }
         },
         "description": "New data of an existing device. All fields are replaced; the owning client cannot be changed."
+      },
+      "UpdatePartRequest": {
+        "required": [
+          "name",
+          "catalogNumber",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Part name."
+          },
+          "catalogNumber": {
+            "type": "string",
+            "description": "Catalog number, unique across all parts regardless of letter case and surrounding spaces."
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Net unit price in PLN with at most two decimal places.",
+            "format": "double"
+          }
+        },
+        "description": "New data of an existing part. All fields are replaced; the stock quantity changes only through deliveries and service entries."
       },
       "UpdateWorkOrderRequest": {
         "required": [
@@ -2547,6 +3219,9 @@
     },
     {
       "name": "WorkOrders"
+    },
+    {
+      "name": "Parts"
     }
   ]
 }

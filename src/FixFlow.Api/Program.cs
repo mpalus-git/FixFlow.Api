@@ -9,6 +9,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Features.Auth;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Devices;
+using FixFlow.Api.Features.Parts;
 using FixFlow.Api.Features.Users;
 using FixFlow.Api.Features.WorkOrders;
 using Serilog;
@@ -32,6 +33,7 @@ builder.Services.AddUsersFeatures();
 builder.Services.AddClientsFeatures();
 builder.Services.AddDevicesFeatures();
 builder.Services.AddWorkOrdersFeatures();
+builder.Services.AddPartsFeatures();
 
 var app = builder.Build();
 
@@ -49,6 +51,7 @@ app.MapUsersEndpoints();
 app.MapClientsEndpoints();
 app.MapDevicesEndpoints();
 app.MapWorkOrdersEndpoints();
+app.MapPartsEndpoints();
 
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {
