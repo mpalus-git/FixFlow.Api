@@ -1,6 +1,8 @@
+using FixFlow.Api.Features.Parts.ArchivePart;
 using FixFlow.Api.Features.Parts.CreatePart;
 using FixFlow.Api.Features.Parts.GetPart;
 using FixFlow.Api.Features.Parts.ListParts;
+using FixFlow.Api.Features.Parts.UpdatePart;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Parts;
@@ -14,6 +16,9 @@ public static class PartsModule
         services.AddScoped<GetPartHandler>();
         services.AddScoped<ListPartsHandler>();
         services.AddSingleton<IValidator<ListPartsRequest>, ListPartsRequestValidator>();
+        services.AddScoped<UpdatePartHandler>();
+        services.AddSingleton<IValidator<UpdatePartRequest>, UpdatePartRequestValidator>();
+        services.AddScoped<ArchivePartHandler>();
 
         return services;
     }
@@ -29,6 +34,8 @@ public static class PartsModule
         group.MapCreatePart();
         group.MapGetPart();
         group.MapListParts();
+        group.MapUpdatePart();
+        group.MapArchivePart();
 
         return app;
     }
