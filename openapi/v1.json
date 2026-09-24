@@ -621,6 +621,93 @@
           }
         ]
       }
+    },
+    "/api/v1/devices": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Create a device",
+        "description": "Registers a device of an active client. The serial number is trimmed, stored in upper case and must be unique, also among archived devices. Available to dispatchers and administrators.",
+        "operationId": "CreateDevice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -775,6 +862,41 @@
         },
         "description": "Data of a new client."
       },
+      "CreateDeviceRequest": {
+        "required": [
+          "clientId",
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate"
+        ],
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of an active client that owns the device.",
+            "format": "uuid"
+          },
+          "serialNumber": {
+            "type": "string",
+            "description": "Serial number, unique across all devices regardless of letter case and surrounding spaces."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed; cannot be in the future.",
+            "format": "date"
+          }
+        },
+        "description": "Data of a new device."
+      },
       "CreateUserRequest": {
         "required": [
           "email",
@@ -797,6 +919,62 @@
           }
         },
         "description": "Data of a new user account created by an administrator."
+      },
+      "DeviceResponse": {
+        "required": [
+          "id",
+          "clientId",
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate",
+          "createdAt",
+          "archivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the device.",
+            "format": "uuid"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of the client that owns the device.",
+            "format": "uuid"
+          },
+          "serialNumber": {
+            "type": "string",
+            "description": "Unique serial number, stored trimmed and in upper case."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed.",
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the device was created.",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the device was archived; null for active devices.",
+            "format": "date-time"
+          }
+        },
+        "description": "Device installed at a client and serviced by the company."
       },
       "HttpValidationProblemDetails": {
         "type": "object",
@@ -1051,6 +1229,9 @@
     },
     {
       "name": "Clients"
+    },
+    {
+      "name": "Devices"
     }
   ]
 }
