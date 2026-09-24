@@ -1015,6 +1015,93 @@
           }
         ]
       }
+    },
+    "/api/v1/work-orders": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Create a work order",
+        "description": "Creates an unassigned work order in the New status for an active device. The due date must be in the future. Available to dispatchers and administrators.",
+        "operationId": "CreateWorkOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1226,6 +1313,35 @@
           }
         },
         "description": "Data of a new user account created by an administrator."
+      },
+      "CreateWorkOrderRequest": {
+        "required": [
+          "deviceId",
+          "description",
+          "dueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Identifier of an active device to service.",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order; must be in the future.",
+            "format": "date-time"
+          },
+          "priority": {
+            "description": "Priority of the work order; Normal when omitted.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          }
+        },
+        "description": "Data of a new work order."
       },
       "DeviceResponse": {
         "required": [
@@ -1591,6 +1707,88 @@
           }
         },
         "description": "User account."
+      },
+      "WorkOrderPriority": {
+        "enum": [
+          "Low",
+          "Normal",
+          "High",
+          "Critical"
+        ]
+      },
+      "WorkOrderResponse": {
+        "required": [
+          "id",
+          "deviceId",
+          "description",
+          "priority",
+          "status",
+          "technicianId",
+          "dueDate",
+          "createdAt",
+          "startedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the work order.",
+            "format": "uuid"
+          },
+          "deviceId": {
+            "type": "string",
+            "description": "Identifier of the serviced device.",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "priority": {
+            "description": "Priority of the work order.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          },
+          "status": {
+            "description": "Current status. Allowed transitions: New -> Assigned -> InProgress -> Completed -> Invoiced, and Assigned -> New when the technician is unassigned.",
+            "$ref": "#/components/schemas/WorkOrderStatus"
+          },
+          "technicianId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of the assigned technician; null when no technician is assigned.",
+            "format": "uuid"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order.",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the work order was created.",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the technician started the work; null before the work is started.",
+            "format": "date-time"
+          }
+        },
+        "description": "Service work order for a device."
+      },
+      "WorkOrderStatus": {
+        "enum": [
+          "New",
+          "Assigned",
+          "InProgress",
+          "Completed",
+          "Invoiced"
+        ]
       }
     },
     "securitySchemes": {
@@ -1614,6 +1812,9 @@
     },
     {
       "name": "Devices"
+    },
+    {
+      "name": "WorkOrders"
     }
   ]
 }
