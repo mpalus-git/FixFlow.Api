@@ -75,6 +75,53 @@ public sealed class PartTests
         part.StockQuantity.ShouldBe(15);
     }
 
+    [Theory]
+    [InlineData(1, 11)]
+    [InlineData(12, 0)]
+    public void Should_Decrease_Stock_When_Consumed_Quantity_Does_Not_Exceed_Stock(int quantity, int expectedStock)
+    {
+        var part = CreatePart();
+
+        var result = part.Consume(quantity);
+
+        result.IsError.ShouldBeFalse();
+        part.StockQuantity.ShouldBe(expectedStock);
+    }
+
+    [Fact]
+    public void Should_Reject_Consumption_And_Keep_Stock_When_It_Would_Drop_Stock_Below_Zero()
+    {
+        var part = CreatePart();
+
+        var result = part.Consume(13);
+
+        result.FirstError.ShouldBe(PartErrors.InsufficientStock);
+        part.StockQuantity.ShouldBe(12);
+    }
+
+    [Fact]
+    public void Should_Reject_Consumption_When_Part_Is_Archived()
+    {
+        var part = CreatePart();
+        part.Archive(Now.AddDays(1));
+
+        var result = part.Consume(1);
+
+        result.FirstError.ShouldBe(PartErrors.Archived);
+        part.StockQuantity.ShouldBe(12);
+    }
+
+    [Fact]
+    public void Should_Increase_Stock_When_Archived_Part_Is_Returned_To_Stock()
+    {
+        var part = CreatePart();
+        part.Archive(Now.AddDays(1));
+
+        part.ReturnToStock(2);
+
+        part.StockQuantity.ShouldBe(14);
+    }
+
     [Fact]
     public void Should_Keep_First_Archive_Time_When_Archived_Twice()
     {

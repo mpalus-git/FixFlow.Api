@@ -118,4 +118,19 @@ public sealed class WorkOrder
 
         return Result.Updated;
     }
+
+    public ErrorOr<Success> EnsureCanAddServiceEntry(Guid technicianId)
+    {
+        if (Status != WorkOrderStatus.InProgress)
+        {
+            return WorkOrderErrors.NotInProgress;
+        }
+
+        if (TechnicianId != technicianId)
+        {
+            return WorkOrderErrors.NotAssignedToTechnician;
+        }
+
+        return Result.Success;
+    }
 }

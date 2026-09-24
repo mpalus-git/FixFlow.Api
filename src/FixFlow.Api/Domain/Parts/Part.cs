@@ -55,6 +55,28 @@ public sealed class Part
         StockQuantity += quantity;
     }
 
+    public ErrorOr<Updated> Consume(int quantity)
+    {
+        if (IsArchived)
+        {
+            return PartErrors.Archived;
+        }
+
+        if (quantity > StockQuantity)
+        {
+            return PartErrors.InsufficientStock;
+        }
+
+        StockQuantity -= quantity;
+
+        return Result.Updated;
+    }
+
+    public void ReturnToStock(int quantity)
+    {
+        StockQuantity += quantity;
+    }
+
     public void Archive(DateTimeOffset now)
     {
         ArchivedAt ??= now;

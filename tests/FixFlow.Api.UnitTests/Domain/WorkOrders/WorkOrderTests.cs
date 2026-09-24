@@ -193,6 +193,30 @@ public sealed class WorkOrderTests
         workOrder.StartedAt.ShouldBe(Now);
     }
 
+    [Fact]
+    public void Should_Accept_Service_Entry_When_Work_Order_Is_In_Progress_And_Technician_Is_Assigned()
+    {
+        var result = CreateInProgressWorkOrder().EnsureCanAddServiceEntry(TechnicianId);
+
+        result.IsError.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Reject_Service_Entry_When_Work_Order_Is_Not_In_Progress()
+    {
+        var result = CreateAssignedWorkOrder().EnsureCanAddServiceEntry(TechnicianId);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.NotInProgress);
+    }
+
+    [Fact]
+    public void Should_Reject_Service_Entry_When_Technician_Is_Not_Assigned_To_Work_Order()
+    {
+        var result = CreateInProgressWorkOrder().EnsureCanAddServiceEntry(Guid.CreateVersion7());
+
+        result.FirstError.ShouldBe(WorkOrderErrors.NotAssignedToTechnician);
+    }
+
     private static Device CreateDevice()
     {
         var client = Client.Create("Klimat-Serwis", new Address("Marszałkowska", "10A", "00-590", "Warszawa"), "Anna Nowak", "+48 600 100 200", null, Now);

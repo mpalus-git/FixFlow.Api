@@ -18,6 +18,10 @@ public static class WorkOrderErrors
         "WorkOrder.TechnicianAlreadyHasWorkInProgress",
         "Technician already has another work order in progress.");
 
+    public static readonly Error NotInProgress = Error.Conflict(
+        "WorkOrder.NotInProgress",
+        "Service entries can be added only to a work order in progress.");
+
     public static Error InvalidStatusTransition(WorkOrderStatus from, WorkOrderStatus to) => Error.Conflict(
         "WorkOrder.InvalidStatusTransition",
         $"Work order status cannot change from {from} to {to}.");
