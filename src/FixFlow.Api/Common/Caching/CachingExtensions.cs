@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace FixFlow.Api.Common.Caching;
@@ -20,11 +23,14 @@ public static class CachingExtensions
         var redisConnectionString = configuration.GetConnectionString(RedisConnectionStringName);
         if (!string.IsNullOrWhiteSpace(redisConnectionString))
         {
-            services.AddStackExchangeRedisCache(options =>
+            services.Configure<RedisCacheOptions>(options =>
             {
                 options.ConfigurationOptions = CreateRedisOptions(redisConnectionString);
                 options.InstanceName = "fixflow:";
             });
+            services.AddSingleton<IDistributedCache>(serviceProvider => new ResilientDistributedCache(
+                new RedisCache(serviceProvider.GetRequiredService<IOptions<RedisCacheOptions>>()),
+                serviceProvider.GetRequiredService<ILogger<ResilientDistributedCache>>()));
         }
 
         return services;
