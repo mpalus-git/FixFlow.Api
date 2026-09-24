@@ -13,6 +13,7 @@ public abstract class IntegrationTestBase(FixFlowApiFactory factory) : IAsyncLif
     public async ValueTask InitializeAsync()
     {
         await Factory.ResetDatabaseAsync();
+        await Factory.ResetCacheAsync();
     }
 
     public ValueTask DisposeAsync()

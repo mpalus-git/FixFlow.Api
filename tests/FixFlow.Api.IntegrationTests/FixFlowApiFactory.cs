@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
@@ -40,6 +42,11 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
         ArgumentNullException.ThrowIfNull(_respawner);
         await using var connection = await OpenDatabaseConnectionAsync();
         await _respawner.ResetAsync(connection);
+    }
+
+    public async Task ResetCacheAsync()
+    {
+        await Services.GetRequiredService<HybridCache>().RemoveByTagAsync("*");
     }
 
     public override async ValueTask DisposeAsync()

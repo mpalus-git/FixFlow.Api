@@ -1,11 +1,13 @@
 using ErrorOr;
+using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Clients;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace FixFlow.Api.Features.Clients.UpdateClient;
 
-public sealed class UpdateClientHandler(FixFlowDbContext dbContext)
+public sealed class UpdateClientHandler(FixFlowDbContext dbContext, HybridCache cache)
 {
     public async Task<ErrorOr<ClientResponse>> HandleAsync(Guid clientId, UpdateClientRequest request, CancellationToken cancellationToken)
     {
@@ -27,6 +29,7 @@ public sealed class UpdateClientHandler(FixFlowDbContext dbContext)
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByTagAsync(CacheTags.Clients, cancellationToken);
 
         return ClientResponse.FromDomain(client);
     }
