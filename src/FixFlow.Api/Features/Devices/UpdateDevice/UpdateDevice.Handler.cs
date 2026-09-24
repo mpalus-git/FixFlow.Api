@@ -1,12 +1,14 @@
 using ErrorOr;
+using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Persistence.Configurations;
 using FixFlow.Api.Domain.Devices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace FixFlow.Api.Features.Devices.UpdateDevice;
 
-public sealed class UpdateDeviceHandler(FixFlowDbContext dbContext)
+public sealed class UpdateDeviceHandler(FixFlowDbContext dbContext, HybridCache cache)
 {
     public async Task<ErrorOr<DeviceResponse>> HandleAsync(Guid deviceId, UpdateDeviceRequest request, CancellationToken cancellationToken)
     {
@@ -30,6 +32,8 @@ public sealed class UpdateDeviceHandler(FixFlowDbContext dbContext)
         {
             return saving.Errors;
         }
+
+        await cache.RemoveByTagAsync(CacheTags.Devices, cancellationToken);
 
         return DeviceResponse.FromDomain(device);
     }

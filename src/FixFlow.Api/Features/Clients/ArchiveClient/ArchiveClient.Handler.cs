@@ -1,11 +1,13 @@
 using ErrorOr;
+using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Clients;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace FixFlow.Api.Features.Clients.ArchiveClient;
 
-public sealed class ArchiveClientHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
+public sealed class ArchiveClientHandler(FixFlowDbContext dbContext, TimeProvider timeProvider, HybridCache cache)
 {
     public async Task<ErrorOr<Success>> HandleAsync(Guid clientId, CancellationToken cancellationToken)
     {
@@ -27,6 +29,7 @@ public sealed class ArchiveClientHandler(FixFlowDbContext dbContext, TimeProvide
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByTagAsync([CacheTags.Clients, CacheTags.Devices], cancellationToken);
 
         return Result.Success;
     }

@@ -11,6 +11,7 @@ services:
       Seed__DemoUsers__DispatcherPassword: ${DEMO_DISPATCHER_PASSWORD:?Set DEMO_DISPATCHER_PASSWORD in .env}
       Seed__DemoUsers__TechnicianPassword: ${DEMO_TECHNICIAN_PASSWORD:?Set DEMO_TECHNICIAN_PASSWORD in .env}
       ConnectionStrings__Database: Host=postgres;Port=5432;Database=fixflow;Username=fixflow;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      ConnectionStrings__Redis: redis:6379
     ports:
       - "8080:8080"
     depends_on:

@@ -1,9 +1,12 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 
 [assembly: AssemblyFixture(typeof(FixFlow.Api.IntegrationTests.FixFlowApiFactory))]
 [assembly: Xunit.v3.Parallelization(Mode = Xunit.Sdk.ParallelMode.None)]
@@ -15,6 +18,7 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
     public const string AllowedClientOrigin = "https://client.fixflow.test";
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7").Build();
     private Respawner? _respawner;
 
     public string SigningKey { get; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
@@ -23,7 +27,7 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.StartAsync();
+        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
         using var client = CreateClient();
 
         await using var connection = await OpenDatabaseConnectionAsync();
@@ -42,16 +46,23 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
         await _respawner.ResetAsync(connection);
     }
 
+    public async Task ResetCacheAsync()
+    {
+        await Services.GetRequiredService<HybridCache>().RemoveByTagAsync("*");
+    }
+
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Database", _postgres.GetConnectionString());
+        builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
         builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("RateLimiting:Auth:PermitLimit", "10000");
         builder.UseSetting("Cors:AllowedOrigins:0", AllowedClientOrigin);
