@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Cors;
@@ -9,6 +10,7 @@ using FixFlow.Api.Features.Auth;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Devices;
 using FixFlow.Api.Features.Users;
+using FixFlow.Api.Features.WorkOrders;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,7 @@ builder.Services.AddApplicationIdentity();
 builder.Services.AddJwtAuthentication();
 builder.Services.AddAuthRateLimiting();
 builder.Services.AddClientCors();
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 builder.Services.AddApplicationHealthChecks();
 builder.Services.AddApiDocumentation();
@@ -28,6 +31,7 @@ builder.Services.AddAuthFeatures();
 builder.Services.AddUsersFeatures();
 builder.Services.AddClientsFeatures();
 builder.Services.AddDevicesFeatures();
+builder.Services.AddWorkOrdersFeatures();
 
 var app = builder.Build();
 
@@ -44,6 +48,7 @@ app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapClientsEndpoints();
 app.MapDevicesEndpoints();
+app.MapWorkOrdersEndpoints();
 
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {

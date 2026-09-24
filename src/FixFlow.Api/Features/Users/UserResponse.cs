@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace FixFlow.Api.Features.Users.CreateUser;
+namespace FixFlow.Api.Features.Users;
 
 [Description("User account.")]
 public sealed record UserResponse(

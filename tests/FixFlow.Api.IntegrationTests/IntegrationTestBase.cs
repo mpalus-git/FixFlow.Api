@@ -36,9 +36,11 @@ public abstract class IntegrationTestBase(FixFlowApiFactory factory) : IAsyncLif
         return new TestUser(user.Id, email, password);
     }
 
-    protected async Task<HttpClient> CreateAuthenticatedClientAsync(string role)
+    protected async Task<HttpClient> CreateAuthenticatedClientAsync(string role) =>
+        await CreateAuthenticatedClientAsync(await CreateUserAsync(role));
+
+    protected async Task<HttpClient> CreateAuthenticatedClientAsync(TestUser user)
     {
-        var user = await CreateUserAsync(role);
         var client = Factory.CreateClient();
         var tokens = await client.LoginAsync(user);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);

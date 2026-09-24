@@ -1,0 +1,45 @@
+using System.Security.Claims;
+using ErrorOr;
+using FixFlow.Api.Common.Auth;
+using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Common.Persistence.Configurations;
+using FixFlow.Api.Domain.WorkOrders;
+using Microsoft.EntityFrameworkCore;
+
+namespace FixFlow.Api.Features.WorkOrders.StartWork;
+
+public sealed class StartWorkHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
+{
+    public async Task<ErrorOr<WorkOrderResponse>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
+    {
+        var workOrder = await dbContext.WorkOrders
+            .VisibleTo(user)
+            .SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
+        if (workOrder is null)
+        {
+            return WorkOrderErrors.NotFound;
+        }
+
+        var technicianId = user.GetUserId();
+        var technicianHasWorkInProgress = await dbContext.WorkOrders.AnyAsync(
+            other => other.TechnicianId == technicianId && other.Status == WorkOrderStatus.InProgress && other.Id != workOrderId,
+            cancellationToken);
+
+        var start = workOrder.Start(technicianId, technicianHasWorkInProgress, timeProvider.GetUtcNow());
+        if (start.IsError)
+        {
+            return start.Errors;
+        }
+
+        var saving = await dbContext.SaveChangesOrConflictAsync(
+            WorkOrderConfiguration.TechnicianInProgressIndexName,
+            WorkOrderErrors.TechnicianAlreadyHasWorkInProgress,
+            cancellationToken);
+        if (saving.IsError)
+        {
+            return saving.Errors;
+        }
+
+        return WorkOrderResponse.FromDomain(workOrder);
+    }
+}

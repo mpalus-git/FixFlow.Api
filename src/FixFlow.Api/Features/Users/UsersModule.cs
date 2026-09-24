@@ -1,4 +1,5 @@
 using FixFlow.Api.Features.Users.CreateUser;
+using FixFlow.Api.Features.Users.ListUsers;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Users;
@@ -9,6 +10,8 @@ public static class UsersModule
     {
         services.AddScoped<CreateUserHandler>();
         services.AddSingleton<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
+        services.AddScoped<ListUsersHandler>();
+        services.AddSingleton<IValidator<ListUsersRequest>, ListUsersRequestValidator>();
 
         return services;
     }
@@ -21,6 +24,7 @@ public static class UsersModule
             .WithTags("Users");
 
         group.MapCreateUser();
+        group.MapListUsers();
 
         return app;
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FixFlow.Api.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FixFlow.Api.Common.Persistence.Migrations
 {
     [DbContext(typeof(FixFlowDbContext))]
-    partial class FixFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924094156_AddWorkOrders")]
+    partial class AddWorkOrders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,12 +334,6 @@ namespace FixFlow.Api.Common.Persistence.Migrations
                     b.Property<Guid?>("TechnicianId")
                         .HasColumnType("uuid")
                         .HasColumnName("technician_id");
-
-                    b.Property<uint>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
 
                     b.HasKey("Id")
                         .HasName("pk_work_orders");

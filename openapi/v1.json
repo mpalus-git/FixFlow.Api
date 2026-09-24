@@ -255,6 +255,99 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List user accounts",
+        "description": "Returns one page of user accounts ordered by email, optionally limited to one role, for example role=Technician when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
+        "operationId": "ListUsers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, starting from 1.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of users per page, from 1 to 100.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "Role of the listed users: Admin, Dispatcher or Technician.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/api/v1/clients": {
@@ -1015,10 +1108,620 @@
           }
         ]
       }
+    },
+    "/api/v1/work-orders": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Create a work order",
+        "description": "Creates an unassigned work order in the New status for an active device. The due date must be in the future. Available to dispatchers and administrators.",
+        "operationId": "CreateWorkOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "List work orders",
+        "description": "Returns one page of work orders ordered by due date, optionally filtered by status, technician and device. Technicians only see work orders assigned to them.",
+        "operationId": "ListWorkOrders",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, starting from 1.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of work orders per page, from 1 to 100.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Status of the listed work orders.",
+            "schema": {
+              "$ref": "#/components/schemas/WorkOrderStatus"
+            }
+          },
+          {
+            "name": "technicianId",
+            "in": "query",
+            "description": "Identifier of the assigned technician.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "deviceId",
+            "in": "query",
+            "description": "Identifier of the serviced device.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfWorkOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}": {
+      "get": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Get a work order",
+        "description": "Returns a work order by identifier. Technicians can only get work orders assigned to them; other work orders are reported as not found.",
+        "operationId": "GetWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Update a work order",
+        "description": "Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Available to dispatchers and administrators.",
+        "operationId": "UpdateWorkOrder",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/assign": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Assign a technician to a work order",
+        "description": "Assigns a user with the Technician role to a work order in the New status and moves it to Assigned. To change the technician, unassign the current one first. Available to dispatchers and administrators.",
+        "operationId": "AssignTechnician",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTechnicianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/unassign": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Unassign the technician from a work order",
+        "description": "Removes the technician from a work order in the Assigned status and moves it back to New. Work that has already started cannot be unassigned. Available to dispatchers and administrators.",
+        "operationId": "UnassignTechnician",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/work-orders/{workOrderId}/start": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Start work on a work order",
+        "description": "Moves a work order assigned to the calling technician from Assigned to InProgress. A technician can have only one work order in progress at a time. Work orders of other technicians are reported as not found. Available to technicians only.",
+        "operationId": "StartWork",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssignTechnicianRequest": {
+        "required": [
+          "technicianId"
+        ],
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "description": "Identifier of a user with the Technician role.",
+            "format": "uuid"
+          }
+        },
+        "description": "Technician to assign to a work order."
+      },
       "AuthTokensResponse": {
         "required": [
           "accessToken",
@@ -1226,6 +1929,35 @@
           }
         },
         "description": "Data of a new user account created by an administrator."
+      },
+      "CreateWorkOrderRequest": {
+        "required": [
+          "deviceId",
+          "description",
+          "dueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "description": "Identifier of an active device to service.",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order; must be in the future.",
+            "format": "date-time"
+          },
+          "priority": {
+            "description": "Priority of the work order; Normal when omitted.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          }
+        },
+        "description": "Data of a new work order."
       },
       "DeviceResponse": {
         "required": [
@@ -1453,6 +2185,98 @@
         },
         "description": "One page of a list."
       },
+      "PagedResponseOfUserResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponse"
+            },
+            "description": "Items on the requested page."
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page number, starting from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page size.",
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of items on all pages.",
+            "format": "int32"
+          }
+        },
+        "description": "One page of a list."
+      },
+      "PagedResponseOfWorkOrderResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkOrderResponse"
+            },
+            "description": "Items on the requested page."
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page number, starting from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page size.",
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of items on all pages.",
+            "format": "int32"
+          }
+        },
+        "description": "One page of a list."
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -1568,6 +2392,30 @@
         },
         "description": "New data of an existing device. All fields are replaced; the owning client cannot be changed."
       },
+      "UpdateWorkOrderRequest": {
+        "required": [
+          "description",
+          "priority",
+          "dueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "priority": {
+            "description": "Priority of the work order.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order; a changed deadline must be in the future, an unchanged one is accepted even when it has passed.",
+            "format": "date-time"
+          }
+        },
+        "description": "New details of an existing work order. All fields are replaced."
+      },
       "UserResponse": {
         "required": [
           "id",
@@ -1591,6 +2439,88 @@
           }
         },
         "description": "User account."
+      },
+      "WorkOrderPriority": {
+        "enum": [
+          "Low",
+          "Normal",
+          "High",
+          "Critical"
+        ]
+      },
+      "WorkOrderResponse": {
+        "required": [
+          "id",
+          "deviceId",
+          "description",
+          "priority",
+          "status",
+          "technicianId",
+          "dueDate",
+          "createdAt",
+          "startedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the work order.",
+            "format": "uuid"
+          },
+          "deviceId": {
+            "type": "string",
+            "description": "Identifier of the serviced device.",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "priority": {
+            "description": "Priority of the work order.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          },
+          "status": {
+            "description": "Current status. Allowed transitions: New -> Assigned -> InProgress -> Completed -> Invoiced, and Assigned -> New when the technician is unassigned.",
+            "$ref": "#/components/schemas/WorkOrderStatus"
+          },
+          "technicianId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of the assigned technician; null when no technician is assigned.",
+            "format": "uuid"
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order.",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the work order was created.",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the technician started the work; null before the work is started.",
+            "format": "date-time"
+          }
+        },
+        "description": "Service work order for a device."
+      },
+      "WorkOrderStatus": {
+        "enum": [
+          "New",
+          "Assigned",
+          "InProgress",
+          "Completed",
+          "Invoiced"
+        ]
       }
     },
     "securitySchemes": {
@@ -1614,6 +2544,9 @@
     },
     {
       "name": "Devices"
+    },
+    {
+      "name": "WorkOrders"
     }
   ]
 }

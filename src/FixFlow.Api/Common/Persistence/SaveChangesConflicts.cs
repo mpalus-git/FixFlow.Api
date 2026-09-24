@@ -4,8 +4,25 @@ using Npgsql;
 
 namespace FixFlow.Api.Common.Persistence;
 
-public static class UniqueConstraintViolation
+public static class SaveChangesConflicts
 {
+    public static readonly Error ConcurrentModification = Error.Conflict(
+        "Persistence.ConcurrentModification",
+        "The resource was changed by another request. Reload it and try again.");
+
+    public static async Task<ErrorOr<Success>> SaveChangesOrConflictAsync(this DbContext dbContext, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return Result.Success;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return ConcurrentModification;
+        }
+    }
+
     public static async Task<ErrorOr<Success>> SaveChangesOrConflictAsync(
         this DbContext dbContext,
         string uniqueConstraintName,
@@ -14,8 +31,7 @@ public static class UniqueConstraintViolation
     {
         try
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return Result.Success;
+            return await dbContext.SaveChangesOrConflictAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (IsViolationOf(exception, uniqueConstraintName))
         {

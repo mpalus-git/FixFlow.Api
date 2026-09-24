@@ -2,6 +2,7 @@ using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Users;
+using FixFlow.Api.Domain.WorkOrders;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,8 @@ public sealed class FixFlowDbContext(DbContextOptions<FixFlowDbContext> options)
     public DbSet<Client> Clients => Set<Client>();
 
     public DbSet<Device> Devices => Set<Device>();
+
+    public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
