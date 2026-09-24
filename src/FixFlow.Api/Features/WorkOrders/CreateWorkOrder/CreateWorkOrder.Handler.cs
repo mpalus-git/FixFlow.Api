@@ -18,7 +18,7 @@ public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
             return DeviceErrors.NotFound;
         }
 
-        var creation = WorkOrder.Create(device, request.Description, request.Priority, request.DueDate, timeProvider.GetUtcNow());
+        var creation = WorkOrder.Create(device, request.Description, request.Priority, request.DueDate.ToDatabasePrecision(), timeProvider.GetUtcNow());
         if (creation.IsError)
         {
             return creation.Errors;

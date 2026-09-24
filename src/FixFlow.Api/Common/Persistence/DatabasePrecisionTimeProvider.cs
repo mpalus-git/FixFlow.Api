@@ -6,11 +6,7 @@ public sealed class DatabasePrecisionTimeProvider(TimeProvider innerTimeProvider
 
     public override long TimestampFrequency => innerTimeProvider.TimestampFrequency;
 
-    public override DateTimeOffset GetUtcNow()
-    {
-        var now = innerTimeProvider.GetUtcNow();
-        return now.AddTicks(-(now.Ticks % TimeSpan.TicksPerMicrosecond));
-    }
+    public override DateTimeOffset GetUtcNow() => innerTimeProvider.GetUtcNow().ToDatabasePrecision();
 
     public override long GetTimestamp() => innerTimeProvider.GetTimestamp();
 }
