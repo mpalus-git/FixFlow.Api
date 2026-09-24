@@ -25,7 +25,7 @@ public static class SaveChangesConflicts
 
     public static async Task<ErrorOr<Success>> SaveChangesOrConflictAsync(
         this DbContext dbContext,
-        string uniqueConstraintName,
+        string constraintName,
         Error conflictError,
         CancellationToken cancellationToken)
     {
@@ -33,13 +33,13 @@ public static class SaveChangesConflicts
         {
             return await dbContext.SaveChangesOrConflictAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (IsViolationOf(exception, uniqueConstraintName))
+        catch (DbUpdateException exception) when (IsViolationOf(exception, constraintName))
         {
             return conflictError;
         }
     }
 
-    private static bool IsViolationOf(DbUpdateException exception, string uniqueConstraintName) =>
-        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } violation
-        && violation.ConstraintName == uniqueConstraintName;
+    private static bool IsViolationOf(DbUpdateException exception, string constraintName) =>
+        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation or PostgresErrorCodes.CheckViolation } violation
+        && violation.ConstraintName == constraintName;
 }

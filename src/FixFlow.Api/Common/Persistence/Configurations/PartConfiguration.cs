@@ -7,10 +7,11 @@ namespace FixFlow.Api.Common.Persistence.Configurations;
 public sealed class PartConfiguration : IEntityTypeConfiguration<Part>
 {
     public const string CatalogNumberIndexName = "ix_parts_catalog_number";
+    public const string StockQuantityCheckName = "ck_parts_stock_quantity_non_negative";
 
     public void Configure(EntityTypeBuilder<Part> builder)
     {
-        builder.ToTable("parts", table => table.HasCheckConstraint("ck_parts_stock_quantity_non_negative", "stock_quantity >= 0"));
+        builder.ToTable("parts", table => table.HasCheckConstraint(StockQuantityCheckName, "stock_quantity >= 0"));
         builder.HasKey(part => part.Id);
         builder.Property(part => part.Id).ValueGeneratedNever();
         builder.Property<uint>("Version").IsRowVersion();
