@@ -1354,10 +1354,122 @@
           }
         ]
       }
+    },
+    "/api/v1/work-orders/{workOrderId}/assign": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Assign a technician to a work order",
+        "description": "Assigns a user with the Technician role to a work order in the New status and moves it to Assigned. To change the technician, unassign the current one first. Available to dispatchers and administrators.",
+        "operationId": "AssignTechnician",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTechnicianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssignTechnicianRequest": {
+        "required": [
+          "technicianId"
+        ],
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "description": "Identifier of a user with the Technician role.",
+            "format": "uuid"
+          }
+        },
+        "description": "Technician to assign to a work order."
+      },
       "AuthTokensResponse": {
         "required": [
           "accessToken",
