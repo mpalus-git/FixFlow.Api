@@ -707,6 +707,98 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "List active devices",
+        "description": "Returns one page of active devices ordered by serial number. Archived devices are not listed. The optional client filter limits the list to devices of one client, and the optional search matches a fragment of the serial number, model or manufacturer regardless of letter case.",
+        "operationId": "ListDevices",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, starting from 1.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of devices per page, from 1 to 100.",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "clientId",
+            "in": "query",
+            "description": "Identifier of the client whose devices are listed.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive fragment of the serial number, model or manufacturer.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfDeviceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/api/v1/devices/{deviceId}": {
@@ -1125,6 +1217,52 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ClientResponse"
+            },
+            "description": "Items on the requested page."
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page number, starting from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Requested page size.",
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of items on all pages.",
+            "format": "int32"
+          }
+        },
+        "description": "One page of a list."
+      },
+      "PagedResponseOfDeviceResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceResponse"
             },
             "description": "Items on the requested page."
           },

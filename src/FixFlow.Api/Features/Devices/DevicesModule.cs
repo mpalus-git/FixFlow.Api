@@ -1,5 +1,6 @@
 using FixFlow.Api.Features.Devices.CreateDevice;
 using FixFlow.Api.Features.Devices.GetDevice;
+using FixFlow.Api.Features.Devices.ListDevices;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Devices;
@@ -11,6 +12,8 @@ public static class DevicesModule
         services.AddScoped<CreateDeviceHandler>();
         services.AddSingleton<IValidator<CreateDeviceRequest>, CreateDeviceRequestValidator>();
         services.AddScoped<GetDeviceHandler>();
+        services.AddScoped<ListDevicesHandler>();
+        services.AddSingleton<IValidator<ListDevicesRequest>, ListDevicesRequestValidator>();
 
         return services;
     }
@@ -25,6 +28,7 @@ public static class DevicesModule
 
         group.MapCreateDevice();
         group.MapGetDevice();
+        group.MapListDevices();
 
         return app;
     }
