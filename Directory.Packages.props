@@ -23,6 +23,7 @@
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="Quartz" Version="4.1.1" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.0" />
     <PackageVersion Include="Respawn" Version="7.0.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.17.8" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />

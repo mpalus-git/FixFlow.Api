@@ -7,6 +7,7 @@ using FixFlow.Api.Common.Health;
 using FixFlow.Api.Common.Jobs;
 using FixFlow.Api.Common.Logging;
 using FixFlow.Api.Common.OpenApi;
+using FixFlow.Api.Common.Pdf;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Features.Auth;
 using FixFlow.Api.Features.Clients;
@@ -16,6 +17,8 @@ using FixFlow.Api.Features.ServiceEntries;
 using FixFlow.Api.Features.Users;
 using FixFlow.Api.Features.WorkOrders;
 using Serilog;
+
+PdfGeneration.Configure();
 
 var builder = WebApplication.CreateBuilder(args);
 
