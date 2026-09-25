@@ -4,6 +4,7 @@ using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.Features.WorkOrders.GetWorkOrder;
 using FixFlow.Api.Features.WorkOrders.InvoiceWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
+using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
 using FixFlow.Api.Features.WorkOrders.StartWork;
 using FixFlow.Api.Features.WorkOrders.UnassignTechnician;
 using FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
@@ -28,6 +29,7 @@ public static class WorkOrdersModule
         services.AddScoped<StartWorkHandler>();
         services.AddScoped<CompleteWorkOrderHandler>();
         services.AddScoped<InvoiceWorkOrderHandler>();
+        services.AddScoped<MarkOverdueWorkOrdersHandler>();
 
         return services;
     }

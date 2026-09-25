@@ -3,6 +3,7 @@ using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Cors;
 using FixFlow.Api.Common.Health;
+using FixFlow.Api.Common.Jobs;
 using FixFlow.Api.Common.Logging;
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Persistence;
@@ -36,6 +37,7 @@ builder.Services.AddDevicesFeatures();
 builder.Services.AddWorkOrdersFeatures();
 builder.Services.AddPartsFeatures();
 builder.Services.AddServiceEntriesFeatures();
+builder.Services.AddScheduledJobs(builder.Configuration);
 
 var app = builder.Build();
 
