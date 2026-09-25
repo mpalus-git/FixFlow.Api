@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 namespace FixFlow.Api.Common.OpenApi;
@@ -21,10 +22,13 @@ public static class ApiDocumentationExtensions
             })
             .AddOpenApi(options => options.Document
                 .AddBearerSecurity()
+                .AddPreciseSchemaTypes()
+                .AddProblemDetailsErrorCode()
                 .AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Title = "FixFlow API";
                     document.Info.Description = "Field service work order management API for dispatchers and technicians.";
+                    document.Info.License = new OpenApiLicense { Name = "MIT", Identifier = "MIT" };
                     return Task.CompletedTask;
                 }));
 
