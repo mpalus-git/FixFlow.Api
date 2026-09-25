@@ -169,6 +169,9 @@ public sealed class WorkOrder
         return Result.Updated;
     }
 
+    public ErrorOr<Success> EnsureCanIssueServiceProtocol() =>
+        Status is WorkOrderStatus.Completed or WorkOrderStatus.Invoiced ? Result.Success : WorkOrderErrors.NotCompleted;
+
     public ErrorOr<Success> EnsureCanAddServiceEntry(Guid technicianId)
     {
         if (Status != WorkOrderStatus.InProgress)
