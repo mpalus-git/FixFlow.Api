@@ -31,7 +31,11 @@ builder.Services.AddJwtAuthentication();
 builder.Services.AddAuthRateLimiting();
 builder.Services.AddClientCors();
 builder.Services.AddEmailSending(builder.Configuration);
-builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddApplicationHealthChecks();
 builder.Services.AddApiDocumentation();

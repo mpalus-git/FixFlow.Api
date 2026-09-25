@@ -76,6 +76,17 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
     }
 
     [Fact]
+    public async Task Should_Return_Bad_Request_When_Unit_Price_Is_Sent_As_Text()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var request = new { name = "Filtr powietrza", catalogNumber = "FLT-100", stockQuantity = 5, unitPrice = "12.50" };
+
+        using var response = await client.PostAsJsonAsync(PartRequests.PartsUri, request, TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Should_Return_Forbidden_When_Technician_Creates_Part()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
