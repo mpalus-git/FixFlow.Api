@@ -19,6 +19,21 @@ public abstract class ServiceEntryTestBase(FixFlowApiFactory factory) : Integrat
 
         return new WorkOrderInProgress(dispatcherClient, technicianClient, await startResponse.ReadWorkOrderAsync());
     }
+
+    protected async Task<WorkOrderInProgress> CreateWorkOrderInProgressWithServiceEntryAsync()
+    {
+        var scenario = await CreateWorkOrderInProgressAsync();
+        await scenario.TechnicianClient.AddServiceEntryAsync(scenario.WorkOrder.Id, ServiceEntryRequests.WorkEntry(scenario.WorkOrder));
+        return scenario;
+    }
+
+    protected async Task<WorkOrderInProgress> CreateCompletedWorkOrderAsync()
+    {
+        var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
+        using var response = await scenario.TechnicianClient.PostTransitionAsync(scenario.WorkOrder.Id, "complete");
+        response.EnsureSuccessStatusCode();
+        return scenario;
+    }
 }
 
 public sealed record WorkOrderInProgress(HttpClient DispatcherClient, HttpClient TechnicianClient, WorkOrderResponse WorkOrder) : IDisposable

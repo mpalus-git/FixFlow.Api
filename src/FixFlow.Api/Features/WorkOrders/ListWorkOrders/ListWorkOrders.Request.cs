@@ -10,4 +10,5 @@ public sealed record ListWorkOrdersRequest(
     [FromQuery(Name = "pageSize")][property: Description("Number of work orders per page, from 1 to 100.")] int PageSize = PagedRequest.DefaultPageSize,
     [FromQuery(Name = "status")][property: Description("Status of the listed work orders.")] WorkOrderStatus? Status = null,
     [FromQuery(Name = "technicianId")][property: Description("Identifier of the assigned technician.")] Guid? TechnicianId = null,
-    [FromQuery(Name = "deviceId")][property: Description("Identifier of the serviced device.")] Guid? DeviceId = null) : IPagedRequest;
+    [FromQuery(Name = "deviceId")][property: Description("Identifier of the serviced device.")] Guid? DeviceId = null,
+    [FromQuery(Name = "isOverdue")][property: Description("When true, lists only overdue work orders; when false, only work orders that are not overdue.")] bool? IsOverdue = null) : IPagedRequest;

@@ -1256,6 +1256,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "isOverdue",
+            "in": "query",
+            "description": "When true, lists only overdue work orders; when false, only work orders that are not overdue.",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -3662,6 +3670,7 @@
           "status",
           "technicianId",
           "dueDate",
+          "isOverdue",
           "createdAt",
           "startedAt",
           "completedAt",
@@ -3703,6 +3712,10 @@
             "type": "string",
             "description": "UTC deadline of the work order.",
             "format": "date-time"
+          },
+          "isOverdue": {
+            "type": "boolean",
+            "description": "True when the deadline has passed and the work order is neither completed nor invoiced. Set by an hourly job and recalculated immediately when the deadline changes."
           },
           "createdAt": {
             "type": "string",

@@ -114,19 +114,4 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
     }
-
-    private async Task<WorkOrderInProgress> CreateWorkOrderInProgressWithServiceEntryAsync()
-    {
-        var scenario = await CreateWorkOrderInProgressAsync();
-        await scenario.TechnicianClient.AddServiceEntryAsync(scenario.WorkOrder.Id, ServiceEntryRequests.WorkEntry(scenario.WorkOrder));
-        return scenario;
-    }
-
-    private async Task<WorkOrderInProgress> CreateCompletedWorkOrderAsync()
-    {
-        var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
-        using var response = await scenario.TechnicianClient.PostTransitionAsync(scenario.WorkOrder.Id, "complete");
-        response.EnsureSuccessStatusCode();
-        return scenario;
-    }
 }

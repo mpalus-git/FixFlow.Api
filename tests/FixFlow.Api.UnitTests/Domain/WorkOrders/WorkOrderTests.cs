@@ -297,6 +297,91 @@ public sealed class WorkOrderTests
         result.FirstError.ShouldBe(WorkOrderErrors.NotInProgress);
     }
 
+    [Theory]
+    [InlineData(WorkOrderStatus.New)]
+    [InlineData(WorkOrderStatus.Assigned)]
+    [InlineData(WorkOrderStatus.InProgress)]
+    public void Should_Treat_Work_Order_As_Past_Due_When_Due_Date_Passed_And_It_Is_Open(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+
+        var isPastDue = WorkOrder.IsPastDueAt(DueDate.AddMinutes(1)).Compile()(workOrder);
+
+        isPastDue.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(WorkOrderStatus.Completed)]
+    [InlineData(WorkOrderStatus.Invoiced)]
+    public void Should_Not_Treat_Work_Order_As_Past_Due_When_It_Is_Completed_Or_Invoiced(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+
+        var isPastDue = WorkOrder.IsPastDueAt(DueDate.AddMinutes(1)).Compile()(workOrder);
+
+        isPastDue.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Should_Not_Treat_Work_Order_As_Past_Due_When_Due_Date_Has_Not_Passed(int minutesAfterDueDate)
+    {
+        var isPastDue = WorkOrder.IsPastDueAt(DueDate.AddMinutes(minutesAfterDueDate)).Compile()(CreateWorkOrder());
+
+        isPastDue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Mark_Work_Order_Overdue_When_Updated_After_Unchanged_Due_Date_Passed()
+    {
+        var workOrder = CreateWorkOrder();
+
+        workOrder.Update("Air conditioner is leaking", WorkOrderPriority.High, DueDate, DueDate.AddHours(1));
+
+        workOrder.IsOverdue.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_Clear_Overdue_When_Due_Date_Is_Moved_To_Future()
+    {
+        var workOrder = CreateWorkOrder();
+        workOrder.Update("Air conditioner is leaking", WorkOrderPriority.High, DueDate, DueDate.AddHours(1));
+
+        workOrder.Update("Air conditioner is leaking", WorkOrderPriority.High, DueDate.AddDays(1), DueDate.AddHours(2));
+
+        workOrder.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Clear_Overdue_When_Work_Order_Is_Completed()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        workOrder.Update("Air conditioner is leaking", WorkOrderPriority.High, DueDate, DueDate.AddHours(1));
+
+        workOrder.Complete(hasServiceEntries: true, DueDate.AddHours(2));
+
+        workOrder.IsOverdue.ShouldBeFalse();
+    }
+
+    private static WorkOrder CreateWorkOrderInStatus(WorkOrderStatus status)
+    {
+        var workOrder = status switch
+        {
+            WorkOrderStatus.New => CreateWorkOrder(),
+            WorkOrderStatus.Assigned => CreateAssignedWorkOrder(),
+            WorkOrderStatus.InProgress => CreateInProgressWorkOrder(),
+            _ => CreateCompletedWorkOrder(),
+        };
+
+        if (status == WorkOrderStatus.Invoiced)
+        {
+            workOrder.Invoice(Now.AddDays(1));
+        }
+
+        return workOrder;
+    }
+
     private static WorkOrder CreateCompletedWorkOrder()
     {
         var workOrder = CreateInProgressWorkOrder();
