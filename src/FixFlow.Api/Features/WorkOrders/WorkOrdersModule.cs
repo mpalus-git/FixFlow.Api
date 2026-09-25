@@ -1,6 +1,7 @@
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 using FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
+using FixFlow.Api.Features.WorkOrders.GetServiceProtocol;
 using FixFlow.Api.Features.WorkOrders.GetWorkOrder;
 using FixFlow.Api.Features.WorkOrders.InvoiceWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
@@ -30,6 +31,7 @@ public static class WorkOrdersModule
         services.AddScoped<StartWorkHandler>();
         services.AddScoped<CompleteWorkOrderHandler>();
         services.AddScoped<InvoiceWorkOrderHandler>();
+        services.AddScoped<GetServiceProtocolHandler>();
         services.AddScoped<MarkOverdueWorkOrdersHandler>();
         services.AddScoped<SendDailySummaryHandler>();
 
@@ -53,6 +55,7 @@ public static class WorkOrdersModule
         group.MapStartWork();
         group.MapCompleteWorkOrder();
         group.MapInvoiceWorkOrder();
+        group.MapGetServiceProtocol();
 
         return app;
     }

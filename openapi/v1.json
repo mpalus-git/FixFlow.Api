@@ -1859,6 +1859,74 @@
         ]
       }
     },
+    "/api/v1/work-orders/{workOrderId}/protocol": {
+      "get": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Download the service protocol",
+        "description": "Returns the service protocol of a completed or invoiced work order as a PDF document in Polish. The protocol lists the client, the device, all service entries with work time, the net used parts with amounts in PLN and fields for signatures. Technicians can only download protocols of work orders assigned to them; other work orders are reported as not found.",
+        "operationId": "GetServiceProtocol",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stream"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/parts": {
       "post": {
         "tags": [
@@ -3512,6 +3580,10 @@
           }
         },
         "description": "Service entry of a work order: performed work with used parts, or a correction returning parts to stock."
+      },
+      "Stream": {
+        "type": "string",
+        "format": "binary"
       },
       "UpdateClientRequest": {
         "required": [
