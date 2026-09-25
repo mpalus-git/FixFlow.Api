@@ -1,5 +1,6 @@
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
+using FixFlow.Api.Features.WorkOrders.SendDailySummary;
 using Quartz;
 
 namespace FixFlow.Api.Common.Jobs;
@@ -15,7 +16,11 @@ public static class JobsExtensions
             return services;
         }
 
-        services.AddQuartz(MarkOverdueWorkOrdersJob.Schedule);
+        services.AddQuartz(quartz =>
+        {
+            MarkOverdueWorkOrdersJob.Schedule(quartz);
+            SendDailySummaryJob.Schedule(quartz);
+        });
         services.AddQuartzHostedService(options =>
         {
             options.AwaitApplicationStarted = true;
