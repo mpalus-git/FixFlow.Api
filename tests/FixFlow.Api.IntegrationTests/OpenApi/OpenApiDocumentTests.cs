@@ -10,7 +10,19 @@ public sealed class OpenApiDocumentTests(FixFlowApiFactory factory) : Integratio
     {
         using var document = await GetDocumentAsync();
 
-        document.RootElement.GetProperty("info").GetProperty("title").GetString().ShouldBe("FixFlow API");
+        var info = document.RootElement.GetProperty("info");
+        info.GetProperty("title").GetString().ShouldBe("FixFlow API");
+        info.GetProperty("license").GetProperty("identifier").GetString().ShouldBe("MIT");
+    }
+
+    [Fact]
+    public async Task Should_Describe_Error_Code_In_Problem_Details()
+    {
+        using var document = await GetDocumentAsync();
+
+        var problemDetails = Schema(document, "ProblemDetails");
+        problemDetails.GetProperty("description").GetString().ShouldNotBeNullOrWhiteSpace();
+        problemDetails.GetProperty("properties").GetProperty("errorCode").GetProperty("description").GetString().ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]

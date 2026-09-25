@@ -3,6 +3,10 @@
   "info": {
     "title": "FixFlow API",
     "description": "Field service work order management API for dispatchers and technicians.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    },
     "version": "1"
   },
   "paths": {
@@ -3267,8 +3271,16 @@
               "null",
               "string"
             ]
+          },
+          "errorCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Stable machine-readable code of a business error, for example WorkOrder.NotFound. Absent for authentication and authorization failures."
           }
-        }
+        },
+        "description": "Error response in the RFC 9457 problem details format."
       },
       "RefreshRequest": {
         "required": [
