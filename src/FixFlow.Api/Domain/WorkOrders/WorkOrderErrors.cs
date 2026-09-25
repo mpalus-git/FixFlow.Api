@@ -30,6 +30,10 @@ public static class WorkOrderErrors
         "WorkOrder.Closed",
         "Completed or invoiced work order cannot be modified.");
 
+    public static readonly Error NotCompleted = Error.Conflict(
+        "WorkOrder.NotCompleted",
+        "Service protocol is available only for completed or invoiced work orders.");
+
     public static Error InvalidStatusTransition(WorkOrderStatus from, WorkOrderStatus to) => Error.Conflict(
         "WorkOrder.InvalidStatusTransition",
         $"Work order status cannot change from {from} to {to}.");

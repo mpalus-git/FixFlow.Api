@@ -178,6 +178,56 @@ public sealed class ServiceEntryTests
         result.FirstError.ShouldBe(WorkOrderErrors.NotAssignedToTechnician);
     }
 
+    [Fact]
+    public void Should_Summarize_Used_Parts_Per_Part_And_Unit_Price()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var filter = CreatePart(stockQuantity: 10, unitPrice: 40m);
+        var fan = Part.Create("Wentylator", "FAN-200", 5, 150m, Now);
+        var firstEntry = CreateWorkEntry(workOrder, new PartUsage(filter, 2), Now.AddHours(1));
+        var secondEntry = CreateWorkEntry(workOrder, new PartUsage(filter, 3), Now.AddHours(2));
+        var thirdEntry = CreateWorkEntry(workOrder, new PartUsage(fan, 1), Now.AddHours(3));
+
+        var usedParts = ServiceEntry.SummarizeUsedParts([thirdEntry, firstEntry, secondEntry]);
+
+        usedParts.ShouldBe([new UsedPart(filter.Id, 5, 40m), new UsedPart(fan.Id, 1, 150m)], ignoreOrder: true);
+        usedParts.Sum(usedPart => usedPart.Value).ShouldBe(350m);
+    }
+
+    [Fact]
+    public void Should_Deduct_Returned_Parts_From_Latest_Consumption_When_Price_Changed_Between_Consumptions()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var part = CreatePart(stockQuantity: 10, unitPrice: 40m);
+        var cheaperEntry = CreateWorkEntry(workOrder, new PartUsage(part, 2), Now.AddHours(1));
+        part.Update(part.Name, part.CatalogNumber, 50m);
+        var pricierEntry = CreateWorkEntry(workOrder, new PartUsage(part, 1), Now.AddHours(2));
+        var correction = ServiceEntry.CreateCorrection(workOrder, TechnicianId, "Unused", [], [new PartUsage(part, 2)], [cheaperEntry, pricierEntry], Now.AddHours(3)).Value;
+
+        var usedParts = ServiceEntry.SummarizeUsedParts([cheaperEntry, pricierEntry, correction]);
+
+        usedParts.ShouldHaveSingleItem().ShouldBe(new UsedPart(part.Id, 1, 40m));
+    }
+
+    [Fact]
+    public void Should_Omit_Part_When_All_Used_Units_Were_Returned()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var part = CreatePart(stockQuantity: 10);
+        var workEntry = CreateWorkEntry(workOrder, new PartUsage(part, 2), Now.AddHours(1));
+        var correction = ServiceEntry.CreateCorrection(workOrder, TechnicianId, "Unused", [], [new PartUsage(part, 2)], [workEntry], Now.AddHours(2)).Value;
+
+        ServiceEntry.SummarizeUsedParts([workEntry, correction]).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_Return_Empty_Summary_When_No_Parts_Were_Used()
+    {
+        var entry = CreateWorkEntryWithTime(Now, Now.AddHours(1), Now.AddHours(1)).Value;
+
+        ServiceEntry.SummarizeUsedParts([entry]).ShouldBeEmpty();
+    }
+
     private static Part CreatePart(int stockQuantity, decimal unitPrice = 49.99m) =>
         Part.Create("Filtr powietrza", "FLT-100", stockQuantity, unitPrice, Now);
 

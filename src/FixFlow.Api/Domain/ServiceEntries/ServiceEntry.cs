@@ -137,6 +137,46 @@ public sealed class ServiceEntry
         return entry;
     }
 
+    public static IReadOnlyList<UsedPart> SummarizeUsedParts(IEnumerable<ServiceEntry> entries)
+    {
+        var remainingLinesByPart = new Dictionary<Guid, List<UsedPart>>();
+        foreach (var entry in entries.OrderBy(entry => entry.CreatedAt).ThenBy(entry => entry.Id))
+        {
+            foreach (var line in entry.Parts)
+            {
+                if (!remainingLinesByPart.TryGetValue(line.PartId, out var remainingLines))
+                {
+                    remainingLines = [];
+                    remainingLinesByPart.Add(line.PartId, remainingLines);
+                }
+
+                if (entry.IsCorrection)
+                {
+                    DeductFromLatestLines(remainingLines, line.Quantity);
+                }
+                else
+                {
+                    remainingLines.Add(new UsedPart(line.PartId, line.Quantity, line.UnitPrice));
+                }
+            }
+        }
+
+        return [.. remainingLinesByPart.Values
+            .SelectMany(lines => lines.GroupBy(line => (line.PartId, line.UnitPrice)))
+            .Select(group => new UsedPart(group.Key.PartId, group.Sum(line => line.Quantity), group.Key.UnitPrice))
+            .Where(usedPart => usedPart.Quantity > 0)];
+    }
+
+    private static void DeductFromLatestLines(List<UsedPart> lines, int returnedQuantity)
+    {
+        for (var index = lines.Count - 1; index >= 0 && returnedQuantity > 0; index--)
+        {
+            var deducted = Math.Min(lines[index].Quantity, returnedQuantity);
+            lines[index] = lines[index] with { Quantity = lines[index].Quantity - deducted };
+            returnedQuantity -= deducted;
+        }
+    }
+
     private static PartConsumption? ConsumptionOf(Guid partId, IReadOnlyCollection<ServiceEntry> entries)
     {
         var lines = entries

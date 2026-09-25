@@ -364,6 +364,27 @@ public sealed class WorkOrderTests
         workOrder.IsOverdue.ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(WorkOrderStatus.Completed)]
+    [InlineData(WorkOrderStatus.Invoiced)]
+    public void Should_Allow_Service_Protocol_When_Work_Order_Is_Completed_Or_Invoiced(WorkOrderStatus status)
+    {
+        var result = CreateWorkOrderInStatus(status).EnsureCanIssueServiceProtocol();
+
+        result.IsError.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(WorkOrderStatus.New)]
+    [InlineData(WorkOrderStatus.Assigned)]
+    [InlineData(WorkOrderStatus.InProgress)]
+    public void Should_Reject_Service_Protocol_When_Work_Order_Is_Not_Completed(WorkOrderStatus status)
+    {
+        var result = CreateWorkOrderInStatus(status).EnsureCanIssueServiceProtocol();
+
+        result.FirstError.ShouldBe(WorkOrderErrors.NotCompleted);
+    }
+
     private static WorkOrder CreateWorkOrderInStatus(WorkOrderStatus status)
     {
         var workOrder = status switch

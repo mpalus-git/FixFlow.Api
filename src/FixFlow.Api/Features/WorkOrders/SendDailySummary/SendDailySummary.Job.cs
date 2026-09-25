@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Time;
 using Quartz;
 
 namespace FixFlow.Api.Features.WorkOrders.SendDailySummary;
@@ -15,7 +16,7 @@ public sealed class SendDailySummaryJob(SendDailySummaryHandler handler) : IJob
         quartz.AddTrigger(trigger => trigger
             .ForJob(Key)
             .WithIdentity($"{Key.Name}.Daily")
-            .WithCronSchedule(DailyCronExpression, cron => cron.InTimeZone(SummaryPeriod.BusinessTimeZone)));
+            .WithCronSchedule(DailyCronExpression, cron => cron.InTimeZone(BusinessTime.Zone)));
     }
 
     public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken) =>
