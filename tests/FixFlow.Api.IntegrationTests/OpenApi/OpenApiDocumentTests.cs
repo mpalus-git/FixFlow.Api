@@ -27,6 +27,31 @@ public sealed class OpenApiDocumentTests(FixFlowApiFactory factory) : Integratio
         pageSchema.TryGetProperty("pattern", out _).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData("WorkOrderPriority")]
+    [InlineData("WorkOrderStatus")]
+    public async Task Should_Describe_Enum_As_String_When_Schema_Is_Generated(string schemaName)
+    {
+        using var document = await GetDocumentAsync();
+
+        var schema = Schema(document, schemaName);
+        schema.GetProperty("type").GetString().ShouldBe("string");
+        schema.GetProperty("description").GetString().ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Should_Describe_Amount_As_Decimal_Number()
+    {
+        using var document = await GetDocumentAsync();
+
+        var unitPrice = Schema(document, "PartResponse").GetProperty("properties").GetProperty("unitPrice");
+        unitPrice.GetProperty("type").GetString().ShouldBe("number");
+        unitPrice.GetProperty("format").GetString().ShouldBe("decimal");
+    }
+
+    private static JsonElement Schema(JsonDocument document, string schemaName) =>
+        document.RootElement.GetProperty("components").GetProperty("schemas").GetProperty(schemaName);
+
     private async Task<JsonDocument> GetDocumentAsync()
     {
         using var client = Factory.CreateClient();

@@ -21,6 +21,7 @@ public static class ApiDocumentationExtensions
             })
             .AddOpenApi(options => options.Document
                 .AddBearerSecurity()
+                .AddPreciseSchemaTypes()
                 .AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Title = "FixFlow API";

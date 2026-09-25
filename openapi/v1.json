@@ -2824,7 +2824,7 @@
           "unitPrice": {
             "type": "number",
             "description": "Net unit price in PLN with at most two decimal places.",
-            "format": "double"
+            "format": "decimal"
           }
         },
         "description": "Data of a new part."
@@ -3216,7 +3216,7 @@
           "unitPrice": {
             "type": "number",
             "description": "Current net unit price in PLN.",
-            "format": "double"
+            "format": "decimal"
           },
           "createdAt": {
             "type": "string",
@@ -3338,7 +3338,7 @@
           "unitPrice": {
             "type": "number",
             "description": "Net unit price in PLN at the time the part was used; for a correction, the price of the last use on the work order.",
-            "format": "double"
+            "format": "decimal"
           }
         },
         "description": "Quantity of one part in a service entry with its unit price at the time of use."
@@ -3524,7 +3524,7 @@
           "unitPrice": {
             "type": "number",
             "description": "Net unit price in PLN with at most two decimal places.",
-            "format": "double"
+            "format": "decimal"
           }
         },
         "description": "New data of an existing part. All fields are replaced; the stock quantity changes only through deliveries and service entries."
@@ -3583,7 +3583,9 @@
           "Normal",
           "High",
           "Critical"
-        ]
+        ],
+        "type": "string",
+        "description": "Priority of a work order."
       },
       "WorkOrderResponse": {
         "required": [
@@ -3680,7 +3682,9 @@
           "InProgress",
           "Completed",
           "Invoiced"
-        ]
+        ],
+        "type": "string",
+        "description": "Status of a work order. Allowed transitions: New -> Assigned -> InProgress -> Completed -> Invoiced, and Assigned -> New when the technician is unassigned."
       }
     },
     "securitySchemes": {
