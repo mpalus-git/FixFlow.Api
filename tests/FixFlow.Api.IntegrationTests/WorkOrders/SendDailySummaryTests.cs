@@ -1,6 +1,7 @@
 using FixFlow.Api.Common.Email;
 using FixFlow.Api.Common.Jobs;
 using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.WorkOrders.SendDailySummary;
 using FixFlow.Api.IntegrationTests.ServiceEntries;
@@ -101,14 +102,14 @@ public sealed class SendDailySummaryTests(FixFlowApiFactory factory) : ServiceEn
 
         var trigger = triggers.ShouldHaveSingleItem().ShouldBeAssignableTo<ICronTrigger>().ShouldNotBeNull();
         trigger.CronExpressionString.ShouldBe(SendDailySummaryJob.DailyCronExpression);
-        trigger.TimeZone.Id.ShouldBe(SummaryPeriod.BusinessTimeZone.Id);
+        trigger.TimeZone.Id.ShouldBe(BusinessTime.Zone.Id);
     }
 
     private static DateTimeOffset SevenAmInWarsawAfter(DateTimeOffset moment, int days)
     {
-        var localDay = DateOnly.FromDateTime(SummaryPeriod.ToBusinessTime(moment).DateTime).AddDays(days);
+        var localDay = DateOnly.FromDateTime(BusinessTime.From(moment).DateTime).AddDays(days);
         var localSevenAm = localDay.ToDateTime(new TimeOnly(7, 0));
-        return new DateTimeOffset(localSevenAm, SummaryPeriod.BusinessTimeZone.GetUtcOffset(localSevenAm)).ToUniversalTime();
+        return new DateTimeOffset(localSevenAm, BusinessTime.Zone.GetUtcOffset(localSevenAm)).ToUniversalTime();
     }
 
     private async Task SendDailySummaryAtAsync(DateTimeOffset now)

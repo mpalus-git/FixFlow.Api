@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using FixFlow.Api.Common.Email;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.WorkOrders;
 
 namespace FixFlow.Api.Features.WorkOrders.SendDailySummary;
@@ -61,5 +62,5 @@ public static class DailySummaryEmail
         technicianEmail is null ? "no technician" : $"technician {technicianEmail}";
 
     private static string FormatBusinessTime(DateTimeOffset moment) =>
-        SummaryPeriod.ToBusinessTime(moment).ToString(DateTimeFormat, CultureInfo.InvariantCulture);
+        BusinessTime.From(moment).ToString(DateTimeFormat, CultureInfo.InvariantCulture);
 }
