@@ -28,6 +28,11 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             query = query.Where(workOrder => workOrder.DeviceId == deviceId);
         }
 
+        if (request.IsOverdue is { } isOverdue)
+        {
+            query = query.Where(workOrder => workOrder.IsOverdue == isOverdue);
+        }
+
         return query
             .OrderBy(workOrder => workOrder.DueDate)
             .ThenBy(workOrder => workOrder.Id)

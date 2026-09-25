@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using ErrorOr;
 using FixFlow.Api.Domain.Devices;
 
@@ -30,6 +31,13 @@ public sealed class WorkOrder
     public DateTimeOffset? CompletedAt { get; private set; }
 
     public DateTimeOffset? InvoicedAt { get; private set; }
+
+    public bool IsOverdue { get; private set; }
+
+    public static Expression<Func<WorkOrder, bool>> IsPastDueAt(DateTimeOffset now) =>
+        workOrder => workOrder.DueDate < now
+            && workOrder.Status != WorkOrderStatus.Completed
+            && workOrder.Status != WorkOrderStatus.Invoiced;
 
     public static ErrorOr<WorkOrder> Create(
         Device device,
@@ -75,6 +83,7 @@ public sealed class WorkOrder
         Description = description;
         Priority = priority;
         DueDate = dueDate;
+        IsOverdue = dueDate < now;
 
         return Result.Updated;
     }
@@ -142,6 +151,7 @@ public sealed class WorkOrder
 
         Status = WorkOrderStatus.Completed;
         CompletedAt = now;
+        IsOverdue = false;
 
         return Result.Updated;
     }
