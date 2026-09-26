@@ -134,3 +134,43 @@ Błędy API mają format ProblemDetails (RFC 9457) z dodatkowym polem `errorCode
 **Kontrakt API pilnowany w CI.** Dokument `openapi/v1.json` jest generowany przy buildzie i commitowany. CI odrzuca zmianę, jeśli wygenerowany dokument różni się od tego w repozytorium, więc każda zmiana kontraktu jest widoczna w review. API jest wersjonowane w ścieżce (`/api/v1`).
 
 **Czas przez `TimeProvider`.** Kod nie odwołuje się do `DateTime.UtcNow`; testy reguły opóźnień i podsumowania dziennego sterują czasem przez `FakeTimeProvider`. Daty są przechowywane jako `timestamptz` w UTC, a strefa `Europe/Warsaw` jest używana tylko do prezentacji (e-mail, protokół PDF).
+
+## Wdrożenie
+
+```mermaid
+flowchart LR
+    push["push na main"] --> ci["GitHub Actions<br/>build, kontrola OpenAPI, testy"]
+    ci --> ghcr["GHCR<br/>obraz latest i sha-commit"]
+    ghcr --> hook["deploy hook Render<br/>imgURL = obraz commita"]
+    hook --> render["Render Web Service<br/>Frankfurt"]
+    render --> neon[("Neon PostgreSQL")]
+    render --> upstash[("Upstash Redis, TLS")]
+```
+
+- Każdy push na `main` po zielonym buildzie i testach publikuje obraz `ghcr.io/mpalus-git/fixflow.api` z tagami `latest` i `sha-<commit>`, a następnie wywołuje deploy hook Render z adresem obrazu tego commita. Pull requesty tylko budują i testują.
+- Usługa Render jest opisana w [render.yaml](render.yaml) i wdraża gotowy obraz z GHCR, a nie buduje go z Dockerfile. Sekrety (connection stringi, hasła kont demo) podaje się przy zakładaniu usługi; klucz JWT generuje Render.
+- Baza to Neon z bezpośrednim connection stringiem (bez `-pooler`) i `SSL Mode=Require`, cache to Upstash Redis z TLS (`ssl=True`).
+- Migracje wykonują się przy starcie aplikacji przez `MigrateAsync`.
+- Render sprawdza `GET /health`, który nie dotyka bazy, więc health check nie wybudza uśpionej bazy Neon. `GET /health/ready` sprawdza połączenie z bazą.
+- Za Renderem żądanie przechodzi przez Cloudflare i proxy Render, dlatego `X-Forwarded-For` ma trzy pozycje, a `ForwardedHeaders__ForwardLimit` wynosi `3`. Adres widziany przez aplikację (i przez limiter logowania) jest zapisywany w logu każdego żądania jako `ClientIp`.
+- Brak sekretu `RENDER_DEPLOY_HOOK_URL` w repozytorium (np. w forku) nie psuje CI: krok wdrożenia jest pomijany z ostrzeżeniem.
+
+## Ograniczenia
+
+- **Usypianie na planie free Render.** Usługa zasypia po okresie bezczynności, a pierwsze żądanie po przerwie czeka na start kontenera. Joby Quartz działają tylko wtedy, gdy usługa nie śpi: flaga opóźnienia jest przeliczana przy starcie i co godzinę, ale podsumowanie o 7:00 może się w ogóle nie wykonać. Na stałym hostingu joby działają zgodnie z harmonogramem.
+- **E-mail wyłączony w produkcji.** Darmowy plan Render blokuje wychodzący ruch SMTP, więc wdrożenie ma `Email__Enabled=false`, a zamiast wysyłki podsumowania dziennego w logu pojawia się tylko wpis o jej pominięciu. Lokalnie wiadomości widać w Mailpit.
+- **Cache po awarii Redis.** Zmiana zapisana w czasie niedostępności Redis nie unieważnia wpisów L2. Po powrocie Redis lista klientów lub urządzeń może być nieaktualna maksymalnie przez czas życia wpisu, czyli 5 minut.
+- **Łańcuch proxy zależy od infrastruktury Render.** Wartość `ForwardLimit` odpowiada obecnemu układowi Cloudflare i proxy Render. Jeśli Render go zmieni, limiter może zacząć rozpoznawać adresy błędnie; pole `ClientIp` w logach pozwala to szybko sprawdzić.
+- **Publiczne konta demo.** Każdy może zalogować się jako Dispatcher lub Technician i zmieniać dane demonstracyjne; nie ma automatycznego resetu bazy.
+- **Zdjęcia jako adresy URL.** Wpis serwisowy przechowuje listę adresów zdjęć, API nie przyjmuje plików.
+- **Jedna waluta.** Ceny i sumy w protokole są w PLN.
+
+## Co zrobiłbym inaczej
+
+- **Upload zdjęć do blob storage.** Zamiast przyjmować gotowe adresy URL, API wydawałoby krótkotrwałe linki do bezpośredniego uploadu (np. S3 lub Azure Blob Storage) i zapisywało tylko klucze plików.
+- **Joby poza procesem API.** Na hostingu, który usypia usługę, joby Quartz powinny działać w osobnym workerze albo być wyzwalane przez zewnętrzny scheduler wywołujący zabezpieczony endpoint.
+- **Outbox dla e-maili.** Job zapisywałby wiadomość w tabeli w tej samej transakcji co dane, a osobny proces wysyłałby ją z ponawianiem. Dziś chwilowa niedostępność serwera SMTP oznacza utratę podsumowania z danego dnia.
+
+## Licencja
+
+[MIT](LICENSE)
