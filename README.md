@@ -93,6 +93,9 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `Jobs__Enabled` | uruchamianie jobów Quartz | `true` |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | odczyt `X-Forwarded-For` i `X-Forwarded-Proto` za reverse proxy | `false` |
 | `ForwardedHeaders__ForwardLimit` | liczba zaufanych proxy w łańcuchu `X-Forwarded-For` | `1` |
+| `OpenTelemetry__ConsoleExporterEnabled` | ślady i metryki OpenTelemetry wypisywane na konsolę | `false` |
+
+Po włączeniu OpenTelemetry aplikacja zbiera ślady żądań HTTP (z trasą endpointu), zapytań do PostgreSQL i wywołań wychodzących oraz metryki ASP.NET Core, Kestrel, klienta HTTP i środowiska uruchomieniowego .NET. Eksporter konsolowy pisze zwykły tekst, który w kontenerze mieszałby się z logami JSON, dlatego jest domyślnie wyłączony i służy do diagnostyki. Logi Serilog zawierają identyfikatory śladu (`@tr`, `@sp`), więc wpis w logu można powiązać ze śladem.
 
 ## Reguły biznesowe
 
