@@ -93,3 +93,44 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `Jobs__Enabled` | uruchamianie jobów Quartz | `true` |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | odczyt `X-Forwarded-For` i `X-Forwarded-Proto` za reverse proxy | `false` |
 | `ForwardedHeaders__ForwardLimit` | liczba zaufanych proxy w łańcuchu `X-Forwarded-For` | `1` |
+
+## Reguły biznesowe
+
+Zlecenie przechodzi przez statusy `New -> Assigned -> InProgress -> Completed -> Invoiced`. Jedynym dozwolonym cofnięciem jest `Assigned -> New` (odpięcie technika), każde inne przejście kończy się `409 WorkOrder.InvalidStatusTransition`.
+
+| Reguła | Gdzie jest wymuszona | Błąd |
+|---|---|---|
+| 1. Technik ma najwyżej jedno zlecenie w statusie `InProgress` | metoda encji `WorkOrder.Start` oraz częściowy unikalny indeks `work_orders(technician_id) WHERE status = 'InProgress'` na wypadek równoległych żądań | `409 WorkOrder.TechnicianAlreadyHasWorkInProgress` |
+| 2. Zakończenie zlecenia wymaga co najmniej jednego wpisu serwisowego | `WorkOrder.Complete`; wyścig między dodaniem wpisu a zakończeniem rozstrzyga token współbieżności `xmin` | `409 WorkOrder.NoServiceEntries` |
+| 3. Zużycie części zmniejsza stan magazynowy, stan nie może spaść poniżej zera | encja `Part` oraz `CHECK (stock_quantity >= 0)` i token `xmin` na tabeli `parts`; pomyłkę koryguje wpis zwracający części na magazyn | `409 Part.InsufficientStock` |
+| 4. Zlecenie po terminie, niezakończone, dostaje flagę `IsOverdue` | job Quartz uruchamiany co godzinę; flaga jest też przeliczana od razu po zmianie terminu i zerowana przy zakończeniu | - |
+| 5. Technika przypisuje tylko Dispatcher lub Admin; technik widzi i zmienia wyłącznie swoje zlecenia | polityki autoryzacji endpointów i filtr widoczności w zapytaniach; cudze zlecenie jest dla technika nieistniejące | `403`, `404 WorkOrder.NotFound` |
+| 6. Numer seryjny urządzenia i numer katalogowy części są unikalne | normalizacja (przycięcie, wielkie litery) i unikalne indeksy; naruszenie `23505` z PostgreSQL mapowane na konflikt | `409 Device.DuplicateSerialNumber`, `409 Part.DuplicateCatalogNumber` |
+
+Każda reguła ma testy: jednostkowe dla metod encji i integracyjne dla endpointów na prawdziwej bazie PostgreSQL.
+
+Błędy API mają format ProblemDetails (RFC 9457) z dodatkowym polem `errorCode`, na którym klient może opierać logikę zamiast na treści komunikatu:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+  "title": "Conflict",
+  "status": 409,
+  "detail": "Technician already has another work order in progress.",
+  "errorCode": "WorkOrder.TechnicianAlreadyHasWorkInProgress"
+}
+```
+
+## Decyzje techniczne
+
+**Vertical Slice zamiast warstw.** Zmiana funkcji (np. przypisanie technika) dotyka jednego folderu z endpointem, handlerem, walidatorem i kontraktem, zamiast pięciu projektów i wspólnych serwisów. Handlery używają `DbContext` bezpośrednio, bez repozytoriów, a reguły biznesowe siedzą w encjach domeny. Gdy reguła potrzebuje wiedzy spoza encji, handler przekazuje ją jako argument, np. `workOrder.Start(technicianHasWorkInProgress)`, dzięki czemu reguła jest testowalna jednostkowo.
+
+**ErrorOr zamiast wyjątków dla błędów biznesowych.** Odrzucenie przejścia statusu czy brak części na magazynie to oczekiwany wynik operacji, a nie sytuacja wyjątkowa. Metody domeny i handlery zwracają `ErrorOr<T>`, a mapowanie na ProblemDetails i kody HTTP odbywa się w jednym miejscu (`Common/Errors`). Wyjątki zostają dla błędów rzeczywiście nieoczekiwanych.
+
+**Cache musi działać bez Redis.** Listy klientów i urządzeń są cache'owane przez `HybridCache`: L1 w pamięci procesu, L2 w Redis. Redis przyspiesza odczyty, ale nie jest źródłem prawdy, więc jego awaria nie może zatrzymać API. Pusty connection string oznacza brak L2. Skonfigurowany, ale niedostępny Redis ma krótkie timeouty i opakowanie, które traktuje błąd jak brak wpisu, zamiast zwracać 500. Unieważnianie odbywa się przez tagi po każdym zapisie. Test integracyjny sprawdza działanie API przy wyłączonym Redis.
+
+**Reguły narażone na współbieżność zabezpieczone także w bazie.** Sprawdzenie w kodzie nie wystarcza przy dwóch równoległych żądaniach, dlatego reguły 1, 3 i 6 mają odpowiednik w postaci indeksu, ograniczenia `CHECK` lub tokenu współbieżności, a naruszenie jest tłumaczone na `409`.
+
+**Kontrakt API pilnowany w CI.** Dokument `openapi/v1.json` jest generowany przy buildzie i commitowany. CI odrzuca zmianę, jeśli wygenerowany dokument różni się od tego w repozytorium, więc każda zmiana kontraktu jest widoczna w review. API jest wersjonowane w ścieżce (`/api/v1`).
+
+**Czas przez `TimeProvider`.** Kod nie odwołuje się do `DateTime.UtcNow`; testy reguły opóźnień i podsumowania dziennego sterują czasem przez `FakeTimeProvider`. Daty są przechowywane jako `timestamptz` w UTC, a strefa `Europe/Warsaw` jest używana tylko do prezentacji (e-mail, protokół PDF).
