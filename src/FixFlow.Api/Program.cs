@@ -16,6 +16,7 @@ using FixFlow.Api.Features.Parts;
 using FixFlow.Api.Features.ServiceEntries;
 using FixFlow.Api.Features.Users;
 using FixFlow.Api.Features.WorkOrders;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
 PdfGeneration.Configure();
@@ -23,6 +24,8 @@ PdfGeneration.Configure();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    options.ForwardLimit = builder.Configuration.GetValue("ForwardedHeaders:ForwardLimit", 1));
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplicationCaching(builder.Configuration);
 builder.Services.AddSingleton<TimeProvider>(new DatabasePrecisionTimeProvider(TimeProvider.System));
