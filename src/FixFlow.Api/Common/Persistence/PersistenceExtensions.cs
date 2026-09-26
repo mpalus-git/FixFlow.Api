@@ -1,6 +1,7 @@
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace FixFlow.Api.Common.Persistence;
 
@@ -8,9 +9,14 @@ public static class PersistenceExtensions
 {
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = new NpgsqlConnectionStringBuilder(configuration.GetConnectionString("Database"))
+        {
+            GssEncryptionMode = GssEncryptionMode.Disable,
+        }.ConnectionString;
+
         services.AddDbContext<FixFlowDbContext>(options => options
             .UseNpgsql(
-                configuration.GetConnectionString("Database"),
+                connectionString,
                 npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history"))
             .UseSnakeCaseNamingConvention());
 
