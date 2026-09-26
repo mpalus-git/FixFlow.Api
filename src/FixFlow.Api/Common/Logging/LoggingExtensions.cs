@@ -6,6 +6,8 @@ namespace FixFlow.Api.Common.Logging;
 
 public static class LoggingExtensions
 {
+    public const string ClientIpProperty = "ClientIp";
+
     public static WebApplicationBuilder AddSerilogLogging(this WebApplicationBuilder builder)
     {
         var runsInContainer = builder.Configuration.GetValue<bool>("DOTNET_RUNNING_IN_CONTAINER");
@@ -38,4 +40,13 @@ public static class LoggingExtensions
 
         return builder;
     }
+
+    public static WebApplication UseRequestLogging(this WebApplication app)
+    {
+        app.UseSerilogRequestLogging(options => options.EnrichDiagnosticContext = EnrichWithClientIp);
+        return app;
+    }
+
+    public static void EnrichWithClientIp(IDiagnosticContext diagnosticContext, HttpContext httpContext) =>
+        diagnosticContext.Set(ClientIpProperty, httpContext.Connection.RemoteIpAddress?.ToString());
 }

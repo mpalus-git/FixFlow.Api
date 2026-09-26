@@ -17,7 +17,6 @@ using FixFlow.Api.Features.ServiceEntries;
 using FixFlow.Api.Features.Users;
 using FixFlow.Api.Features.WorkOrders;
 using Microsoft.AspNetCore.HttpOverrides;
-using Serilog;
 
 PdfGeneration.Configure();
 
@@ -55,7 +54,7 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-app.UseSerilogRequestLogging();
+app.UseRequestLogging();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
