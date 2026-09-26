@@ -9,6 +9,7 @@ using FixFlow.Api.Common.Logging;
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Pdf;
 using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Common.Telemetry;
 using FixFlow.Api.Features.Auth;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Devices;
@@ -49,6 +50,7 @@ builder.Services.AddWorkOrdersFeatures();
 builder.Services.AddPartsFeatures();
 builder.Services.AddServiceEntriesFeatures();
 builder.Services.AddScheduledJobs(builder.Configuration);
+builder.Services.AddApplicationTelemetry(builder.Configuration);
 
 var app = builder.Build();
 
