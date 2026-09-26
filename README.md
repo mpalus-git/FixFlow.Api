@@ -30,8 +30,8 @@ flowchart LR
         handlers --> cache["HybridCache<br/>L1 w pamięci"]
     end
 
-    handlers --> postgres[("PostgreSQL 17")]
-    cache -. "L2, opcjonalnie" .-> redis[("Redis 7")]
+    handlers --> postgres[("PostgreSQL 18")]
+    cache -. "L2, opcjonalnie" .-> redis[("Redis 8.4")]
     handlers --> smtp["SMTP<br/>(lokalnie Mailpit)"]
 ```
 

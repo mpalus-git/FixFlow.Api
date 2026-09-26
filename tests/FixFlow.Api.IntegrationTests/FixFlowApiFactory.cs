@@ -17,8 +17,8 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
 {
     public const string AllowedClientOrigin = "https://client.fixflow.test";
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7").Build();
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18").Build();
+    private readonly RedisContainer _redis = new RedisBuilder("redis:8.4").Build();
     private Respawner? _respawner;
 
     public string SigningKey { get; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
