@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -42,6 +43,21 @@ public sealed class ForwardedHeadersTests(FixFlowApiFactory factory) : Integrati
     }
 
     [Fact]
+    public async Task Should_Limit_Auth_Requests_Per_Client_When_Request_Passes_Through_Two_Proxies()
+    {
+        await using var proxiedFactory = CreateFactory(forwardedHeadersEnabled: true, forwardLimit: 2);
+        using var client = proxiedFactory.CreateClient();
+
+        using var firstResponse = await LoginAsync(client, $"198.51.100.1, {FirstClientAddress}, 192.0.2.1");
+        using var spoofedResponse = await LoginAsync(client, $"198.51.100.2, {FirstClientAddress}, 192.0.2.2");
+        using var otherClientResponse = await LoginAsync(client, $"198.51.100.1, {SecondClientAddress}, 192.0.2.1");
+
+        firstResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        spoofedResponse.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+        otherClientResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task Should_Describe_Https_Server_In_OpenApi_Document_When_Proxy_Forwards_Https()
     {
         await using var proxiedFactory = CreateFactory(forwardedHeadersEnabled: true);
@@ -58,18 +74,19 @@ public sealed class ForwardedHeadersTests(FixFlowApiFactory factory) : Integrati
         serverUrl.ShouldNotBeNull().ShouldStartWith("https://");
     }
 
-    private WebApplicationFactory<Program> CreateFactory(bool forwardedHeadersEnabled) =>
+    private WebApplicationFactory<Program> CreateFactory(bool forwardedHeadersEnabled, int forwardLimit = 1) =>
         Factory.WithWebHostBuilder(builder => builder
             .UseSetting("FORWARDEDHEADERS_ENABLED", forwardedHeadersEnabled ? "true" : "false")
+            .UseSetting("ForwardedHeaders:ForwardLimit", forwardLimit.ToString(CultureInfo.InvariantCulture))
             .UseSetting("RateLimiting:Auth:PermitLimit", "1"));
 
-    private static async Task<HttpResponseMessage> LoginAsync(HttpClient client, string forwardedClientAddress)
+    private static async Task<HttpResponseMessage> LoginAsync(HttpClient client, string forwardedFor)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, AuthRequests.LoginUri)
         {
             Content = JsonContent.Create(new LoginRequest("nobody@fixflow.test", "Some1!password")),
         };
-        request.Headers.Add("X-Forwarded-For", forwardedClientAddress);
+        request.Headers.Add("X-Forwarded-For", forwardedFor);
         return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 }
