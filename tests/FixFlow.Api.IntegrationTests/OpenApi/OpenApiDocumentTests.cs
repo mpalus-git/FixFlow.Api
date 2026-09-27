@@ -12,7 +12,6 @@ public sealed class OpenApiDocumentTests(FixFlowApiFactory factory) : Integratio
 
         var info = document.RootElement.GetProperty("info");
         info.GetProperty("title").GetString().ShouldBe("FixFlow API");
-        info.GetProperty("license").GetProperty("identifier").GetString().ShouldBe("MIT");
     }
 
     [Fact]

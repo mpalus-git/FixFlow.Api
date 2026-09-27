@@ -3,10 +3,6 @@
   "info": {
     "title": "FixFlow API",
     "description": "Field service work order management API for dispatchers and technicians.",
-    "license": {
-      "name": "MIT",
-      "identifier": "MIT"
-    },
     "version": "1"
   },
   "paths": {

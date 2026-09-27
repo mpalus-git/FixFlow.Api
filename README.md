@@ -1,7 +1,6 @@
 # FixFlow.Api
 
 [![CI](https://github.com/mpalus-git/FixFlow.Api/actions/workflows/ci.yml/badge.svg)](https://github.com/mpalus-git/FixFlow.Api/actions/workflows/ci.yml)
-[![Licencja: MIT](https://img.shields.io/badge/licencja-MIT-blue.svg)](LICENSE)
 
 ## Opis systemu
 
@@ -176,4 +175,4 @@ flowchart LR
 
 ## Licencja
 
-[MIT](LICENSE)
+Wszelkie prawa zastrzeżone. Kod jest udostępniony wyłącznie do wglądu; wykorzystanie, kopiowanie lub modyfikacja wymagają zgody autora.
