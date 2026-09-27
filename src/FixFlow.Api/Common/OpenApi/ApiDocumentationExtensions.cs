@@ -28,7 +28,6 @@ public static class ApiDocumentationExtensions
                 {
                     document.Info.Title = "FixFlow API";
                     document.Info.Description = "Field service work order management API for dispatchers and technicians.";
-                    document.Info.License = new OpenApiLicense { Name = "MIT", Identifier = "MIT" };
                     return Task.CompletedTask;
                 }));
 
