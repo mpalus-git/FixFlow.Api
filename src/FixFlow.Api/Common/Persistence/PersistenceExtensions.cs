@@ -7,6 +7,10 @@ namespace FixFlow.Api.Common.Persistence;
 
 public static class PersistenceExtensions
 {
+    private const int MaxRetryCount = 3;
+
+    private static readonly TimeSpan MaxRetryDelay = TimeSpan.FromSeconds(5);
+
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = new NpgsqlConnectionStringBuilder(configuration.GetConnectionString("Database"))
@@ -17,7 +21,9 @@ public static class PersistenceExtensions
         services.AddDbContext<FixFlowDbContext>(options => options
             .UseNpgsql(
                 connectionString,
-                npgsql => npgsql.MigrationsHistoryTable("__ef_migrations_history"))
+                npgsql => npgsql
+                    .MigrationsHistoryTable("__ef_migrations_history")
+                    .EnableRetryOnFailure(MaxRetryCount, MaxRetryDelay, errorCodesToAdd: null))
             .UseSnakeCaseNamingConvention());
 
         services.AddOptions<DemoUsersOptions>()
