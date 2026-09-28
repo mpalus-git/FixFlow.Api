@@ -19,6 +19,7 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var workOrder = await response.ReadWorkOrderAsync();
         response.Headers.Location.ShouldBe(WorkOrderRequests.WorkOrderUri(workOrder.Id));
+        response.ETag().ShouldBe(await client.GetETagAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken));
         workOrder.DeviceId.ShouldBe(deviceId);
         workOrder.Priority.ShouldBe(WorkOrderPriority.High);
         workOrder.Status.ShouldBe(WorkOrderStatus.New);

@@ -1,6 +1,6 @@
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
 
@@ -8,21 +8,23 @@ public static class UpdateWorkOrderEndpoint
 {
     public static RouteGroupBuilder MapUpdateWorkOrder(this RouteGroupBuilder group)
     {
-        group.MapPut("/{workOrderId:guid}", async (Guid workOrderId, UpdateWorkOrderRequest request, UpdateWorkOrderHandler handler, CancellationToken cancellationToken) =>
+        group.MapPut("/{workOrderId:guid}", async (Guid workOrderId, UpdateWorkOrderRequest request, UpdateWorkOrderHandler handler, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                var result = await handler.HandleAsync(workOrderId, request, cancellationToken);
-                return result.ToOkOrProblem();
+                var result = await handler.HandleAsync(workOrderId, request, httpContext.IfMatch(), cancellationToken);
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("UpdateWorkOrder")
             .WithSummary("Update a work order")
-            .WithDescription("Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Completed and invoiced work orders cannot be edited. Available to dispatchers and administrators.")
+            .WithDescription("Replaces the description, priority and due date of a work order without changing its status or technician. A changed due date must be in the future. Completed and invoiced work orders cannot be edited. The If-Match header must carry the ETag of the work order; a work order changed in the meantime is rejected with 412. Available to dispatchers and administrators.")
             .RequireAuthorization(AuthorizationPolicies.DispatcherOrAdmin)
             .WithRequestValidation<UpdateWorkOrderRequest>()
             .Produces<WorkOrderResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireIfMatch()
+            .WithETagResponse();
 
         return group;
     }

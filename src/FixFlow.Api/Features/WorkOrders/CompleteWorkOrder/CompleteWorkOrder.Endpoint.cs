@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 
@@ -10,7 +10,7 @@ public static class CompleteWorkOrderEndpoint
         group.MapPost("/{workOrderId:guid}/complete", async (Guid workOrderId, ClaimsPrincipal user, CompleteWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("CompleteWorkOrder")
             .WithSummary("Complete a work order")
@@ -18,7 +18,8 @@ public static class CompleteWorkOrderEndpoint
             .Produces<WorkOrderResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

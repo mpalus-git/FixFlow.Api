@@ -2,18 +2,24 @@ using System.Net;
 using System.Net.Http.Json;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Users;
+using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Clients.UpdateClient;
 using FixFlow.Api.Features.Devices.UpdateDevice;
 using FixFlow.Api.Features.Parts.UpdatePart;
+using FixFlow.Api.Features.WorkOrders;
+using FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
 using FixFlow.Api.IntegrationTests.Parts;
+using FixFlow.Api.IntegrationTests.WorkOrders;
 
 namespace FixFlow.Api.IntegrationTests.Concurrency;
 
 public sealed class ConditionalUpdateTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
+    private static readonly UpdateWorkOrderRequest ChangedWorkOrder = new("Leak and noisy fan", WorkOrderPriority.High, DateTimeOffset.UtcNow.AddDays(10));
+
     private static readonly Dictionary<string, Func<HttpClient, Task<UpdatableResource>>> Resources = new()
     {
         ["client"] = async client =>
@@ -35,6 +41,11 @@ public sealed class ConditionalUpdateTests(FixFlowApiFactory factory) : Integrat
         {
             var part = await client.CreatePartAsync(PartRequests.NewPart());
             return new UpdatableResource(PartRequests.PartUri(part.Id), new UpdatePartRequest("Filtr węglowy", "FLT-200", 59.50m));
+        },
+        ["work order"] = async client =>
+        {
+            var workOrder = await CreateWorkOrderAsync(client);
+            return new UpdatableResource(WorkOrderRequests.WorkOrderUri(workOrder.Id), ChangedWorkOrder);
         },
     };
 
@@ -82,6 +93,27 @@ public sealed class ConditionalUpdateTests(FixFlowApiFactory factory) : Integrat
         await response.ShouldBeProblemAsync(HttpStatusCode.PreconditionFailed, PreconditionErrors.Failed.Code);
         (await client.GetETagAsync(resource.Uri, TestContext.Current.CancellationToken)).ShouldBe(firstUpdate.ETag());
     }
+
+    [Fact]
+    public async Task Should_Accept_Update_When_If_Match_Carries_ETag_Returned_By_Assignment()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(client);
+        var technician = await CreateUserAsync(Roles.Technician);
+        using var assignResponse = await client.PostAssignAsync(workOrder.Id, technician.Id);
+
+        using var response = await client.PutWithIfMatchAsync(
+            WorkOrderRequests.WorkOrderUri(workOrder.Id),
+            ChangedWorkOrder,
+            assignResponse.ETag(),
+            ApiJson.Options,
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    private static async Task<WorkOrderResponse> CreateWorkOrderAsync(HttpClient client) =>
+        await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await client.CreateServicedDeviceAsync()));
 
     private sealed record UpdatableResource(Uri Uri, object Update);
 }

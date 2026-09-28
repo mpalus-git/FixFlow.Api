@@ -64,7 +64,7 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
         var update = new UpdateWorkOrderRequest("Leak and noisy fan", WorkOrderPriority.Low, scenario.WorkOrder.DueDate);
 
         using var entryResponse = await scenario.TechnicianClient.PostServiceEntryAsync(scenario.WorkOrder.Id, ServiceEntryRequests.WorkEntry(scenario.WorkOrder));
-        using var updateResponse = await scenario.DispatcherClient.PutAsJsonAsync(WorkOrderRequests.WorkOrderUri(scenario.WorkOrder.Id), update, ApiJson.Options, TestContext.Current.CancellationToken);
+        using var updateResponse = await scenario.DispatcherClient.PutWithCurrentETagAsync(WorkOrderRequests.WorkOrderUri(scenario.WorkOrder.Id), update, ApiJson.Options, TestContext.Current.CancellationToken);
 
         await entryResponse.ShouldBeProblemAsync(HttpStatusCode.Conflict, WorkOrderErrors.NotInProgress.Code);
         await updateResponse.ShouldBeProblemAsync(HttpStatusCode.Conflict, WorkOrderErrors.Closed.Code);

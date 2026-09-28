@@ -102,7 +102,7 @@ public sealed class MarkOverdueWorkOrdersTests(FixFlowApiFactory factory) : Serv
         await MarkOverdueWorkOrdersAtAsync(AfterDefaultDueDate);
         var update = new UpdateWorkOrderRequest(workOrder.Description, workOrder.Priority, DateTimeOffset.UtcNow.AddDays(10));
 
-        using var response = await client.PutAsJsonAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), update, ApiJson.Options, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), update, ApiJson.Options, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
         (await response.ReadWorkOrderAsync()).IsOverdue.ShouldBeFalse();

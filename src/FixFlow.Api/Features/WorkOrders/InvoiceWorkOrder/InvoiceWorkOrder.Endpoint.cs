@@ -1,5 +1,5 @@
 using FixFlow.Api.Common.Auth;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.InvoiceWorkOrder;
 
@@ -10,7 +10,7 @@ public static class InvoiceWorkOrderEndpoint
         group.MapPost("/{workOrderId:guid}/invoice", async (Guid workOrderId, InvoiceWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("InvoiceWorkOrder")
             .WithSummary("Mark a work order as invoiced")
@@ -20,7 +20,8 @@ public static class InvoiceWorkOrderEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

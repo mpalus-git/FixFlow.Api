@@ -59,7 +59,7 @@ public sealed class UpdateWorkOrderTests(FixFlowApiFactory factory) : Integratio
         var workOrder = await CreateWorkOrderAsync(client);
         var request = new { description = "Printer jams paper", dueDate = workOrder.DueDate };
 
-        using var response = await client.PutAsJsonAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), request, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), request, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await client.GetWorkOrderAsync(workOrder.Id)).Priority.ShouldBe(workOrder.Priority);
@@ -69,5 +69,5 @@ public sealed class UpdateWorkOrderTests(FixFlowApiFactory factory) : Integratio
         await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await client.CreateServicedDeviceAsync()));
 
     private static Task<HttpResponseMessage> PutAsync(HttpClient client, Guid workOrderId, UpdateWorkOrderRequest request) =>
-        client.PutAsJsonAsync(WorkOrderRequests.WorkOrderUri(workOrderId), request, ApiJson.Options, TestContext.Current.CancellationToken);
+        client.PutWithCurrentETagAsync(WorkOrderRequests.WorkOrderUri(workOrderId), request, ApiJson.Options, TestContext.Current.CancellationToken);
 }
