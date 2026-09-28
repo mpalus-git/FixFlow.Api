@@ -28,6 +28,20 @@ public sealed class CorsTests(FixFlowApiFactory factory) : IntegrationTestBase(f
         response.Headers.Contains("Access-Control-Allow-Origin").ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Should_Expose_ETag_And_Retry_After_Headers_When_Origin_Is_Configured()
+    {
+        using var client = Factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("/health", UriKind.Relative));
+        request.Headers.Add("Origin", FixFlowApiFactory.AllowedClientOrigin);
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        response.Headers.GetValues("Access-Control-Expose-Headers")
+            .SelectMany(value => value.Split(',', StringSplitOptions.TrimEntries))
+            .ShouldBe(["Retry-After", "ETag"], ignoreOrder: true);
+    }
+
     private static HttpRequestMessage CreatePreflightRequest(string origin)
     {
         var request = new HttpRequestMessage(HttpMethod.Options, AuthRequests.LoginUri);
