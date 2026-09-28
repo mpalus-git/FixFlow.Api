@@ -39,7 +39,7 @@ public sealed class CreateUserHandler(UserManager<ApplicationUser> userManager, 
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new UserResponse(user.Id, request.Email, request.Role);
+        return new UserResponse(user.Id, request.Email, request.Role, user.IsActive);
     }
 
     private static List<Error> ToErrors(IdentityResult result)

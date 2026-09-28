@@ -35,6 +35,21 @@ public sealed class ListUsersTests(FixFlowApiFactory factory) : IntegrationTestB
     }
 
     [Fact]
+    public async Task Should_Return_Only_Active_Technicians_When_Dispatcher_Filters_By_Active_State()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var activeTechnician = await CreateUserAsync(Roles.Technician);
+        var deactivatedTechnician = await CreateUserAsync(Roles.Technician);
+        await DeactivateUserDirectlyAsync(deactivatedTechnician.Id);
+
+        var activePage = await GetPageAsync(client, $"?role={Roles.Technician}&isActive=true");
+        var deactivatedPage = await GetPageAsync(client, $"?role={Roles.Technician}&isActive=false");
+
+        activePage.Items.ShouldHaveSingleItem().ShouldBe(new UserResponse(activeTechnician.Id, activeTechnician.Email, Roles.Technician, IsActive: true));
+        deactivatedPage.Items.ShouldHaveSingleItem().ShouldBe(new UserResponse(deactivatedTechnician.Id, deactivatedTechnician.Email, Roles.Technician, IsActive: false));
+    }
+
+    [Fact]
     public async Task Should_Return_Validation_Problem_When_Role_Is_Unknown()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

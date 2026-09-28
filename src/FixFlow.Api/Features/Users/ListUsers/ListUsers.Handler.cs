@@ -12,16 +12,21 @@ public sealed class ListUsersHandler(FixFlowDbContext dbContext)
             from user in dbContext.Users.AsNoTracking()
             join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
             join role in dbContext.Roles on userRole.RoleId equals role.Id
-            select new { user.Id, Email = user.Email!, Role = role.Name! };
+            select new { user.Id, Email = user.Email!, Role = role.Name!, IsActive = user.DeactivatedAt == null };
 
         if (request.Role is not null)
         {
             query = query.Where(user => user.Role == request.Role);
         }
 
+        if (request.IsActive is { } isActive)
+        {
+            query = query.Where(user => user.IsActive == isActive);
+        }
+
         return query
             .OrderBy(user => user.Email)
             .ThenBy(user => user.Id)
-            .ToPagedResponseAsync(request, user => new UserResponse(user.Id, user.Email, user.Role), cancellationToken);
+            .ToPagedResponseAsync(request, user => new UserResponse(user.Id, user.Email, user.Role, user.IsActive), cancellationToken);
     }
 }

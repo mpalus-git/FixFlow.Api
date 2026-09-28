@@ -12,7 +12,7 @@ public static class ListUsersEndpoint
                 TypedResults.Ok(await handler.HandleAsync(request, cancellationToken)))
             .WithName("ListUsers")
             .WithSummary("List user accounts")
-            .WithDescription("Returns one page of user accounts ordered by email, optionally limited to one role, for example role=Technician when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.")
+            .WithDescription("Returns one page of user accounts ordered by email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.")
             .RequireAuthorization(AuthorizationPolicies.DispatcherOrAdmin)
             .WithRequestValidation<ListUsersRequest>()
             .Produces<PagedResponse<UserResponse>>()

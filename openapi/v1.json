@@ -261,7 +261,7 @@
           "Users"
         ],
         "summary": "List user accounts",
-        "description": "Returns one page of user accounts ordered by email, optionally limited to one role, for example role=Technician when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
+        "description": "Returns one page of user accounts ordered by email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
         "operationId": "ListUsers",
         "parameters": [
           {
@@ -290,6 +290,14 @@
             "description": "Role of the listed users: Admin, Dispatcher or Technician.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "description": "When true, lists only active accounts, for example when choosing a technician for a work order; when false, only deactivated accounts.",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -4013,7 +4021,8 @@
         "required": [
           "id",
           "email",
-          "role"
+          "role",
+          "isActive"
         ],
         "type": "object",
         "properties": {
@@ -4029,6 +4038,10 @@
           "role": {
             "type": "string",
             "description": "Role of the user account."
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "False when an administrator deactivated the account; a deactivated account cannot sign in."
           }
         },
         "description": "User account."

@@ -20,6 +20,6 @@ public sealed class CurrentUserTests(FixFlowApiFactory factory) : IntegrationTes
 
         var currentUser = await client.GetFromJsonAsync<UserResponse>(CurrentUserUri, TestContext.Current.CancellationToken);
 
-        currentUser.ShouldBe(new UserResponse(user.Id, user.Email, role));
+        currentUser.ShouldBe(new UserResponse(user.Id, user.Email, role, IsActive: true));
     }
 }

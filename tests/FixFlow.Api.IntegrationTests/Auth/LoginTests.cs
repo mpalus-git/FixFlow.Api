@@ -85,6 +85,18 @@ public sealed class LoginTests(FixFlowApiFactory factory) : IntegrationTestBase(
     }
 
     [Fact]
+    public async Task Should_Reject_Valid_Password_When_Account_Is_Deactivated()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        await DeactivateUserDirectlyAsync(user.Id);
+        using var client = Factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(AuthRequests.LoginUri, new LoginRequest(user.Email, user.Password), TestContext.Current.CancellationToken);
+
+        await ShouldBeInvalidCredentialsProblemAsync(response);
+    }
+
+    [Fact]
     public async Task Should_Return_Validation_Problem_When_Email_Is_Not_Valid()
     {
         using var client = Factory.CreateClient();
