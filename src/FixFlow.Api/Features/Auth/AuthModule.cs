@@ -1,4 +1,5 @@
 using FixFlow.Api.Common.Auth;
+using FixFlow.Api.Features.Auth.DeleteExpiredRefreshTokens;
 using FixFlow.Api.Features.Auth.Login;
 using FixFlow.Api.Features.Auth.Logout;
 using FixFlow.Api.Features.Auth.Refresh;
@@ -17,6 +18,7 @@ public static class AuthModule
         services.AddSingleton<IValidator<RefreshRequest>, RefreshRequestValidator>();
         services.AddScoped<LogoutHandler>();
         services.AddSingleton<IValidator<LogoutRequest>, LogoutRequestValidator>();
+        services.AddScoped<DeleteExpiredRefreshTokensHandler>();
 
         return services;
     }

@@ -24,7 +24,7 @@ flowchart LR
 
     subgraph api["FixFlow.Api"]
         endpoints["Minimal API /api/v1<br/>walidacja, autoryzacja"] --> handlers["Handlery funkcji<br/>(Vertical Slice)"]
-        jobs["Joby Quartz<br/>opóźnienia, podsumowanie"] --> handlers
+        jobs["Joby Quartz<br/>opóźnienia, podsumowanie,<br/>sprzątanie tokenów"] --> handlers
         handlers --> domain["Domena<br/>encje i reguły"]
         handlers --> cache["HybridCache<br/>L1 w pamięci"]
     end
@@ -161,7 +161,7 @@ flowchart LR
 
 ## Ograniczenia
 
-- **Usypianie na planie free Render.** Usługa zasypia po okresie bezczynności, a pierwsze żądanie po przerwie czeka na start kontenera. Joby Quartz działają tylko wtedy, gdy usługa nie śpi: flaga opóźnienia jest przeliczana przy starcie i co godzinę, ale podsumowanie o 7:00 może się w ogóle nie wykonać. Na stałym hostingu joby działają zgodnie z harmonogramem.
+- **Usypianie na planie free Render.** Usługa zasypia po okresie bezczynności, a pierwsze żądanie po przerwie czeka na start kontenera. Joby Quartz działają tylko wtedy, gdy usługa nie śpi: flaga opóźnienia jest przeliczana przy starcie i co godzinę, ale podsumowanie o 7:00 i nocne usuwanie wygasłych refresh tokenów (o 3:00) mogą się w ogóle nie wykonać. Na stałym hostingu joby działają zgodnie z harmonogramem.
 - **E-mail wyłączony w produkcji.** Darmowy plan Render blokuje wychodzący ruch SMTP, więc wdrożenie ma `Email__Enabled=false`, a zamiast wysyłki podsumowania dziennego w logu pojawia się tylko wpis o jej pominięciu. Lokalnie wiadomości widać w Mailpit.
 - **Cache po awarii Redis.** Zmiana zapisana w czasie niedostępności Redis nie unieważnia wpisów L2. Po powrocie Redis lista klientów lub urządzeń może być nieaktualna maksymalnie przez czas życia wpisu, czyli 5 minut.
 - **Łańcuch proxy zależy od infrastruktury Render.** Wartość `ForwardLimit` odpowiada obecnemu układowi Cloudflare i proxy Render. Jeśli Render go zmieni, limiter może zacząć rozpoznawać adresy błędnie; pole `ClientIp` w logach pozwala to szybko sprawdzić.

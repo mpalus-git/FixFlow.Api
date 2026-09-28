@@ -1,4 +1,5 @@
 using FixFlow.Api.Common.OpenApi;
+using FixFlow.Api.Features.Auth.DeleteExpiredRefreshTokens;
 using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
 using FixFlow.Api.Features.WorkOrders.SendDailySummary;
 using Quartz;
@@ -20,6 +21,7 @@ public static class JobsExtensions
         {
             MarkOverdueWorkOrdersJob.Schedule(quartz);
             SendDailySummaryJob.Schedule(quartz);
+            DeleteExpiredRefreshTokensJob.Schedule(quartz);
         });
         services.AddQuartzHostedService(options =>
         {
