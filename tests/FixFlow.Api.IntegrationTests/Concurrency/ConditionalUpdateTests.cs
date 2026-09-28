@@ -4,7 +4,9 @@ using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Clients.UpdateClient;
+using FixFlow.Api.Features.Devices.UpdateDevice;
 using FixFlow.Api.IntegrationTests.Clients;
+using FixFlow.Api.IntegrationTests.Devices;
 
 namespace FixFlow.Api.IntegrationTests.Concurrency;
 
@@ -18,6 +20,14 @@ public sealed class ConditionalUpdateTests(FixFlowApiFactory factory) : Integrat
             return new UpdatableResource(
                 ClientRequests.ClientUri(createdClient.Id),
                 new UpdateClientRequest("Klimat-Serwis Sp. z o.o.", new ClientAddress("Przemysłowa", "3", "30-701", "Kraków"), "Jan Kowalski", "+48 600 300 400"));
+        },
+        ["device"] = async client =>
+        {
+            var owner = await client.CreateClientAsync(ClientRequests.NewClient());
+            var device = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id));
+            return new UpdatableResource(
+                DeviceRequests.DeviceUri(device.Id),
+                new UpdateDeviceRequest("AC-2002", "Multi 5 kW", "Mitsubishi", new DateOnly(2025, 3, 10)));
         },
     };
 

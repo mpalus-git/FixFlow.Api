@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Devices;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ public sealed class DeviceConfiguration : IEntityTypeConfiguration<Device>
         builder.ToTable("devices");
         builder.HasKey(device => device.Id);
         builder.Property(device => device.Id).ValueGeneratedNever();
+        builder.Property<uint>(EntityTag.VersionProperty).IsRowVersion();
         builder.Property(device => device.SerialNumber).HasMaxLength(100);
         builder.Property(device => device.Model).HasMaxLength(100);
         builder.Property(device => device.Manufacturer).HasMaxLength(100);

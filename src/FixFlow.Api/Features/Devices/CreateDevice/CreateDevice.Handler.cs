@@ -1,5 +1,6 @@
 using ErrorOr;
 using FixFlow.Api.Common.Caching;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Persistence.Configurations;
 using FixFlow.Api.Domain.Clients;
@@ -11,7 +12,7 @@ namespace FixFlow.Api.Features.Devices.CreateDevice;
 
 public sealed class CreateDeviceHandler(FixFlowDbContext dbContext, TimeProvider timeProvider, HybridCache cache)
 {
-    public async Task<ErrorOr<DeviceResponse>> HandleAsync(CreateDeviceRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<DeviceResponse>>> HandleAsync(CreateDeviceRequest request, CancellationToken cancellationToken)
     {
         var client = await dbContext.Clients
             .AsNoTracking()
@@ -45,6 +46,6 @@ public sealed class CreateDeviceHandler(FixFlowDbContext dbContext, TimeProvider
 
         await cache.RemoveByTagAsync(CacheTags.Devices, cancellationToken);
 
-        return DeviceResponse.FromDomain(creation.Value);
+        return dbContext.Versioned(creation.Value, DeviceResponse.FromDomain(creation.Value));
     }
 }

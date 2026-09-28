@@ -793,6 +793,14 @@
           },
           "201": {
             "description": "Created",
+            "headers": {
+              "ETag": {
+                "description": "Current version of the resource, to be sent in If-Match when changing it.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -955,6 +963,14 @@
         "responses": {
           "200": {
             "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Current version of the resource, to be sent in If-Match when changing it.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -995,7 +1011,7 @@
           "Devices"
         ],
         "summary": "Update a device",
-        "description": "Replaces the serial number, model, manufacturer and installation date of an active device. The owning client cannot be changed and archived devices cannot be modified. Available to dispatchers and administrators.",
+        "description": "Replaces the serial number, model, manufacturer and installation date of an active device. The owning client cannot be changed and archived devices cannot be modified. The If-Match header must carry the ETag of the device; a device changed in the meantime is rejected with 412. Available to dispatchers and administrators.",
         "operationId": "UpdateDevice",
         "parameters": [
           {
@@ -1005,6 +1021,15 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "ETag of the resource returned by the last read or change. A different current version is rejected with 412.",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1031,6 +1056,14 @@
           },
           "200": {
             "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Current version of the resource, to be sent in If-Match when changing it.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1071,6 +1104,26 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition Required",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1132,6 +1185,16 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
