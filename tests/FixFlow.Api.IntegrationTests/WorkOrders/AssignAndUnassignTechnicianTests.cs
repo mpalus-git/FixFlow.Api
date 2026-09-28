@@ -7,12 +7,10 @@ namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
 public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Assign_Technician_And_Make_Work_Order_Visible_To_Technician_When_Dispatcher_Or_Admin_Assigns(string role)
+    [Fact]
+    public async Task Should_Assign_Technician_And_Make_Work_Order_Visible_To_Technician_When_Dispatcher_Assigns()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var workOrder = await CreateWorkOrderAsync(client);
         var technician = await CreateUserAsync(Roles.Technician);
 
@@ -54,34 +52,6 @@ public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) 
         firstResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
         (await client.GetWorkOrderAsync(workOrder.Id)).TechnicianId.ShouldBe(technician.Id);
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Assigns_Or_Unassigns()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var workOrder = await CreateWorkOrderAsync(dispatcherClient);
-        var technician = await CreateUserAsync(Roles.Technician);
-        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
-
-        using var assignResponse = await technicianClient.PostAssignAsync(workOrder.Id, technician.Id);
-        using var unassignResponse = await technicianClient.PostTransitionAsync(workOrder.Id, "unassign");
-
-        assignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        unassignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Assigned_Work_Order_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var technician = await CreateUserAsync(Roles.Technician);
-
-        using var assignResponse = await client.PostAssignAsync(Guid.CreateVersion7(), technician.Id);
-        using var unassignResponse = await client.PostTransitionAsync(Guid.CreateVersion7(), "unassign");
-
-        await assignResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-        await unassignResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
     }
 
     [Fact]

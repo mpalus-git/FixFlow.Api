@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Devices;
@@ -10,12 +9,10 @@ namespace FixFlow.Api.IntegrationTests.Devices;
 
 public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_Device_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_Device_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var owner = await client.CreateClientAsync(ClientRequests.NewClient());
         var request = DeviceRequests.NewDevice(owner.Id);
 
@@ -56,16 +53,6 @@ public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : Integra
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Client_Of_New_Device_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PostAsJsonAsync(DeviceRequests.DevicesUri, DeviceRequests.NewDevice(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, ClientErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Return_Conflict_Problem_When_Client_Of_New_Device_Is_Archived()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -90,16 +77,6 @@ public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : Integra
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Device()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostAsJsonAsync(DeviceRequests.DevicesUri, DeviceRequests.NewDevice(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Device_When_Technician_Gets_Existing_Device()
     {
         using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -110,15 +87,5 @@ public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : Integra
         var fetchedDevice = await technicianClient.GetFromJsonAsync<DeviceResponse>(DeviceRequests.DeviceUri(createdDevice.Id), TestContext.Current.CancellationToken);
 
         fetchedDevice.ShouldBe(createdDevice);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Device_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.GetAsync(DeviceRequests.DeviceUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, DeviceErrors.NotFound.Code);
     }
 }

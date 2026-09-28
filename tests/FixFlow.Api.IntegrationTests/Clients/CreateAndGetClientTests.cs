@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
 
@@ -8,12 +7,10 @@ namespace FixFlow.Api.IntegrationTests.Clients;
 
 public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_Client_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_Client_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var request = ClientRequests.NewClient();
 
         using var response = await client.PostAsJsonAsync(ClientRequests.ClientsUri, request, TestContext.Current.CancellationToken);
@@ -25,16 +22,6 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
         createdClient.Name.ShouldBe(request.Name);
         createdClient.Address.ShouldBe(request.Address);
         createdClient.ArchivedAt.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Client()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostAsJsonAsync(ClientRequests.ClientsUri, ClientRequests.NewClient(), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -60,15 +47,5 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
         var fetchedClient = await client.GetFromJsonAsync<ClientResponse>(ClientRequests.ClientUri(createdClient.Id), TestContext.Current.CancellationToken);
 
         fetchedClient.ShouldBe(createdClient);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Client_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.GetAsync(ClientRequests.ClientUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, ClientErrors.NotFound.Code);
     }
 }

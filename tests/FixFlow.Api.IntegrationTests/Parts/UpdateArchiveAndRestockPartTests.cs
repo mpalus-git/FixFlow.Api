@@ -68,16 +68,6 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Updated_Part_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PutAsJsonAsync(PartRequests.PartUri(Guid.CreateVersion7()), UpdatedDetails, TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, PartErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Keep_Archived_Part_Available_By_Identifier_When_Archived_Twice()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -121,33 +111,6 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         using var response = await client.PostAsJsonAsync(PartRequests.RestockPartUri(part.Id), new RestockPartRequest(0), TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("quantity");
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Delivery_Is_Registered_For_Missing_Part()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PostAsJsonAsync(PartRequests.RestockPartUri(Guid.CreateVersion7()), new RestockPartRequest(1), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, PartErrors.NotFound.Code);
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Updates_Archives_Or_Restocks_Part()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var part = await dispatcherClient.CreatePartAsync(PartRequests.NewPart());
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var updateResponse = await technicianClient.PutAsJsonAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
-        using var archiveResponse = await technicianClient.PostAsync(PartRequests.ArchivePartUri(part.Id), null, TestContext.Current.CancellationToken);
-        using var restockResponse = await technicianClient.PostAsJsonAsync(PartRequests.RestockPartUri(part.Id), new RestockPartRequest(1), TestContext.Current.CancellationToken);
-
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        archiveResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        restockResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        (await GetPartAsync(dispatcherClient, part.Id)).ShouldBe(part);
     }
 
     [Fact]

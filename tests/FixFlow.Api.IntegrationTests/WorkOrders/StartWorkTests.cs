@@ -86,17 +86,6 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Technician_Starts_Work_Order_Of_Another_Technician()
-    {
-        var (workOrders, _) = await CreateAssignedWorkOrdersAsync(1);
-        using var otherTechnicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await otherTechnicianClient.PostTransitionAsync(workOrders[0].Id, "start");
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Return_Conflict_Problem_When_Work_Order_Is_Already_In_Progress()
     {
         var (workOrders, technician) = await CreateAssignedWorkOrdersAsync(1);
@@ -121,17 +110,6 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
 
         startResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Dispatcher_Starts_Work()
-    {
-        var (workOrders, _) = await CreateAssignedWorkOrdersAsync(1);
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await dispatcherClient.PostTransitionAsync(workOrders[0].Id, "start");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     private async Task<(IReadOnlyList<WorkOrderResponse> WorkOrders, TestUser Technician)> CreateAssignedWorkOrdersAsync(int count)

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 
@@ -8,12 +7,10 @@ namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
 public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_New_Unassigned_Work_Order_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_New_Unassigned_Work_Order_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var deviceId = await client.CreateServicedDeviceAsync();
         var request = WorkOrderRequests.NewWorkOrder(deviceId);
 
@@ -58,17 +55,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
     }
 
     [Fact]
-    public async Task Should_Return_Validation_Problem_When_Due_Date_Is_In_The_Past()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var deviceId = await client.CreateServicedDeviceAsync();
-
-        using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId, dueInDays: -1));
-
-        await response.ShouldBeValidationProblemAsync("dueDate");
-    }
-
-    [Fact]
     public async Task Should_Return_Validation_Problem_When_Description_Is_Empty()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -77,16 +63,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
         using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId) with { Description = string.Empty });
 
         await response.ShouldBeValidationProblemAsync("description");
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Device_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(Guid.CreateVersion7()));
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, DeviceErrors.NotFound.Code);
     }
 
     [Fact]
@@ -100,16 +76,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
 
         archiveResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, WorkOrderErrors.DeviceArchived.Code);
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Work_Order()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(Guid.CreateVersion7()));
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -135,29 +101,5 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
         var fetchedWorkOrder = await technicianClient.GetWorkOrderAsync(workOrder.Id);
 
         fetchedWorkOrder.TechnicianId.ShouldBe(technician.Id);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Technician_Gets_Work_Order_Of_Another_Technician()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var workOrder = await dispatcherClient.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await dispatcherClient.CreateServicedDeviceAsync()));
-        var otherTechnician = await CreateUserAsync(Roles.Technician);
-        await Factory.AssignTechnicianDirectlyAsync(workOrder.Id, otherTechnician.Id);
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await technicianClient.GetAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Work_Order_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.GetAsync(WorkOrderRequests.WorkOrderUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
     }
 }

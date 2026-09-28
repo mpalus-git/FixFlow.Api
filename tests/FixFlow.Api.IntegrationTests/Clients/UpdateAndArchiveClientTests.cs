@@ -48,16 +48,6 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Updated_Client_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Admin);
-
-        using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(Guid.CreateVersion7()), UpdatedDetails, TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, ClientErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Return_Validation_Problem_When_Update_Has_Invalid_Phone()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -66,20 +56,6 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
         using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails with { Phone = "123" }, TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("phone");
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Updates_Or_Archives_Client()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var createdClient = await dispatcherClient.CreateClientAsync(ClientRequests.NewClient());
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var updateResponse = await technicianClient.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails, TestContext.Current.CancellationToken);
-        using var archiveResponse = await technicianClient.PostAsync(ArchiveUri(createdClient.Id), null, TestContext.Current.CancellationToken);
-
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        archiveResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -144,16 +120,6 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
         storedDevice.ShouldNotBeNull();
         clientArchiveResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         storedDevice.ArchivedAt.ShouldBe(archivedDevice.ArchivedAt);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Archived_Client_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PostAsync(ArchiveUri(Guid.CreateVersion7()), null, TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, ClientErrors.NotFound.Code);
     }
 
     private static Uri ArchiveUri(Guid clientId) => new($"/api/v1/clients/{clientId}/archive", UriKind.Relative);

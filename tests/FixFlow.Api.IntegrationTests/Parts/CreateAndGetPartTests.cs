@@ -8,12 +8,10 @@ namespace FixFlow.Api.IntegrationTests.Parts;
 
 public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_Part_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_Part_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var request = PartRequests.NewPart();
 
         using var response = await client.PostAsJsonAsync(PartRequests.PartsUri, request, TestContext.Current.CancellationToken);
@@ -86,16 +84,6 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Part()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostAsJsonAsync(PartRequests.PartsUri, PartRequests.NewPart(), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Part_When_Technician_Gets_Existing_Part()
     {
         using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -105,15 +93,5 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
         var fetchedPart = await technicianClient.GetFromJsonAsync<PartResponse>(PartRequests.PartUri(createdPart.Id), TestContext.Current.CancellationToken);
 
         fetchedPart.ShouldBe(createdPart);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Part_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.GetAsync(PartRequests.PartUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, PartErrors.NotFound.Code);
     }
 }

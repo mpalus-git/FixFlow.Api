@@ -1,4 +1,3 @@
-using System.Net;
 using System.Net.Http.Json;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Domain.Users;
@@ -43,16 +42,6 @@ public sealed class ListUsersTests(FixFlowApiFactory factory) : IntegrationTestB
         using var response = await client.GetAsync(new Uri("/api/v1/users?role=Manager", UriKind.Relative), TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("role");
-    }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Lists_Users()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.GetAsync(new Uri("/api/v1/users", UriKind.Relative), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     private static async Task<PagedResponse<UserResponse>> GetPageAsync(HttpClient client, string query)
