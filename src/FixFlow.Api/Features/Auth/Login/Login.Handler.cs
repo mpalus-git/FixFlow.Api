@@ -12,6 +12,7 @@ public sealed class LoginHandler(
     UserManager<ApplicationUser> userManager,
     FixFlowDbContext dbContext,
     AccessTokenIssuer accessTokenIssuer,
+    PasswordVerificationTimingGuard passwordVerificationTimingGuard,
     IOptions<JwtOptions> jwtOptions,
     TimeProvider timeProvider)
 {
@@ -20,6 +21,7 @@ public sealed class LoginHandler(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null || await userManager.IsLockedOutAsync(user))
         {
+            passwordVerificationTimingGuard.SimulatePasswordVerification(request.Password);
             return AuthErrors.InvalidCredentials;
         }
 
