@@ -76,6 +76,16 @@ public sealed class ListPartsTests(FixFlowApiFactory factory) : IntegrationTestB
         await response.ShouldBeValidationProblemAsync("Search");
     }
 
+    [Fact]
+    public async Task Should_Return_Validation_Problem_When_Page_Would_Overflow_Offset()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+
+        using var response = await client.GetAsync(new Uri("/api/v1/parts?page=30000000&pageSize=100", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        await response.ShouldBeValidationProblemAsync("Page");
+    }
+
     private static async Task<PagedResponse<PartResponse>> GetPageAsync(HttpClient client, string query)
     {
         using var response = await client.GetAsync(new Uri($"/api/v1/parts{query}", UriKind.Relative), TestContext.Current.CancellationToken);
