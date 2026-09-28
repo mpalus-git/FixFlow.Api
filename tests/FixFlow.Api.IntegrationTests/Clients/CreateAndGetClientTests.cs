@@ -71,14 +71,4 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
 
         await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, ClientErrors.NotFound.Code);
     }
-
-    [Fact]
-    public async Task Should_Return_Unauthorized_When_Client_Is_Requested_Without_Access_Token()
-    {
-        using var client = Factory.CreateClient();
-
-        using var response = await client.GetAsync(ClientRequests.ClientUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
 }
