@@ -11,11 +11,7 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSend
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         var settings = options.Value;
-        using var mimeMessage = new MimeMessage();
-        mimeMessage.From.Add(new MailboxAddress(settings.FromName, settings.FromAddress));
-        mimeMessage.To.AddRange(message.Recipients.Select(recipient => MailboxAddress.Parse(recipient)));
-        mimeMessage.Subject = message.Subject;
-        mimeMessage.Body = new TextPart("plain") { Text = message.Body };
+        using var mimeMessage = CreateMimeMessage(message, settings);
 
         using var smtpClient = new SmtpClient { Timeout = (int)SmtpTimeout.TotalMilliseconds };
         await smtpClient.ConnectAsync(settings.Host, settings.Port, settings.Security, cancellationToken);
@@ -26,5 +22,17 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSend
 
         await smtpClient.SendAsync(mimeMessage, cancellationToken);
         await smtpClient.DisconnectAsync(quit: true, cancellationToken);
+    }
+
+    public static MimeMessage CreateMimeMessage(EmailMessage message, EmailOptions settings)
+    {
+        var sender = new MailboxAddress(settings.FromName, settings.FromAddress);
+        var mimeMessage = new MimeMessage();
+        mimeMessage.From.Add(sender);
+        mimeMessage.To.Add(sender);
+        mimeMessage.Bcc.AddRange(message.Recipients.Select(recipient => MailboxAddress.Parse(recipient)));
+        mimeMessage.Subject = message.Subject;
+        mimeMessage.Body = new TextPart("plain") { Text = message.Body };
+        return mimeMessage;
     }
 }
