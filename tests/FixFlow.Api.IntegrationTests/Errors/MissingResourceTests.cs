@@ -72,6 +72,7 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
             new AddServiceEntryRequest("Replaced filters", WorkStartedAt: DateTimeOffset.UtcNow.AddHours(-2), WorkFinishedAt: DateTimeOffset.UtcNow.AddHours(-1)),
             WorkOrderErrors.NotFound.Code),
         ["deactivate user"] = new(Roles.Admin, HttpMethod.Post, $"users/{MissingId}/deactivate", null, UserErrors.NotFound.Code),
+        ["activate user"] = new(Roles.Admin, HttpMethod.Post, $"users/{MissingId}/activate", null, UserErrors.NotFound.Code),
         ["list service entries"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/service-entries", null, WorkOrderErrors.NotFound.Code),
     };
 
