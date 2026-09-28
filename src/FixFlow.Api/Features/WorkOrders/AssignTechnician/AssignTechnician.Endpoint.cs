@@ -1,6 +1,6 @@
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.AssignTechnician;
 
@@ -11,7 +11,7 @@ public static class AssignTechnicianEndpoint
         group.MapPost("/{workOrderId:guid}/assign", async (Guid workOrderId, AssignTechnicianRequest request, AssignTechnicianHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, request, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("AssignTechnician")
             .WithSummary("Assign a technician to a work order")
@@ -22,7 +22,8 @@ public static class AssignTechnicianEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

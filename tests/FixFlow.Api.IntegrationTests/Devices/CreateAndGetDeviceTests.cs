@@ -22,6 +22,7 @@ public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : Integra
         var createdDevice = await response.Content.ReadFromJsonAsync<DeviceResponse>(TestContext.Current.CancellationToken);
         createdDevice.ShouldNotBeNull();
         response.Headers.Location.ShouldBe(DeviceRequests.DeviceUri(createdDevice.Id));
+        response.ETag().ShouldBe(await client.GetETagAsync(DeviceRequests.DeviceUri(createdDevice.Id), TestContext.Current.CancellationToken));
         createdDevice.ClientId.ShouldBe(owner.Id);
         createdDevice.InstallationDate.ShouldBe(request.InstallationDate);
         createdDevice.ArchivedAt.ShouldBeNull();

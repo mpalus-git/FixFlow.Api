@@ -18,7 +18,12 @@ public sealed class ArchiveDeviceHandler(FixFlowDbContext dbContext, TimeProvide
         }
 
         device.Archive(timeProvider.GetUtcNow());
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var saving = await dbContext.SaveChangesOrConflictAsync(cancellationToken);
+        if (saving.IsError)
+        {
+            return saving.Errors;
+        }
+
         await cache.RemoveByTagAsync(CacheTags.Devices, cancellationToken);
 
         return Result.Success;

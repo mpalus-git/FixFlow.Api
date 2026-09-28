@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ErrorOr;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Persistence.Configurations;
@@ -10,7 +11,7 @@ namespace FixFlow.Api.Features.WorkOrders.StartWork;
 
 public sealed class StartWorkHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<WorkOrderResponse>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         var workOrder = await dbContext.WorkOrders
             .VisibleTo(user)
@@ -40,6 +41,6 @@ public sealed class StartWorkHandler(FixFlowDbContext dbContext, TimeProvider ti
             return saving.Errors;
         }
 
-        return WorkOrderResponse.FromDomain(workOrder);
+        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
     }
 }

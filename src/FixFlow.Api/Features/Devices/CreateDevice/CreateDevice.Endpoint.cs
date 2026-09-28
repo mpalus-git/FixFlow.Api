@@ -1,6 +1,6 @@
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.Devices.CreateDevice;
 
@@ -11,7 +11,7 @@ public static class CreateDeviceEndpoint
         group.MapPost("/", async (CreateDeviceRequest request, CreateDeviceHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.ToCreatedOrProblem(device => $"/api/v1/devices/{device.Id}");
+                return result.ToCreatedWithETagOrProblem(device => $"/api/v1/devices/{device.Id}");
             })
             .WithName("CreateDevice")
             .WithSummary("Create a device")
@@ -22,7 +22,8 @@ public static class CreateDeviceEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

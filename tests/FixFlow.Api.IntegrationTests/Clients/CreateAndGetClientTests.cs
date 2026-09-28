@@ -19,6 +19,7 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
         var createdClient = await response.Content.ReadFromJsonAsync<ClientResponse>(TestContext.Current.CancellationToken);
         createdClient.ShouldNotBeNull();
         response.Headers.Location.ShouldBe(ClientRequests.ClientUri(createdClient.Id));
+        response.ETag().ShouldBe(await client.GetETagAsync(ClientRequests.ClientUri(createdClient.Id), TestContext.Current.CancellationToken));
         createdClient.Name.ShouldBe(request.Name);
         createdClient.Address.ShouldBe(request.Address);
         createdClient.ArchivedAt.ShouldBeNull();

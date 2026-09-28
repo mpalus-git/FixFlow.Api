@@ -1,6 +1,6 @@
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.Parts.RestockPart;
 
@@ -11,7 +11,7 @@ public static class RestockPartEndpoint
         group.MapPost("/{partId:guid}/restock", async (Guid partId, RestockPartRequest request, RestockPartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(partId, request, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("RestockPart")
             .WithSummary("Register a part delivery")
@@ -22,7 +22,8 @@ public static class RestockPartEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

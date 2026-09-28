@@ -1,4 +1,5 @@
 using ErrorOr;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Common.Errors;
 
@@ -31,6 +32,7 @@ public static class ErrorOrProblemExtensions
         ErrorType.Forbidden => StatusCodes.Status403Forbidden,
         ErrorType.NotFound => StatusCodes.Status404NotFound,
         ErrorType.Conflict => StatusCodes.Status409Conflict,
+        _ when (int)errorType is PreconditionErrors.FailedType or PreconditionErrors.RequiredType => (int)errorType,
         _ => StatusCodes.Status500InternalServerError,
     };
 }

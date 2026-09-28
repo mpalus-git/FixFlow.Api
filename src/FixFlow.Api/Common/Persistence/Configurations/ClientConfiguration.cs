@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Clients;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,6 +12,7 @@ public sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.ToTable("clients");
         builder.HasKey(client => client.Id);
         builder.Property(client => client.Id).ValueGeneratedNever();
+        builder.Property<uint>(EntityTag.VersionProperty).IsRowVersion();
         builder.Property(client => client.Name).HasMaxLength(200);
         builder.Property(client => client.ContactPerson).HasMaxLength(200);
         builder.Property(client => client.Phone).HasMaxLength(20);

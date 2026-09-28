@@ -1,6 +1,6 @@
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 
@@ -11,7 +11,7 @@ public static class CreateWorkOrderEndpoint
         group.MapPost("/", async (CreateWorkOrderRequest request, CreateWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.ToCreatedOrProblem(workOrder => $"/api/v1/work-orders/{workOrder.Id}");
+                return result.ToCreatedWithETagOrProblem(workOrder => $"/api/v1/work-orders/{workOrder.Id}");
             })
             .WithName("CreateWorkOrder")
             .WithSummary("Create a work order")
@@ -22,7 +22,8 @@ public static class CreateWorkOrderEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

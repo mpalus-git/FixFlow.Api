@@ -46,7 +46,7 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
         var createdClient = await client.CreateClientAsync(ClientRequests.NewClient("Alfa"));
         await GetClientsAsync(client);
 
-        using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), ClientRequests.NewClient("Alfa Serwis"), TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(createdClient.Id), ClientRequests.NewClient("Alfa Serwis"), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
         var page = await GetClientsAsync(client);
@@ -79,7 +79,7 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
         await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "SN-2"));
         var afterCreate = await GetDevicesAsync(client);
         var updatedDevice = new UpdateDeviceRequest("SN-3", device.Model, device.Manufacturer, device.InstallationDate);
-        using var updateResponse = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), updatedDevice, TestContext.Current.CancellationToken);
+        using var updateResponse = await client.PutWithCurrentETagAsync(DeviceRequests.DeviceUri(device.Id), updatedDevice, TestContext.Current.CancellationToken);
         var afterUpdate = await GetDevicesAsync(client);
 
         afterCreate.Items.Select(item => item.SerialNumber).ShouldBe(["SN-1", "SN-2"]);

@@ -1,4 +1,5 @@
 using ErrorOr;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.WorkOrders;
@@ -8,7 +9,7 @@ namespace FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 
 public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<WorkOrderResponse>> HandleAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken)
     {
         var device = await dbContext.Devices
             .AsNoTracking()
@@ -27,6 +28,6 @@ public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
         dbContext.WorkOrders.Add(creation.Value);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return WorkOrderResponse.FromDomain(creation.Value);
+        return dbContext.Versioned(creation.Value, WorkOrderResponse.FromDomain(creation.Value));
     }
 }

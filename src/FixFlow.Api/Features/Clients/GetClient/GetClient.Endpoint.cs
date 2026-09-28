@@ -1,4 +1,4 @@
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.Clients.GetClient;
 
@@ -9,11 +9,12 @@ public static class GetClientEndpoint
         group.MapGet("/{clientId:guid}", async (Guid clientId, GetClientHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(clientId, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("GetClient")
             .WithSummary("Get a client")
             .WithDescription("Returns a client by identifier, including archived clients so that historical work orders keep their client details.")
+            .WithETagResponse()
             .Produces<ClientResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);

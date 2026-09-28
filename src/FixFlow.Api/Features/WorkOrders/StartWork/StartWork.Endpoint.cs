@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using FixFlow.Api.Common.Auth;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.StartWork;
 
@@ -11,7 +11,7 @@ public static class StartWorkEndpoint
         group.MapPost("/{workOrderId:guid}/start", async (Guid workOrderId, ClaimsPrincipal user, StartWorkHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("StartWork")
             .WithSummary("Start work on a work order")
@@ -21,7 +21,8 @@ public static class StartWorkEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

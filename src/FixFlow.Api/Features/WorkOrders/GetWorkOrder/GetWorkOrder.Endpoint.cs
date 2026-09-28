@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.GetWorkOrder;
 
@@ -10,14 +10,15 @@ public static class GetWorkOrderEndpoint
         group.MapGet("/{workOrderId:guid}", async (Guid workOrderId, ClaimsPrincipal user, GetWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("GetWorkOrder")
             .WithSummary("Get a work order")
             .WithDescription("Returns a work order by identifier. Technicians can only get work orders assigned to them; other work orders are reported as not found.")
             .Produces<WorkOrderResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithETagResponse();
 
         return group;
     }

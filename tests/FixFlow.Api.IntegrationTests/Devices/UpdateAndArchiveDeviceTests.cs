@@ -18,7 +18,7 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var device = await CreateDeviceAsync(client, "AC-1001");
 
-        using var response = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var storedDevice = await client.GetFromJsonAsync<DeviceResponse>(DeviceRequests.DeviceUri(device.Id), TestContext.Current.CancellationToken);
@@ -37,7 +37,7 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var device = await CreateDeviceAsync(client, "AC-1001");
 
-        using var response = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails with { SerialNumber = "ac-1001" }, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails with { SerialNumber = "ac-1001" }, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -50,7 +50,7 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
         await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "AC-2002"));
         var device = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "AC-1001"));
 
-        using var response = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, DeviceErrors.DuplicateSerialNumber.Code);
     }
@@ -62,7 +62,7 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
         var device = await CreateDeviceAsync(client, "AC-1001");
         using var archiveResponse = await client.PostAsync(ArchiveUri(device.Id), null, TestContext.Current.CancellationToken);
 
-        using var response = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(DeviceRequests.DeviceUri(device.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, DeviceErrors.Archived.Code);
     }
@@ -74,7 +74,7 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
         var device = await CreateDeviceAsync(client, "AC-1001");
         var request = UpdatedDetails with { InstallationDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(2) };
 
-        using var response = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), request, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(DeviceRequests.DeviceUri(device.Id), request, TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("installationDate");
     }

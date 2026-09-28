@@ -1,4 +1,5 @@
 using ErrorOr;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
@@ -8,7 +9,7 @@ namespace FixFlow.Api.Features.WorkOrders.AssignTechnician;
 
 public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
 {
-    public async Task<ErrorOr<WorkOrderResponse>> HandleAsync(Guid workOrderId, AssignTechnicianRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, AssignTechnicianRequest request, CancellationToken cancellationToken)
     {
         var workOrder = await dbContext.WorkOrders.SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
         if (workOrder is null)
@@ -33,7 +34,7 @@ public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
             return saving.Errors;
         }
 
-        return WorkOrderResponse.FromDomain(workOrder);
+        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
     }
 
     private Task<bool> IsTechnicianAsync(Guid userId, CancellationToken cancellationToken) =>

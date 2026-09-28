@@ -1,5 +1,5 @@
 using FixFlow.Api.Common.Auth;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.WorkOrders.UnassignTechnician;
 
@@ -10,7 +10,7 @@ public static class UnassignTechnicianEndpoint
         group.MapPost("/{workOrderId:guid}/unassign", async (Guid workOrderId, UnassignTechnicianHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, cancellationToken);
-                return result.ToOkOrProblem();
+                return result.ToOkWithETagOrProblem();
             })
             .WithName("UnassignTechnician")
             .WithSummary("Unassign the technician from a work order")
@@ -20,7 +20,8 @@ public static class UnassignTechnicianEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

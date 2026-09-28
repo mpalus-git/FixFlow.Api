@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 
 namespace FixFlow.Api.Common.Cors;
 
@@ -22,7 +23,7 @@ public static class ClientCorsExtensions
                     .WithOrigins(clientCorsOptions.Value.AllowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .WithExposedHeaders("Retry-After")));
+                    .WithExposedHeaders(HeaderNames.RetryAfter, HeaderNames.ETag)));
 
         return services;
     }
