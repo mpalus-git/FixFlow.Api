@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Common.Time;
 using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders.ListWorkOrders;
@@ -33,6 +34,18 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             query = query.Where(workOrder => workOrder.IsOverdue == isOverdue);
         }
 
+        if (request.DueFrom is { } dueFrom)
+        {
+            var rangeStart = BusinessTime.StartOfDay(dueFrom);
+            query = query.Where(workOrder => workOrder.DueDate >= rangeStart);
+        }
+
+        if (request.DueTo is { } dueTo)
+        {
+            var rangeEnd = BusinessTime.StartOfDay(dueTo.AddDays(1));
+            query = query.Where(workOrder => workOrder.DueDate < rangeEnd);
+        }
+
         var rows =
             from workOrder in query
             join device in dbContext.Devices on workOrder.DeviceId equals device.Id
@@ -48,6 +61,16 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
                 ClientName = client.Name,
                 TechnicianEmail = technician == null ? null : technician.Email,
             };
+
+        var search = request.Search?.Trim();
+        if (!string.IsNullOrEmpty(search))
+        {
+            var pattern = LikePattern.Contains(search);
+            rows = rows.Where(row =>
+                EF.Functions.ILike(row.WorkOrder.Description, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(row.DeviceSerialNumber, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(row.ClientName, pattern, LikePattern.EscapeCharacter));
+        }
 
         return rows
             .OrderBy(row => row.WorkOrder.DueDate)

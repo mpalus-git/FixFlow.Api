@@ -1,5 +1,8 @@
+using System.Globalization;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.WorkOrders;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
 
@@ -40,6 +43,49 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
         page.Items.ShouldAllBe(item => item.DeviceSerialNumber == device.SerialNumber && item.DeviceModel == device.Model);
         page.Items.ShouldAllBe(item => item.ClientId == owner.Id && item.ClientName == owner.Name);
         page.Items.Select(item => item.TechnicianEmail).ShouldBe([technician.Email, null]);
+    }
+
+    [Fact]
+    public async Task Should_Return_Work_Orders_Due_Within_Calendar_Days_When_Due_Date_Range_Is_Provided()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var deviceId = await client.CreateServicedDeviceAsync();
+        var firstDay = DateOnly.FromDateTime(BusinessTime.From(DateTimeOffset.UtcNow).DateTime).AddDays(5);
+        var lastDay = firstDay.AddDays(1);
+        var dayAfterRange = BusinessTime.StartOfDay(lastDay.AddDays(1));
+        await CreateWorkOrderDueAtAsync(client, deviceId, BusinessTime.StartOfDay(firstDay).AddMinutes(-1));
+        var dueAtRangeStart = await CreateWorkOrderDueAtAsync(client, deviceId, BusinessTime.StartOfDay(firstDay));
+        var dueAtRangeEnd = await CreateWorkOrderDueAtAsync(client, deviceId, dayAfterRange.AddMinutes(-1));
+        await CreateWorkOrderDueAtAsync(client, deviceId, dayAfterRange);
+
+        var page = await client.ListWorkOrdersAsync($"?dueFrom={FormatDate(firstDay)}&dueTo={FormatDate(lastDay)}");
+
+        page.Items.Select(item => item.Id).ShouldBe([dueAtRangeStart.Id, dueAtRangeEnd.Id]);
+    }
+
+    [Theory]
+    [InlineData("JAMS", "Biuro Alfa")]
+    [InlineData("beta-2", "Hotel Beta")]
+    [InlineData("hotel", "Hotel Beta")]
+    public async Task Should_Find_Work_Orders_By_Description_Serial_Number_Or_Client_Name_When_Search_Is_Provided(string search, string expectedClientName)
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        await CreateWorkOrderForClientAsync(client, "Biuro Alfa", "SN-ALFA-1", "Printer jams paper");
+        await CreateWorkOrderForClientAsync(client, "Hotel Beta", "SN-BETA-2", "Air conditioner is leaking");
+
+        var page = await client.ListWorkOrdersAsync($"?search={search}");
+
+        page.Items.ShouldHaveSingleItem().ClientName.ShouldBe(expectedClientName);
+    }
+
+    [Fact]
+    public async Task Should_Return_Validation_Problem_When_Due_Date_Range_Ends_Before_It_Starts()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+
+        using var response = await client.GetAsync(new Uri("/api/v1/work-orders?dueFrom=2026-10-02&dueTo=2026-10-01", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        await response.ShouldBeValidationProblemAsync("dueTo");
     }
 
     [Fact]
@@ -85,4 +131,16 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
         page.TotalCount.ShouldBe(1);
         pageFilteredByOtherTechnician.TotalCount.ShouldBe(0);
     }
+
+    private static Task<WorkOrderResponse> CreateWorkOrderDueAtAsync(HttpClient client, Guid deviceId, DateTimeOffset dueDate) =>
+        client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId) with { DueDate = dueDate });
+
+    private static async Task CreateWorkOrderForClientAsync(HttpClient client, string clientName, string serialNumber, string description)
+    {
+        var owner = await client.CreateClientAsync(ClientRequests.NewClient(clientName));
+        var device = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, serialNumber));
+        await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(device.Id) with { Description = description });
+    }
+
+    private static string FormatDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }
