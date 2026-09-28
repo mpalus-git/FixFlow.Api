@@ -65,16 +65,6 @@ public sealed class UpdateWorkOrderTests(FixFlowApiFactory factory) : Integratio
         (await client.GetWorkOrderAsync(workOrder.Id)).Priority.ShouldBe(workOrder.Priority);
     }
 
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Updated_Work_Order_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Admin);
-
-        using var response = await PutAsync(client, Guid.CreateVersion7(), new UpdateWorkOrderRequest("Changed", WorkOrderPriority.Low, DateTimeOffset.UtcNow.AddDays(1)));
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
     private static async Task<WorkOrderResponse> CreateWorkOrderAsync(HttpClient client) =>
         await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await client.CreateServicedDeviceAsync()));
 

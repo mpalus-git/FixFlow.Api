@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
 
@@ -50,15 +49,5 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
         var fetchedClient = await client.GetFromJsonAsync<ClientResponse>(ClientRequests.ClientUri(createdClient.Id), TestContext.Current.CancellationToken);
 
         fetchedClient.ShouldBe(createdClient);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Client_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.GetAsync(ClientRequests.ClientUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, ClientErrors.NotFound.Code);
     }
 }

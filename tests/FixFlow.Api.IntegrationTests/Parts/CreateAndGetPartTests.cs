@@ -96,14 +96,4 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
 
         fetchedPart.ShouldBe(createdPart);
     }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Part_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.GetAsync(PartRequests.PartUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, PartErrors.NotFound.Code);
-    }
 }

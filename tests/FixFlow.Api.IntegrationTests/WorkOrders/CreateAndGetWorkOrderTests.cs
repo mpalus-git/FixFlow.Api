@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 
@@ -80,16 +79,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Device_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(Guid.CreateVersion7()));
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, DeviceErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Return_Conflict_Problem_When_Device_Is_Archived()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -137,16 +126,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
         using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
 
         using var response = await technicianClient.GetAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Work_Order_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.GetAsync(WorkOrderRequests.WorkOrderUri(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
     }

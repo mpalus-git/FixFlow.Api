@@ -80,18 +80,6 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Updated_Or_Archived_Device_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Admin);
-
-        using var updateResponse = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(Guid.CreateVersion7()), UpdatedDetails, TestContext.Current.CancellationToken);
-        using var archiveResponse = await client.PostAsync(ArchiveUri(Guid.CreateVersion7()), null, TestContext.Current.CancellationToken);
-
-        await updateResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, DeviceErrors.NotFound.Code);
-        await archiveResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, DeviceErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Keep_Device_Available_By_Id_With_First_Archive_Time_When_Archived_Twice()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

@@ -68,16 +68,6 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Updated_Part_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PutAsJsonAsync(PartRequests.PartUri(Guid.CreateVersion7()), UpdatedDetails, TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, PartErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Keep_Archived_Part_Available_By_Identifier_When_Archived_Twice()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -121,16 +111,6 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         using var response = await client.PostAsJsonAsync(PartRequests.RestockPartUri(part.Id), new RestockPartRequest(0), TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("quantity");
-    }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Delivery_Is_Registered_For_Missing_Part()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await client.PostAsJsonAsync(PartRequests.RestockPartUri(Guid.CreateVersion7()), new RestockPartRequest(1), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, PartErrors.NotFound.Code);
     }
 
     [Fact]

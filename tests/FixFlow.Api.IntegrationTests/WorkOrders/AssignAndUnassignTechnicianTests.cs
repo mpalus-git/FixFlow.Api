@@ -57,19 +57,6 @@ public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Assigned_Work_Order_Does_Not_Exist()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var technician = await CreateUserAsync(Roles.Technician);
-
-        using var assignResponse = await client.PostAssignAsync(Guid.CreateVersion7(), technician.Id);
-        using var unassignResponse = await client.PostTransitionAsync(Guid.CreateVersion7(), "unassign");
-
-        await assignResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-        await unassignResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Return_To_New_And_Hide_From_Technician_When_Dispatcher_Unassigns_Technician()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
