@@ -65,7 +65,7 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
 
         using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId, dueInDays: -1));
 
-        await response.ShouldBeValidationProblemAsync("DueDate");
+        await response.ShouldBeValidationProblemAsync("dueDate");
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
 
         using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId) with { Description = string.Empty });
 
-        await response.ShouldBeValidationProblemAsync("Description");
+        await response.ShouldBeValidationProblemAsync("description");
     }
 
     [Fact]

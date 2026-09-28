@@ -76,7 +76,7 @@ public sealed class UpdateAndArchiveDeviceTests(FixFlowApiFactory factory) : Int
 
         using var response = await client.PutAsJsonAsync(DeviceRequests.DeviceUri(device.Id), request, TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync(nameof(UpdateDeviceRequest.InstallationDate));
+        await response.ShouldBeValidationProblemAsync("installationDate");
     }
 
     [Fact]

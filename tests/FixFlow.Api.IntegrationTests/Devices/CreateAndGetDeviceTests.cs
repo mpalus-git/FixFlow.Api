@@ -86,7 +86,7 @@ public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : Integra
 
         using var response = await client.PostAsJsonAsync(DeviceRequests.DevicesUri, request, TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("InstallationDate");
+        await response.ShouldBeValidationProblemAsync("installationDate");
     }
 
     [Fact]

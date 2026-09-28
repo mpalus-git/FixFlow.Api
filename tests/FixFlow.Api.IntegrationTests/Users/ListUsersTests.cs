@@ -42,7 +42,7 @@ public sealed class ListUsersTests(FixFlowApiFactory factory) : IntegrationTestB
 
         using var response = await client.GetAsync(new Uri("/api/v1/users?role=Manager", UriKind.Relative), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("Role");
+        await response.ShouldBeValidationProblemAsync("role");
     }
 
     [Fact]

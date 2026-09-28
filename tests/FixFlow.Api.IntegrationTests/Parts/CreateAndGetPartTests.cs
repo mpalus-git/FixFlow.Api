@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using FixFlow.Api.Domain.Parts;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Parts;
-using FixFlow.Api.Features.Parts.CreatePart;
 
 namespace FixFlow.Api.IntegrationTests.Parts;
 
@@ -72,7 +71,7 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
 
         using var response = await client.PostAsJsonAsync(PartRequests.PartsUri, request, TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync(nameof(CreatePartRequest.UnitPrice));
+        await response.ShouldBeValidationProblemAsync("unitPrice");
     }
 
     [Fact]

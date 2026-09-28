@@ -10,9 +10,10 @@ public static class ErrorOrProblemExtensions
     {
         if (errors.Count > 0 && errors.All(error => error.Type == ErrorType.Validation))
         {
-            return TypedResults.ValidationProblem(errors
-                .GroupBy(error => error.Code)
-                .ToDictionary(group => group.Key, group => group.Select(error => error.Description).ToArray()));
+            return TypedResults.ValidationProblem(ValidationErrorKey.GroupByPropertyPath(
+                errors,
+                error => error.Code,
+                error => error.Description));
         }
 
         var firstError = errors.Count > 0 ? errors[0] : Error.Unexpected();

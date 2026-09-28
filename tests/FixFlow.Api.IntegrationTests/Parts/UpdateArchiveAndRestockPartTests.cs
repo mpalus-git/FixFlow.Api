@@ -120,7 +120,7 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
 
         using var response = await client.PostAsJsonAsync(PartRequests.RestockPartUri(part.Id), new RestockPartRequest(0), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync(nameof(RestockPartRequest.Quantity));
+        await response.ShouldBeValidationProblemAsync("quantity");
     }
 
     [Fact]

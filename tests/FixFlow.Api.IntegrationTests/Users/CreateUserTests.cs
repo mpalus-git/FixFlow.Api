@@ -75,7 +75,7 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
 
         using var response = await adminClient.PostAsJsonAsync(UsersUri, request, TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync(nameof(CreateUserRequest.Password));
+        await response.ShouldBeValidationProblemAsync("password");
         using var anonymousClient = Factory.CreateClient();
         using var loginResponse = await anonymousClient.PostAsJsonAsync(
             AuthRequests.LoginUri,
@@ -91,6 +91,6 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
 
         using var response = await adminClient.PostAsJsonAsync(UsersUri, new CreateUserRequest("someone@fixflow.test", "Initial1!password", "Manager"), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync(nameof(CreateUserRequest.Role));
+        await response.ShouldBeValidationProblemAsync("role");
     }
 }

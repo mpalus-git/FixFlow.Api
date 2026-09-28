@@ -65,7 +65,7 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
 
         using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails with { Phone = "123" }, TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync(nameof(UpdateClientRequest.Phone));
+        await response.ShouldBeValidationProblemAsync("phone");
     }
 
     [Fact]
