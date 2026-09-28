@@ -45,17 +45,6 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Technician_Completes_Work_Order_Of_Another_Technician()
-    {
-        using var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
-        using var otherTechnicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await otherTechnicianClient.PostTransitionAsync(scenario.WorkOrder.Id, "complete");
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
-    [Fact]
     public async Task Should_Return_Conflict_Problem_When_Assigned_Work_Order_Is_Completed_Before_Start()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

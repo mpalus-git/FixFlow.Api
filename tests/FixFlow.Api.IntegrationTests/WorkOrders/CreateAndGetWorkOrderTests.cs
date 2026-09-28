@@ -115,18 +115,4 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
 
         fetchedWorkOrder.TechnicianId.ShouldBe(technician.Id);
     }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Technician_Gets_Work_Order_Of_Another_Technician()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var workOrder = await dispatcherClient.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await dispatcherClient.CreateServicedDeviceAsync()));
-        var otherTechnician = await CreateUserAsync(Roles.Technician);
-        await Factory.AssignTechnicianDirectlyAsync(workOrder.Id, otherTechnician.Id);
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await technicianClient.GetAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
 }

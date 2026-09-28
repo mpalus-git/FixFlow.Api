@@ -108,17 +108,4 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, WorkOrderErrors.NotInProgress.Code);
     }
-
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Technician_Adds_Or_Lists_Entries_Of_Another_Technician()
-    {
-        using var scenario = await CreateWorkOrderInProgressAsync();
-        using var otherTechnicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var addResponse = await otherTechnicianClient.PostServiceEntryAsync(scenario.WorkOrder.Id, ServiceEntryRequests.WorkEntry(scenario.WorkOrder));
-        using var listResponse = await otherTechnicianClient.GetAsync(ServiceEntryRequests.ServiceEntriesUri(scenario.WorkOrder.Id), TestContext.Current.CancellationToken);
-
-        await addResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-        await listResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
 }

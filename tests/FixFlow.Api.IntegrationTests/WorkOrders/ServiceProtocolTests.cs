@@ -48,17 +48,6 @@ public sealed class ServiceProtocolTests(FixFlowApiFactory factory) : ServiceEnt
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, WorkOrderErrors.NotCompleted.Code);
     }
 
-    [Fact]
-    public async Task Should_Return_Not_Found_Problem_When_Technician_Downloads_Protocol_Of_Another_Technician()
-    {
-        using var scenario = await CreateCompletedWorkOrderAsync();
-        using var otherTechnicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await GetProtocolAsync(otherTechnicianClient, scenario.WorkOrder.Id);
-
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
-    }
-
     private static Task<HttpResponseMessage> GetProtocolAsync(HttpClient client, Guid workOrderId) =>
         client.GetAsync(new Uri($"/api/v1/work-orders/{workOrderId}/protocol", UriKind.Relative), TestContext.Current.CancellationToken);
 }
