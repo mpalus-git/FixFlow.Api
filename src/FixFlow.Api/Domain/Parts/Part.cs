@@ -55,7 +55,7 @@ public sealed class Part
         StockQuantity += quantity;
     }
 
-    public ErrorOr<Updated> Consume(int quantity)
+    public ErrorOr<Success> EnsureCanConsume(int quantity)
     {
         if (IsArchived)
         {
@@ -65,6 +65,17 @@ public sealed class Part
         if (quantity > StockQuantity)
         {
             return PartErrors.InsufficientStock;
+        }
+
+        return Result.Success;
+    }
+
+    public ErrorOr<Updated> Consume(int quantity)
+    {
+        var check = EnsureCanConsume(quantity);
+        if (check.IsError)
+        {
+            return check.Errors;
         }
 
         StockQuantity -= quantity;
