@@ -165,6 +165,7 @@ flowchart LR
 - **E-mail wyłączony w produkcji.** Darmowy plan Render blokuje wychodzący ruch SMTP, więc wdrożenie ma `Email__Enabled=false`, a zamiast wysyłki podsumowania dziennego w logu pojawia się tylko wpis o jej pominięciu. Lokalnie wiadomości widać w Mailpit.
 - **Cache po awarii Redis.** Zmiana zapisana w czasie niedostępności Redis nie unieważnia wpisów L2. Po powrocie Redis lista klientów lub urządzeń może być nieaktualna maksymalnie przez czas życia wpisu, czyli 5 minut.
 - **Łańcuch proxy zależy od infrastruktury Render.** Wartość `ForwardLimit` odpowiada obecnemu układowi Cloudflare i proxy Render. Jeśli Render go zmieni, limiter może zacząć rozpoznawać adresy błędnie; pole `ClientIp` w logach pozwala to szybko sprawdzić.
+- **Blokada konta po nieudanych logowaniach.** Po 5 błędnych hasłach konto jest blokowane na 5 minut, więc ktoś znający e-mail może celowo zablokować cudze konto. To standardowy kompromis ASP.NET Core Identity; limit prób na adres IP ogranicza skalę takiego działania.
 - **Publiczne konta demo.** Każdy może zalogować się jako Dispatcher lub Technician i zmieniać dane demonstracyjne; nie ma automatycznego resetu bazy.
 - **Zdjęcia jako adresy URL.** Wpis serwisowy przechowuje listę adresów zdjęć, API nie przyjmuje plików.
 - **Jedna waluta.** Ceny i sumy w protokole są w PLN.
