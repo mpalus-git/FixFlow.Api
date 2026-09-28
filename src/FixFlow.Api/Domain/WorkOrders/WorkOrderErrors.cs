@@ -6,7 +6,7 @@ public static class WorkOrderErrors
 {
     public static readonly Error NotFound = Error.NotFound("WorkOrder.NotFound", "Work order was not found.");
 
-    public static readonly Error TechnicianNotFound = Error.NotFound("WorkOrder.TechnicianNotFound", "Technician was not found.");
+    public static readonly Error TechnicianNotFound = Error.NotFound("WorkOrder.TechnicianNotFound", "Active technician was not found.");
 
     public static readonly Error DeviceArchived = Error.Conflict("WorkOrder.DeviceArchived", "Work orders cannot be created for an archived device.");
 

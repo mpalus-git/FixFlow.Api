@@ -261,7 +261,7 @@
           "Users"
         ],
         "summary": "List user accounts",
-        "description": "Returns one page of user accounts ordered by email, optionally limited to one role, for example role=Technician when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
+        "description": "Returns one page of user accounts ordered by email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
         "operationId": "ListUsers",
         "parameters": [
           {
@@ -290,6 +290,14 @@
             "description": "Role of the listed users: Admin, Dispatcher or Technician.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "description": "When true, lists only active accounts, for example when choosing a technician for a work order; when false, only deactivated accounts.",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -450,6 +458,229 @@
           },
           "429": {
             "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{userId}/deactivate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Deactivate a user account",
+        "description": "Blocks signing in to the account and revokes all its refresh tokens. Access tokens issued before stay valid until they expire. A technician with assigned or in-progress work orders cannot be deactivated until the work orders are unassigned or completed, and administrators cannot deactivate their own account. Deactivating an already deactivated account has no effect. Available to administrators.",
+        "operationId": "DeactivateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{userId}/activate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Activate a user account",
+        "description": "Allows a deactivated account to sign in again with its current password. Activating an active account has no effect. Available to administrators.",
+        "operationId": "ActivateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{userId}/password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reset the password of a user account",
+        "description": "Replaces the password of any account, for example when the user forgot it, lifts a lockout after failed sign-ins and revokes all refresh tokens of the account. Access tokens issued before stay valid until they expire. Available to administrators.",
+        "operationId": "ResetPassword",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1762,7 +1993,7 @@
           "WorkOrders"
         ],
         "summary": "Assign a technician to a work order",
-        "description": "Assigns a user with the Technician role to a work order in the New status and moves it to Assigned. To change the technician, unassign the current one first. Available to dispatchers and administrators.",
+        "description": "Assigns an active user with the Technician role to a work order in the New status and moves it to Assigned. To change the technician, unassign the current one first. Available to dispatchers and administrators.",
         "operationId": "AssignTechnician",
         "parameters": [
           {
@@ -3739,6 +3970,19 @@
         },
         "description": "Refresh token received from the last login or refresh."
       },
+      "ResetPasswordRequest": {
+        "required": [
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "description": "New password. At least 8 characters with an uppercase letter, a lowercase letter, a digit and a non-alphanumeric character."
+          }
+        },
+        "description": "New password set by an administrator for a user account."
+      },
       "RestockPartRequest": {
         "required": [
           "quantity"
@@ -4013,7 +4257,8 @@
         "required": [
           "id",
           "email",
-          "role"
+          "role",
+          "isActive"
         ],
         "type": "object",
         "properties": {
@@ -4029,6 +4274,10 @@
           "role": {
             "type": "string",
             "description": "Role of the user account."
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "False when an administrator deactivated the account; a deactivated account cannot sign in."
           }
         },
         "description": "User account."

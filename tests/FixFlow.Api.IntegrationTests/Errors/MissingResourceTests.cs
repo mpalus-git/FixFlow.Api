@@ -10,6 +10,8 @@ using FixFlow.Api.Features.Clients.UpdateClient;
 using FixFlow.Api.Features.Devices.UpdateDevice;
 using FixFlow.Api.Features.Parts.RestockPart;
 using FixFlow.Api.Features.Parts.UpdatePart;
+using FixFlow.Api.Features.Users;
+using FixFlow.Api.Features.Users.ResetPassword;
 using FixFlow.Api.Features.ServiceEntries.AddServiceEntry;
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 using FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
@@ -70,6 +72,9 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
             $"work-orders/{MissingId}/service-entries",
             new AddServiceEntryRequest("Replaced filters", WorkStartedAt: DateTimeOffset.UtcNow.AddHours(-2), WorkFinishedAt: DateTimeOffset.UtcNow.AddHours(-1)),
             WorkOrderErrors.NotFound.Code),
+        ["deactivate user"] = new(Roles.Admin, HttpMethod.Post, $"users/{MissingId}/deactivate", null, UserErrors.NotFound.Code),
+        ["activate user"] = new(Roles.Admin, HttpMethod.Post, $"users/{MissingId}/activate", null, UserErrors.NotFound.Code),
+        ["reset password"] = new(Roles.Admin, HttpMethod.Post, $"users/{MissingId}/password", new ResetPasswordRequest("NewSecret1!"), UserErrors.NotFound.Code),
         ["list service entries"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/service-entries", null, WorkOrderErrors.NotFound.Code),
     };
 

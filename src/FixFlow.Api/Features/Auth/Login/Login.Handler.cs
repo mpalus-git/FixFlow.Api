@@ -13,7 +13,7 @@ public sealed class LoginHandler(
     public async Task<ErrorOr<AuthTokensResponse>> HandleAsync(LoginRequest request, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
-        if (user is null || await userManager.IsLockedOutAsync(user))
+        if (user is null || !user.IsActive || await userManager.IsLockedOutAsync(user))
         {
             passwordVerificationTimingGuard.SimulatePasswordVerification(request.Password);
             return AuthErrors.InvalidCredentials;

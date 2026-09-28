@@ -36,6 +36,15 @@ public abstract class IntegrationTestBase(FixFlowApiFactory factory) : IAsyncLif
         return new TestUser(user.Id, email, password);
     }
 
+    protected async Task DeactivateUserDirectlyAsync(Guid userId)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = (await userManager.FindByIdAsync(userId.ToString())).ShouldNotBeNull();
+        user.Deactivate(DateTimeOffset.UtcNow);
+        (await userManager.UpdateAsync(user)).Succeeded.ShouldBeTrue();
+    }
+
     protected async Task<HttpClient> CreateAuthenticatedClientAsync(string role) =>
         await CreateAuthenticatedClientAsync(await CreateUserAsync(role));
 
