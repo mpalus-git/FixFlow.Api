@@ -389,6 +389,83 @@
         ]
       }
     },
+    "/api/v1/users/me/password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Change the password of the current user",
+        "description": "Replaces the password of the signed-in user after checking the current one. All refresh tokens of the user are revoked, which signs out other devices, and a new token pair is returned for the calling device. Access tokens issued before stay valid until they expire. Requests are rate limited per client IP address.",
+        "operationId": "ChangePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/clients": {
       "post": {
         "tags": [
@@ -2996,6 +3073,24 @@
           }
         },
         "description": "Access and refresh tokens issued for an authenticated session."
+      },
+      "ChangePasswordRequest": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "description": "Current password of the account."
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password. At least 8 characters with an uppercase letter, a lowercase letter, a digit and a non-alphanumeric character, different from the current one."
+          }
+        },
+        "description": "Change of the password of the signed-in user."
       },
       "ClientAddress": {
         "required": [

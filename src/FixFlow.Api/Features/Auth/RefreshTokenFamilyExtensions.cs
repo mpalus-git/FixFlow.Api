@@ -22,4 +22,19 @@ public static class RefreshTokenFamilyExtensions
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public static async Task RevokeActiveRefreshTokensOfUserAsync(
+        this FixFlowDbContext dbContext,
+        Guid userId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var activeTokens = await dbContext.RefreshTokens
+            .Where(token => token.UserId == userId && token.RevokedAt == null)
+            .ToListAsync(cancellationToken);
+        foreach (var token in activeTokens)
+        {
+            token.Revoke(now);
+        }
+    }
 }

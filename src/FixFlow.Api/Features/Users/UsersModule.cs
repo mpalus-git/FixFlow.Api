@@ -1,3 +1,4 @@
+using FixFlow.Api.Features.Users.ChangePassword;
 using FixFlow.Api.Features.Users.CreateUser;
 using FixFlow.Api.Features.Users.GetCurrentUser;
 using FixFlow.Api.Features.Users.ListUsers;
@@ -13,6 +14,8 @@ public static class UsersModule
         services.AddSingleton<IValidator<CreateUserRequest>, CreateUserRequestValidator>();
         services.AddScoped<ListUsersHandler>();
         services.AddScoped<GetCurrentUserHandler>();
+        services.AddScoped<ChangePasswordHandler>();
+        services.AddSingleton<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
         services.AddSingleton<IValidator<ListUsersRequest>, ListUsersRequestValidator>();
 
         return services;
@@ -28,6 +31,7 @@ public static class UsersModule
         group.MapCreateUser();
         group.MapListUsers();
         group.MapGetCurrentUser();
+        group.MapChangePassword();
 
         return app;
     }
