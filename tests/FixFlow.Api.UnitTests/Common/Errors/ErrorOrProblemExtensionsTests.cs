@@ -1,4 +1,5 @@
 using ErrorOr;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -42,6 +43,16 @@ public sealed class ErrorOrProblemExtensionsTests
         problem.StatusCode.ShouldBe(expectedStatusCode);
         problem.ProblemDetails.Detail.ShouldBe("Sample description.");
         problem.ProblemDetails.Extensions[ErrorOrProblemExtensions.ErrorCodeExtension].ShouldBe("Sample.Code");
+    }
+
+    [Fact]
+    public void Should_Map_Precondition_Errors_To_412_And_428_When_Errors_Are_Precondition_Errors()
+    {
+        var failed = new[] { PreconditionErrors.Failed }.ToProblem();
+        var required = new[] { PreconditionErrors.Required }.ToProblem();
+
+        failed.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status412PreconditionFailed);
+        required.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status428PreconditionRequired);
     }
 
     [Fact]

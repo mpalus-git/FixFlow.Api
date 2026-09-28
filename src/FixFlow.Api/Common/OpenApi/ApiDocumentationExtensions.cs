@@ -24,6 +24,7 @@ public static class ApiDocumentationExtensions
                 .AddBearerSecurity()
                 .AddPreciseSchemaTypes()
                 .AddProblemDetailsErrorCode()
+                .AddConditionalRequestHeaders()
                 .AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Title = "FixFlow API";

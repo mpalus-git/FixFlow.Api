@@ -1,4 +1,5 @@
 using ErrorOr;
+using FixFlow.Api.Common.Concurrency;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -19,7 +20,27 @@ public static class SaveChangesConflicts
         }
     }
 
-    public static async Task<ErrorOr<Success>> SaveChangesOrConflictAsync(this DbContext dbContext, CancellationToken cancellationToken)
+    public static Task<ErrorOr<Success>> SaveChangesOrConflictAsync(this DbContext dbContext, CancellationToken cancellationToken) =>
+        dbContext.SaveChangesOrErrorAsync(ConcurrentModification, cancellationToken);
+
+    public static Task<ErrorOr<Success>> SaveChangesOrConflictAsync(
+        this DbContext dbContext,
+        string constraintName,
+        Error conflictError,
+        CancellationToken cancellationToken) =>
+        dbContext.SaveChangesOrErrorAsync(constraintName, conflictError, ConcurrentModification, cancellationToken);
+
+    public static Task<ErrorOr<Success>> SaveChangesOrPreconditionFailedAsync(this DbContext dbContext, CancellationToken cancellationToken) =>
+        dbContext.SaveChangesOrErrorAsync(PreconditionErrors.Failed, cancellationToken);
+
+    public static Task<ErrorOr<Success>> SaveChangesOrPreconditionFailedAsync(
+        this DbContext dbContext,
+        string constraintName,
+        Error conflictError,
+        CancellationToken cancellationToken) =>
+        dbContext.SaveChangesOrErrorAsync(constraintName, conflictError, PreconditionErrors.Failed, cancellationToken);
+
+    private static async Task<ErrorOr<Success>> SaveChangesOrErrorAsync(this DbContext dbContext, Error concurrencyError, CancellationToken cancellationToken)
     {
         try
         {
@@ -28,19 +49,20 @@ public static class SaveChangesConflicts
         }
         catch (DbUpdateConcurrencyException)
         {
-            return ConcurrentModification;
+            return concurrencyError;
         }
     }
 
-    public static async Task<ErrorOr<Success>> SaveChangesOrConflictAsync(
+    private static async Task<ErrorOr<Success>> SaveChangesOrErrorAsync(
         this DbContext dbContext,
         string constraintName,
         Error conflictError,
+        Error concurrencyError,
         CancellationToken cancellationToken)
     {
         try
         {
-            return await dbContext.SaveChangesOrConflictAsync(cancellationToken);
+            return await dbContext.SaveChangesOrErrorAsync(concurrencyError, cancellationToken);
         }
         catch (DbUpdateException exception) when (IsViolationOf(exception, constraintName))
         {
