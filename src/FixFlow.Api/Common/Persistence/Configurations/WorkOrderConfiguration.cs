@@ -28,6 +28,7 @@ public sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
             .HasForeignKey(workOrder => workOrder.TechnicianId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(workOrder => workOrder.TechnicianId);
+        builder.HasIndex(workOrder => new { workOrder.DueDate, workOrder.Id });
         builder.HasIndex(workOrder => workOrder.TechnicianId, TechnicianInProgressIndexName)
             .HasDatabaseName(TechnicianInProgressIndexName)
             .IsUnique()
