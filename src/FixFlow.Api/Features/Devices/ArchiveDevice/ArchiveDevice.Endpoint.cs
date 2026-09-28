@@ -10,7 +10,7 @@ public static class ArchiveDeviceEndpoint
         group.MapPost("/{deviceId:guid}/archive", async (Guid deviceId, ArchiveDeviceHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(deviceId, cancellationToken);
-                return result.Match<IResult>(_ => TypedResults.NoContent(), errors => errors.ToProblem());
+                return result.ToNoContentOrProblem();
             })
             .WithName("ArchiveDevice")
             .WithSummary("Archive a device")

@@ -9,7 +9,7 @@ public static class GetPartEndpoint
         group.MapGet("/{partId:guid}", async (Guid partId, GetPartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(partId, cancellationToken);
-                return result.Match<IResult>(part => TypedResults.Ok(part), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("GetPart")
             .WithSummary("Get a part")

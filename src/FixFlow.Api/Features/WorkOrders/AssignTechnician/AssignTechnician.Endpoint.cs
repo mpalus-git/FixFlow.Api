@@ -11,7 +11,7 @@ public static class AssignTechnicianEndpoint
         group.MapPost("/{workOrderId:guid}/assign", async (Guid workOrderId, AssignTechnicianRequest request, AssignTechnicianHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, request, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("AssignTechnician")
             .WithSummary("Assign a technician to a work order")

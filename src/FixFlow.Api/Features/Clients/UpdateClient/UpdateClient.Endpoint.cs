@@ -11,7 +11,7 @@ public static class UpdateClientEndpoint
         group.MapPut("/{clientId:guid}", async (Guid clientId, UpdateClientRequest request, UpdateClientHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(clientId, request, cancellationToken);
-                return result.Match<IResult>(client => TypedResults.Ok(client), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("UpdateClient")
             .WithSummary("Update a client")

@@ -11,7 +11,7 @@ public static class StartWorkEndpoint
         group.MapPost("/{workOrderId:guid}/start", async (Guid workOrderId, ClaimsPrincipal user, StartWorkHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("StartWork")
             .WithSummary("Start work on a work order")

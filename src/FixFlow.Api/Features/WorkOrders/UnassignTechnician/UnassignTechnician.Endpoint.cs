@@ -10,7 +10,7 @@ public static class UnassignTechnicianEndpoint
         group.MapPost("/{workOrderId:guid}/unassign", async (Guid workOrderId, UnassignTechnicianHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("UnassignTechnician")
             .WithSummary("Unassign the technician from a work order")

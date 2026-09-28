@@ -10,7 +10,7 @@ public static class ListServiceEntriesEndpoint
         group.MapGet("/", async (Guid workOrderId, ClaimsPrincipal user, ListServiceEntriesHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.Match<IResult>(entries => TypedResults.Ok(entries), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("ListServiceEntries")
             .WithSummary("List service entries of a work order")

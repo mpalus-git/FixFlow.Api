@@ -10,7 +10,7 @@ public static class CompleteWorkOrderEndpoint
         group.MapPost("/{workOrderId:guid}/complete", async (Guid workOrderId, ClaimsPrincipal user, CompleteWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("CompleteWorkOrder")
             .WithSummary("Complete a work order")

@@ -10,7 +10,7 @@ public static class GetWorkOrderEndpoint
         group.MapGet("/{workOrderId:guid}", async (Guid workOrderId, ClaimsPrincipal user, GetWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, user, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("GetWorkOrder")
             .WithSummary("Get a work order")

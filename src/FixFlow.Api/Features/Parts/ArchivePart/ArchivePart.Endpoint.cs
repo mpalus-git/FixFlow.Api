@@ -10,7 +10,7 @@ public static class ArchivePartEndpoint
         group.MapPost("/{partId:guid}/archive", async (Guid partId, ArchivePartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(partId, cancellationToken);
-                return result.Match<IResult>(_ => TypedResults.NoContent(), errors => errors.ToProblem());
+                return result.ToNoContentOrProblem();
             })
             .WithName("ArchivePart")
             .WithSummary("Archive a part")

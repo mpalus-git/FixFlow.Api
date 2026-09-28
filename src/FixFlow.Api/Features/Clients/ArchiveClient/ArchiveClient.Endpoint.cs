@@ -10,7 +10,7 @@ public static class ArchiveClientEndpoint
         group.MapPost("/{clientId:guid}/archive", async (Guid clientId, ArchiveClientHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(clientId, cancellationToken);
-                return result.Match<IResult>(_ => TypedResults.NoContent(), errors => errors.ToProblem());
+                return result.ToNoContentOrProblem();
             })
             .WithName("ArchiveClient")
             .WithSummary("Archive a client")

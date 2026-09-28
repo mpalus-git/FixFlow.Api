@@ -11,9 +11,7 @@ public static class CreatePartEndpoint
         group.MapPost("/", async (CreatePartRequest request, CreatePartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.Match<IResult>(
-                    part => TypedResults.Created($"/api/v1/parts/{part.Id}", part),
-                    errors => errors.ToProblem());
+                return result.ToCreatedOrProblem(part => $"/api/v1/parts/{part.Id}");
             })
             .WithName("CreatePart")
             .WithSummary("Create a part")
