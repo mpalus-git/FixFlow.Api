@@ -88,7 +88,7 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
 
         using var response = await client.PostRefreshAsync(string.Empty);
 
-        await response.ShouldBeValidationProblemAsync("RefreshToken");
+        await response.ShouldBeValidationProblemAsync("refreshToken");
     }
 
     [Fact]

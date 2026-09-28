@@ -49,7 +49,7 @@ public sealed class UpdateWorkOrderTests(FixFlowApiFactory factory) : Integratio
 
         using var response = await PutAsync(client, workOrder.Id, new UpdateWorkOrderRequest("Printer jams paper", WorkOrderPriority.Low, DateTimeOffset.UtcNow.AddHours(-1)));
 
-        await response.ShouldBeValidationProblemAsync("DueDate");
+        await response.ShouldBeValidationProblemAsync("dueDate");
     }
 
     [Fact]

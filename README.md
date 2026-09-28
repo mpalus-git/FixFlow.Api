@@ -123,6 +123,8 @@ Błędy API mają format ProblemDetails (RFC 9457) z dodatkowym polem `errorCode
 }
 ```
 
+Błędy walidacji (400) mają słownik `errors`, którego klucze są ścieżkami pól w camelCase, tak jak w JSON żądania (np. `address.postalCode`, `parts[0].partId`).
+
 ## Decyzje techniczne
 
 **Vertical Slice zamiast warstw.** Zmiana funkcji (np. przypisanie technika) dotyka jednego folderu z endpointem, handlerem, walidatorem i kontraktem, zamiast pięciu projektów i wspólnych serwisów. Handlery używają `DbContext` bezpośrednio, bez repozytoriów, a reguły biznesowe siedzą w encjach domeny. Gdy reguła potrzebuje wiedzy spoza encji, handler przekazuje ją jako argument, np. `workOrder.Start(technicianHasWorkInProgress)`, dzięki czemu reguła jest testowalna jednostkowo.

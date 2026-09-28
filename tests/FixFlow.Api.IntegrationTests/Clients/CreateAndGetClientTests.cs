@@ -45,7 +45,7 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
 
         using var response = await client.PostAsJsonAsync(ClientRequests.ClientsUri, request, TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("Address.PostalCode");
+        await response.ShouldBeValidationProblemAsync("address.postalCode");
     }
 
     [Theory]

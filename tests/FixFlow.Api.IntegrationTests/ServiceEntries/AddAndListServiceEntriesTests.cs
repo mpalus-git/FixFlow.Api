@@ -69,7 +69,7 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
 
         using var response = await scenario.TechnicianClient.PostServiceEntryAsync(scenario.WorkOrder.Id, request);
 
-        await response.ShouldBeValidationProblemAsync(nameof(AddServiceEntryRequest.WorkStartedAt));
+        await response.ShouldBeValidationProblemAsync("workStartedAt");
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
 
         using var response = await scenario.TechnicianClient.PostServiceEntryAsync(scenario.WorkOrder.Id, request);
 
-        await response.ShouldBeValidationProblemAsync(nameof(AddServiceEntryRequest.WorkFinishedAt));
+        await response.ShouldBeValidationProblemAsync("workFinishedAt");
     }
 
     [Fact]

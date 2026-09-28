@@ -96,7 +96,7 @@ public sealed class ListDevicesTests(FixFlowApiFactory factory) : IntegrationTes
 
         using var response = await client.GetAsync(new Uri($"/api/v1/devices?search={new string('a', 101)}", UriKind.Relative), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("Search");
+        await response.ShouldBeValidationProblemAsync("search");
     }
 
     private static async Task<PagedResponse<DeviceResponse>> GetPageAsync(HttpClient client, string query)

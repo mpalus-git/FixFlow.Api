@@ -8,7 +8,7 @@ namespace FixFlow.Api.UnitTests.Common.Errors;
 public sealed class ErrorOrProblemExtensionsTests
 {
     [Fact]
-    public void Should_Return_Validation_Problem_With_Errors_Grouped_By_Code_When_All_Errors_Are_Validation()
+    public void Should_Return_Validation_Problem_With_Camel_Case_Keys_Grouped_By_Code_When_All_Errors_Are_Validation()
     {
         Error[] errors =
         [
@@ -21,8 +21,8 @@ public sealed class ErrorOrProblemExtensionsTests
 
         var problem = result.ShouldBeOfType<ValidationProblem>();
         problem.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
-        problem.ProblemDetails.Errors["Email"].ShouldBe(["Email is required.", "Email is invalid."]);
-        problem.ProblemDetails.Errors["Password"].ShouldBe(["Password is required."]);
+        problem.ProblemDetails.Errors["email"].ShouldBe(["Email is required.", "Email is invalid."]);
+        problem.ProblemDetails.Errors["password"].ShouldBe(["Password is required."]);
     }
 
     [Theory]

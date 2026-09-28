@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Errors;
 using FluentValidation;
 
 namespace FixFlow.Api.Common.Behaviors;
@@ -16,7 +17,10 @@ public sealed class ValidationFilter<TRequest> : IEndpointFilter
         var validationResult = await validator.ValidateAsync(request, context.HttpContext.RequestAborted);
         if (!validationResult.IsValid)
         {
-            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+            return TypedResults.ValidationProblem(ValidationErrorKey.GroupByPropertyPath(
+                validationResult.Errors,
+                error => error.PropertyName,
+                error => error.ErrorMessage));
         }
 
         return await next(context);

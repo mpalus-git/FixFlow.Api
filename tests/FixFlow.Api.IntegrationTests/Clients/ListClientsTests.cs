@@ -85,7 +85,7 @@ public sealed class ListClientsTests(FixFlowApiFactory factory) : IntegrationTes
 
         using var response = await client.GetAsync(new Uri("/api/v1/clients?pageSize=101", UriKind.Relative), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("PageSize");
+        await response.ShouldBeValidationProblemAsync("pageSize");
     }
 
     private static async Task<PagedResponse<ClientResponse>> GetPageAsync(HttpClient client, string query)

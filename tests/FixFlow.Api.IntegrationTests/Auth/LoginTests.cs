@@ -91,7 +91,7 @@ public sealed class LoginTests(FixFlowApiFactory factory) : IntegrationTestBase(
 
         using var response = await client.PostAsJsonAsync(AuthRequests.LoginUri, new LoginRequest("not-an-email", "Some1!password"), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("Email");
+        await response.ShouldBeValidationProblemAsync("email");
     }
 
     private static Task ShouldBeInvalidCredentialsProblemAsync(HttpResponseMessage response) =>

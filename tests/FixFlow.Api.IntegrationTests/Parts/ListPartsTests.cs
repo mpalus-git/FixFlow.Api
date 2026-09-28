@@ -73,7 +73,7 @@ public sealed class ListPartsTests(FixFlowApiFactory factory) : IntegrationTestB
 
         using var response = await client.GetAsync(new Uri($"/api/v1/parts?search={new string('a', 101)}", UriKind.Relative), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("Search");
+        await response.ShouldBeValidationProblemAsync("search");
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class ListPartsTests(FixFlowApiFactory factory) : IntegrationTestB
 
         using var response = await client.GetAsync(new Uri("/api/v1/parts?page=30000000&pageSize=100", UriKind.Relative), TestContext.Current.CancellationToken);
 
-        await response.ShouldBeValidationProblemAsync("Page");
+        await response.ShouldBeValidationProblemAsync("page");
     }
 
     private static async Task<PagedResponse<PartResponse>> GetPageAsync(HttpClient client, string query)
