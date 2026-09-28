@@ -1310,7 +1310,7 @@
           "WorkOrders"
         ],
         "summary": "List work orders",
-        "description": "Returns one page of work orders ordered by due date, optionally filtered by status, technician and device. Technicians only see work orders assigned to them.",
+        "description": "Returns one page of work orders ordered by due date, with the serial number and model of the device, the client name and the technician email, optionally filtered by status, technician and device. Technicians only see work orders assigned to them.",
         "operationId": "ListWorkOrders",
         "parameters": [
           {
@@ -1374,7 +1374,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResponseOfWorkOrderResponse"
+                  "$ref": "#/components/schemas/PagedResponseOfWorkOrderListItemResponse"
                 }
               }
             }
@@ -3429,7 +3429,7 @@
         },
         "description": "One page of a list."
       },
-      "PagedResponseOfWorkOrderResponse": {
+      "PagedResponseOfWorkOrderListItemResponse": {
         "required": [
           "items",
           "page",
@@ -3441,7 +3441,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WorkOrderResponse"
+              "$ref": "#/components/schemas/WorkOrderListItemResponse"
             },
             "description": "Items on the requested page."
           },
@@ -3864,6 +3864,123 @@
           }
         },
         "description": "User account."
+      },
+      "WorkOrderListItemResponse": {
+        "required": [
+          "id",
+          "deviceId",
+          "deviceSerialNumber",
+          "deviceModel",
+          "clientId",
+          "clientName",
+          "description",
+          "priority",
+          "status",
+          "technicianId",
+          "technicianEmail",
+          "dueDate",
+          "isOverdue",
+          "createdAt",
+          "startedAt",
+          "completedAt",
+          "invoicedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the work order.",
+            "format": "uuid"
+          },
+          "deviceId": {
+            "type": "string",
+            "description": "Identifier of the serviced device.",
+            "format": "uuid"
+          },
+          "deviceSerialNumber": {
+            "type": "string",
+            "description": "Serial number of the serviced device."
+          },
+          "deviceModel": {
+            "type": "string",
+            "description": "Model of the serviced device."
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of the client owning the device.",
+            "format": "uuid"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Name of the client owning the device."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the fault."
+          },
+          "priority": {
+            "description": "Priority of the work order.",
+            "$ref": "#/components/schemas/WorkOrderPriority"
+          },
+          "status": {
+            "description": "Current status of the work order.",
+            "$ref": "#/components/schemas/WorkOrderStatus"
+          },
+          "technicianId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of the assigned technician; null when no technician is assigned.",
+            "format": "uuid"
+          },
+          "technicianEmail": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email of the assigned technician; null when no technician is assigned."
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order.",
+            "format": "date-time"
+          },
+          "isOverdue": {
+            "type": "boolean",
+            "description": "True when the deadline has passed and the work order is neither completed nor invoiced."
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the work order was created.",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the technician started the work; null before the work is started.",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the work order was completed; null before completion.",
+            "format": "date-time"
+          },
+          "invoicedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the work order was invoiced; null before invoicing.",
+            "format": "date-time"
+          }
+        },
+        "description": "Work order on a list, with basic details of its device, client and technician."
       },
       "WorkOrderPriority": {
         "enum": [

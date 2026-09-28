@@ -5,6 +5,7 @@ using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
+using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
 using Microsoft.EntityFrameworkCore;
@@ -44,9 +45,9 @@ public static class WorkOrderRequests
         return workOrder.ShouldNotBeNull();
     }
 
-    public static async Task<PagedResponse<WorkOrderResponse>> ListWorkOrdersAsync(this HttpClient client, string query = "")
+    public static async Task<PagedResponse<WorkOrderListItemResponse>> ListWorkOrdersAsync(this HttpClient client, string query = "")
     {
-        var page = await client.GetFromJsonAsync<PagedResponse<WorkOrderResponse>>(
+        var page = await client.GetFromJsonAsync<PagedResponse<WorkOrderListItemResponse>>(
             new Uri($"/api/v1/work-orders{query}", UriKind.Relative),
             ApiJson.Options,
             TestContext.Current.CancellationToken);

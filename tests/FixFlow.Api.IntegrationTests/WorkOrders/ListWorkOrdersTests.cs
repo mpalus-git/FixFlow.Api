@@ -1,5 +1,7 @@
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.IntegrationTests.Clients;
+using FixFlow.Api.IntegrationTests.Devices;
 
 namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
@@ -19,6 +21,25 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
 
         page.Items.Select(item => item.Description).ShouldBe(["Due in 3 days", "Due in 4 days"]);
         page.TotalCount.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task Should_Include_Device_Client_And_Technician_Details_When_Work_Orders_Are_Listed()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var owner = await client.CreateClientAsync(ClientRequests.NewClient("Biuro Rachunkowe Alfa"));
+        var device = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "SN-LIST-1"));
+        var assignedWorkOrder = await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(device.Id, dueInDays: 1));
+        await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(device.Id, dueInDays: 2));
+        var technician = await CreateUserAsync(Roles.Technician);
+        await Factory.AssignTechnicianDirectlyAsync(assignedWorkOrder.Id, technician.Id);
+
+        var page = await client.ListWorkOrdersAsync();
+
+        page.Items.Count.ShouldBe(2);
+        page.Items.ShouldAllBe(item => item.DeviceSerialNumber == device.SerialNumber && item.DeviceModel == device.Model);
+        page.Items.ShouldAllBe(item => item.ClientId == owner.Id && item.ClientName == owner.Name);
+        page.Items.Select(item => item.TechnicianEmail).ShouldBe([technician.Email, null]);
     }
 
     [Fact]

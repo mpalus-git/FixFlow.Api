@@ -7,7 +7,7 @@ namespace FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 
 public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
 {
-    public Task<PagedResponse<WorkOrderResponse>> HandleAsync(ListWorkOrdersRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
+    public Task<PagedResponse<WorkOrderListItemResponse>> HandleAsync(ListWorkOrdersRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         var query = dbContext.WorkOrders
             .AsNoTracking()
@@ -33,9 +33,25 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             query = query.Where(workOrder => workOrder.IsOverdue == isOverdue);
         }
 
-        return query
-            .OrderBy(workOrder => workOrder.DueDate)
-            .ThenBy(workOrder => workOrder.Id)
-            .ToPagedResponseAsync(request, WorkOrderResponse.FromDomain, cancellationToken);
+        var rows =
+            from workOrder in query
+            join device in dbContext.Devices on workOrder.DeviceId equals device.Id
+            join client in dbContext.Clients on device.ClientId equals client.Id
+            join technician in dbContext.Users on workOrder.TechnicianId equals technician.Id into technicians
+            from technician in technicians.DefaultIfEmpty()
+            select new WorkOrderListRow
+            {
+                WorkOrder = workOrder,
+                DeviceSerialNumber = device.SerialNumber,
+                DeviceModel = device.Model,
+                ClientId = client.Id,
+                ClientName = client.Name,
+                TechnicianEmail = technician == null ? null : technician.Email,
+            };
+
+        return rows
+            .OrderBy(row => row.WorkOrder.DueDate)
+            .ThenBy(row => row.WorkOrder.Id)
+            .ToPagedResponseAsync(request, WorkOrderListItemResponse.FromRow, cancellationToken);
     }
 }
