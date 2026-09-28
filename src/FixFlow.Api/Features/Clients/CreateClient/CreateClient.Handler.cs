@@ -1,4 +1,5 @@
 using FixFlow.Api.Common.Caching;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Clients;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -7,7 +8,7 @@ namespace FixFlow.Api.Features.Clients.CreateClient;
 
 public sealed class CreateClientHandler(FixFlowDbContext dbContext, TimeProvider timeProvider, HybridCache cache)
 {
-    public async Task<ClientResponse> HandleAsync(CreateClientRequest request, CancellationToken cancellationToken)
+    public async Task<Versioned<ClientResponse>> HandleAsync(CreateClientRequest request, CancellationToken cancellationToken)
     {
         var client = Client.Create(
             request.Name,
@@ -21,6 +22,6 @@ public sealed class CreateClientHandler(FixFlowDbContext dbContext, TimeProvider
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveByTagAsync(CacheTags.Clients, cancellationToken);
 
-        return ClientResponse.FromDomain(client);
+        return dbContext.Versioned(client, ClientResponse.FromDomain(client));
     }
 }

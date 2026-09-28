@@ -84,6 +84,7 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
         using var request = new HttpRequestMessage(
             missingResourceRequest.Method,
             new Uri($"/api/v1/{missingResourceRequest.Path.Replace(MissingId, Guid.CreateVersion7().ToString(), StringComparison.Ordinal)}", UriKind.Relative));
+        request.Headers.TryAddWithoutValidation("If-Match", ConditionalRequests.AnyVersion);
         if (missingResourceRequest.Body is not null)
         {
             request.Content = JsonContent.Create(missingResourceRequest.Body, missingResourceRequest.Body.GetType(), options: ApiJson.Options);

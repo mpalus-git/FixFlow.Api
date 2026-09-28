@@ -23,7 +23,7 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var createdClient = await client.CreateClientAsync(ClientRequests.NewClient());
 
-        using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var storedClient = await client.GetFromJsonAsync<ClientResponse>(ClientRequests.ClientUri(createdClient.Id), TestContext.Current.CancellationToken);
@@ -42,7 +42,7 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
         var createdClient = await client.CreateClientAsync(ClientRequests.NewClient());
         using var archiveResponse = await client.PostAsync(ArchiveUri(createdClient.Id), null, TestContext.Current.CancellationToken);
 
-        using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, ClientErrors.Archived.Code);
     }
@@ -53,7 +53,7 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var createdClient = await client.CreateClientAsync(ClientRequests.NewClient());
 
-        using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails with { Phone = "123" }, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails with { Phone = "123" }, TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("phone");
     }

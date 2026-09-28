@@ -46,7 +46,7 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
         var createdClient = await client.CreateClientAsync(ClientRequests.NewClient("Alfa"));
         await GetClientsAsync(client);
 
-        using var response = await client.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), ClientRequests.NewClient("Alfa Serwis"), TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(createdClient.Id), ClientRequests.NewClient("Alfa Serwis"), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
         var page = await GetClientsAsync(client);

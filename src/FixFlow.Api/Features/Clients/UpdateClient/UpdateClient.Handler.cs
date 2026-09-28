@@ -1,5 +1,6 @@
 using ErrorOr;
 using FixFlow.Api.Common.Caching;
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Clients;
 using Microsoft.EntityFrameworkCore;
@@ -9,12 +10,22 @@ namespace FixFlow.Api.Features.Clients.UpdateClient;
 
 public sealed class UpdateClientHandler(FixFlowDbContext dbContext, HybridCache cache)
 {
-    public async Task<ErrorOr<ClientResponse>> HandleAsync(Guid clientId, UpdateClientRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<ClientResponse>>> HandleAsync(
+        Guid clientId,
+        UpdateClientRequest request,
+        string ifMatch,
+        CancellationToken cancellationToken)
     {
         var client = await dbContext.Clients.SingleOrDefaultAsync(client => client.Id == clientId, cancellationToken);
         if (client is null)
         {
             return ClientErrors.NotFound;
+        }
+
+        var precondition = dbContext.EnsureVersionMatches(client, ifMatch);
+        if (precondition.IsError)
+        {
+            return precondition.Errors;
         }
 
         var update = client.Update(
@@ -28,9 +39,14 @@ public sealed class UpdateClientHandler(FixFlowDbContext dbContext, HybridCache 
             return update.Errors;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var saving = await dbContext.SaveChangesOrPreconditionFailedAsync(cancellationToken);
+        if (saving.IsError)
+        {
+            return saving.Errors;
+        }
+
         await cache.RemoveByTagAsync(CacheTags.Clients, cancellationToken);
 
-        return ClientResponse.FromDomain(client);
+        return dbContext.Versioned(client, ClientResponse.FromDomain(client));
     }
 }
