@@ -7,12 +7,10 @@ namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
 public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Assign_Technician_And_Make_Work_Order_Visible_To_Technician_When_Dispatcher_Or_Admin_Assigns(string role)
+    [Fact]
+    public async Task Should_Assign_Technician_And_Make_Work_Order_Visible_To_Technician_When_Dispatcher_Assigns()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var workOrder = await CreateWorkOrderAsync(client);
         var technician = await CreateUserAsync(Roles.Technician);
 

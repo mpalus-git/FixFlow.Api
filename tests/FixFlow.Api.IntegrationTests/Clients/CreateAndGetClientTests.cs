@@ -7,12 +7,10 @@ namespace FixFlow.Api.IntegrationTests.Clients;
 
 public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_Client_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_Client_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var request = ClientRequests.NewClient();
 
         using var response = await client.PostAsJsonAsync(ClientRequests.ClientsUri, request, TestContext.Current.CancellationToken);

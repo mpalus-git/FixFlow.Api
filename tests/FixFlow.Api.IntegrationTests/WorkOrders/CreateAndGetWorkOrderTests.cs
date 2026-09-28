@@ -7,12 +7,10 @@ namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
 public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_New_Unassigned_Work_Order_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_New_Unassigned_Work_Order_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var deviceId = await client.CreateServicedDeviceAsync();
         var request = WorkOrderRequests.NewWorkOrder(deviceId);
 

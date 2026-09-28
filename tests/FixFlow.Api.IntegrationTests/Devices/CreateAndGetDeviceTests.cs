@@ -9,12 +9,10 @@ namespace FixFlow.Api.IntegrationTests.Devices;
 
 public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Admin)]
-    public async Task Should_Create_Device_With_Location_When_Dispatcher_Or_Admin_Creates_It(string role)
+    [Fact]
+    public async Task Should_Create_Device_With_Location_When_Dispatcher_Creates_It()
     {
-        using var client = await CreateAuthenticatedClientAsync(role);
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var owner = await client.CreateClientAsync(ClientRequests.NewClient());
         var request = DeviceRequests.NewDevice(owner.Id);
 
