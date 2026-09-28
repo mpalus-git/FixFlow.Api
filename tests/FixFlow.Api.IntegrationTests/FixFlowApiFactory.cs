@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
@@ -71,6 +72,8 @@ public sealed class FixFlowApiFactory : WebApplicationFactory<Program>, IAsyncLi
         builder.UseSetting("Seed:DemoUsers:AdminPassword", DemoUsersPassword);
         builder.UseSetting("Seed:DemoUsers:DispatcherPassword", DemoUsersPassword);
         builder.UseSetting("Seed:DemoUsers:TechnicianPassword", DemoUsersPassword);
+        builder.ConfigureServices(services =>
+            services.Configure<PasswordHasherOptions>(options => options.IterationCount = 1));
     }
 
     private async Task<NpgsqlConnection> OpenDatabaseConnectionAsync()
