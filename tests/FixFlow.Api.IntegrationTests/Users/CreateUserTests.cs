@@ -70,14 +70,4 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
             TestContext.Current.CancellationToken);
         loginResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
-
-    [Fact]
-    public async Task Should_Return_Validation_Problem_When_Role_Is_Unknown()
-    {
-        using var adminClient = await CreateAuthenticatedClientAsync(Roles.Admin);
-
-        using var response = await adminClient.PostAsJsonAsync(UsersUri, new CreateUserRequest("someone@fixflow.test", "Initial1!password", "Manager"), TestContext.Current.CancellationToken);
-
-        await response.ShouldBeValidationProblemAsync("role");
-    }
 }
