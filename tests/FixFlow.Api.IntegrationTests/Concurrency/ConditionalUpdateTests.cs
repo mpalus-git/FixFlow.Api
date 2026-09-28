@@ -5,8 +5,10 @@ using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Clients.UpdateClient;
 using FixFlow.Api.Features.Devices.UpdateDevice;
+using FixFlow.Api.Features.Parts.UpdatePart;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
+using FixFlow.Api.IntegrationTests.Parts;
 
 namespace FixFlow.Api.IntegrationTests.Concurrency;
 
@@ -28,6 +30,11 @@ public sealed class ConditionalUpdateTests(FixFlowApiFactory factory) : Integrat
             return new UpdatableResource(
                 DeviceRequests.DeviceUri(device.Id),
                 new UpdateDeviceRequest("AC-2002", "Multi 5 kW", "Mitsubishi", new DateOnly(2025, 3, 10)));
+        },
+        ["part"] = async client =>
+        {
+            var part = await client.CreatePartAsync(PartRequests.NewPart());
+            return new UpdatableResource(PartRequests.PartUri(part.Id), new UpdatePartRequest("Filtr węglowy", "FLT-200", 59.50m));
         },
     };
 

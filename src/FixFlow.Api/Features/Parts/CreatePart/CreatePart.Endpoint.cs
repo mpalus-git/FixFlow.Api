@@ -1,6 +1,6 @@
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
-using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Common.Concurrency;
 
 namespace FixFlow.Api.Features.Parts.CreatePart;
 
@@ -11,7 +11,7 @@ public static class CreatePartEndpoint
         group.MapPost("/", async (CreatePartRequest request, CreatePartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.ToCreatedOrProblem(part => $"/api/v1/parts/{part.Id}");
+                return result.ToCreatedWithETagOrProblem(part => $"/api/v1/parts/{part.Id}");
             })
             .WithName("CreatePart")
             .WithSummary("Create a part")
@@ -21,7 +21,8 @@ public static class CreatePartEndpoint
             .Produces<PartResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .WithETagResponse();
 
         return group;
     }

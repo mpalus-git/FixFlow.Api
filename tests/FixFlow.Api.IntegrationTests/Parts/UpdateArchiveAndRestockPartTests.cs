@@ -21,7 +21,7 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var part = await client.CreatePartAsync(PartRequests.NewPart("FLT-100"));
 
-        using var response = await client.PutAsJsonAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var storedPart = await GetPartAsync(client, part.Id);
@@ -38,7 +38,7 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         var part = await client.CreatePartAsync(PartRequests.NewPart("FLT-100"));
 
-        using var response = await client.PutAsJsonAsync(PartRequests.PartUri(part.Id), UpdatedDetails with { CatalogNumber = "flt-100" }, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(PartRequests.PartUri(part.Id), UpdatedDetails with { CatalogNumber = "flt-100" }, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -50,7 +50,7 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         await client.CreatePartAsync(PartRequests.NewPart("FLT-200"));
         var part = await client.CreatePartAsync(PartRequests.NewPart("FLT-100"));
 
-        using var response = await client.PutAsJsonAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, PartErrors.DuplicateCatalogNumber.Code);
     }
@@ -62,7 +62,7 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         var part = await client.CreatePartAsync(PartRequests.NewPart());
         await client.ArchivePartAsync(part.Id);
 
-        using var response = await client.PutAsJsonAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
+        using var response = await client.PutWithCurrentETagAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, PartErrors.Archived.Code);
     }
@@ -99,6 +99,7 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var restockedPart = await response.Content.ReadFromJsonAsync<PartResponse>(TestContext.Current.CancellationToken);
         restockedPart.ShouldNotBeNull().StockQuantity.ShouldBe(part.StockQuantity + 8);
+        response.ETag().ShouldBe(await client.GetETagAsync(PartRequests.PartUri(part.Id), TestContext.Current.CancellationToken));
         (await GetPartAsync(client, part.Id)).StockQuantity.ShouldBe(part.StockQuantity + 8);
     }
 

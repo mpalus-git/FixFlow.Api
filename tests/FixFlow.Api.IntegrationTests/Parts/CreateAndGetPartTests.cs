@@ -20,6 +20,7 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
         var createdPart = await response.Content.ReadFromJsonAsync<PartResponse>(TestContext.Current.CancellationToken);
         createdPart.ShouldNotBeNull();
         response.Headers.Location.ShouldBe(PartRequests.PartUri(createdPart.Id));
+        response.ETag().ShouldBe(await client.GetETagAsync(PartRequests.PartUri(createdPart.Id), TestContext.Current.CancellationToken));
         createdPart.Name.ShouldBe(request.Name);
         createdPart.StockQuantity.ShouldBe(request.StockQuantity);
         createdPart.UnitPrice.ShouldBe(request.UnitPrice);
