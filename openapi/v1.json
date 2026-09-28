@@ -616,6 +616,87 @@
         ]
       }
     },
+    "/api/v1/users/{userId}/password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reset the password of a user account",
+        "description": "Replaces the password of any account, for example when the user forgot it, lifts a lockout after failed sign-ins and revokes all refresh tokens of the account. Access tokens issued before stay valid until they expire. Available to administrators.",
+        "operationId": "ResetPassword",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/clients": {
       "post": {
         "tags": [
@@ -3888,6 +3969,19 @@
           }
         },
         "description": "Refresh token received from the last login or refresh."
+      },
+      "ResetPasswordRequest": {
+        "required": [
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "description": "New password. At least 8 characters with an uppercase letter, a lowercase letter, a digit and a non-alphanumeric character."
+          }
+        },
+        "description": "New password set by an administrator for a user account."
       },
       "RestockPartRequest": {
         "required": [

@@ -4,6 +4,7 @@ using FixFlow.Api.Features.Users.CreateUser;
 using FixFlow.Api.Features.Users.DeactivateUser;
 using FixFlow.Api.Features.Users.GetCurrentUser;
 using FixFlow.Api.Features.Users.ListUsers;
+using FixFlow.Api.Features.Users.ResetPassword;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Users;
@@ -19,6 +20,8 @@ public static class UsersModule
         services.AddScoped<ChangePasswordHandler>();
         services.AddScoped<DeactivateUserHandler>();
         services.AddScoped<ActivateUserHandler>();
+        services.AddScoped<ResetPasswordHandler>();
+        services.AddSingleton<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
         services.AddSingleton<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
         services.AddSingleton<IValidator<ListUsersRequest>, ListUsersRequestValidator>();
 
@@ -38,6 +41,7 @@ public static class UsersModule
         group.MapChangePassword();
         group.MapDeactivateUser();
         group.MapActivateUser();
+        group.MapResetPassword();
 
         return app;
     }
