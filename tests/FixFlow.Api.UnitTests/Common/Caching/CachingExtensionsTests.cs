@@ -1,8 +1,10 @@
 using FixFlow.Api.Common.Caching;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace FixFlow.Api.UnitTests.Common.Caching;
 
@@ -29,11 +31,28 @@ public sealed class CachingExtensionsTests
         services.ShouldContain(descriptor => descriptor.ServiceType == typeof(IDistributedCache));
     }
 
-    private static IConfiguration CreateConfiguration(string? redisConnectionString) =>
+    [Theory]
+    [InlineData(null, 1000)]
+    [InlineData("00:00:00.100", 100)]
+    public void Should_Apply_Redis_Timeouts_From_Configuration_Or_Default_When_Redis_Is_Configured(string? redisTimeout, int expectedMilliseconds)
+    {
+        using var serviceProvider = new ServiceCollection()
+            .AddApplicationCaching(CreateConfiguration("localhost:6379", redisTimeout))
+            .BuildServiceProvider();
+
+        var redisOptions = serviceProvider.GetRequiredService<IOptions<RedisCacheOptions>>().Value.ConfigurationOptions.ShouldNotBeNull();
+
+        redisOptions.ConnectTimeout.ShouldBe(expectedMilliseconds);
+        redisOptions.SyncTimeout.ShouldBe(expectedMilliseconds);
+        redisOptions.AsyncTimeout.ShouldBe(expectedMilliseconds);
+    }
+
+    private static IConfiguration CreateConfiguration(string? redisConnectionString, string? redisTimeout = null) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"ConnectionStrings:{CachingExtensions.RedisConnectionStringName}"] = redisConnectionString,
+                [CachingExtensions.RedisTimeoutKey] = redisTimeout,
             })
             .Build();
 }
