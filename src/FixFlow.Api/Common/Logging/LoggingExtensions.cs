@@ -1,5 +1,7 @@
 using System.Globalization;
+using FixFlow.Api.Common.Health;
 using Serilog;
+using Serilog.Events;
 using Serilog.Formatting.Compact;
 
 namespace FixFlow.Api.Common.Logging;
@@ -43,8 +45,24 @@ public static class LoggingExtensions
 
     public static WebApplication UseRequestLogging(this WebApplication app)
     {
-        app.UseSerilogRequestLogging(options => options.EnrichDiagnosticContext = EnrichWithClientIp);
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.EnrichDiagnosticContext = EnrichWithClientIp;
+            options.GetLevel = GetRequestLogLevel;
+        });
         return app;
+    }
+
+    public static LogEventLevel GetRequestLogLevel(HttpContext httpContext, double elapsedMilliseconds, Exception? exception)
+    {
+        if (exception is not null || httpContext.Response.StatusCode >= StatusCodes.Status500InternalServerError)
+        {
+            return LogEventLevel.Error;
+        }
+
+        return httpContext.Request.Path.StartsWithSegments(HealthCheckExtensions.LivenessPath, StringComparison.OrdinalIgnoreCase)
+            ? LogEventLevel.Verbose
+            : LogEventLevel.Information;
     }
 
     public static void EnrichWithClientIp(IDiagnosticContext diagnosticContext, HttpContext httpContext) =>
