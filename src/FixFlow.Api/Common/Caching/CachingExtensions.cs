@@ -10,7 +10,9 @@ public static class CachingExtensions
 {
     public const string RedisConnectionStringName = "Redis";
 
-    private const int RedisTimeoutMilliseconds = 1000;
+    public const string RedisTimeoutKey = "Caching:RedisTimeout";
+
+    private static readonly TimeSpan DefaultRedisTimeout = TimeSpan.FromSeconds(1);
 
     public static IServiceCollection AddApplicationCaching(this IServiceCollection services, IConfiguration configuration)
     {
@@ -23,9 +25,10 @@ public static class CachingExtensions
         var redisConnectionString = configuration.GetConnectionString(RedisConnectionStringName);
         if (!string.IsNullOrWhiteSpace(redisConnectionString))
         {
+            var redisTimeout = configuration.GetValue(RedisTimeoutKey, DefaultRedisTimeout);
             services.Configure<RedisCacheOptions>(options =>
             {
-                options.ConfigurationOptions = CreateRedisOptions(redisConnectionString);
+                options.ConfigurationOptions = CreateRedisOptions(redisConnectionString, redisTimeout);
                 options.InstanceName = "fixflow:";
             });
             services.AddSingleton<IDistributedCache>(serviceProvider => new ResilientDistributedCache(
@@ -36,13 +39,14 @@ public static class CachingExtensions
         return services;
     }
 
-    private static ConfigurationOptions CreateRedisOptions(string connectionString)
+    private static ConfigurationOptions CreateRedisOptions(string connectionString, TimeSpan timeout)
     {
+        var timeoutMilliseconds = (int)timeout.TotalMilliseconds;
         var redisOptions = ConfigurationOptions.Parse(connectionString);
         redisOptions.AbortOnConnectFail = false;
-        redisOptions.ConnectTimeout = RedisTimeoutMilliseconds;
-        redisOptions.SyncTimeout = RedisTimeoutMilliseconds;
-        redisOptions.AsyncTimeout = RedisTimeoutMilliseconds;
+        redisOptions.ConnectTimeout = timeoutMilliseconds;
+        redisOptions.SyncTimeout = timeoutMilliseconds;
+        redisOptions.AsyncTimeout = timeoutMilliseconds;
         redisOptions.BacklogPolicy = BacklogPolicy.FailFast;
         return redisOptions;
     }

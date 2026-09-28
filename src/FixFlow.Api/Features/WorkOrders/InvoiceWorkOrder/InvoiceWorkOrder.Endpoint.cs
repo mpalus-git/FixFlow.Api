@@ -10,7 +10,7 @@ public static class InvoiceWorkOrderEndpoint
         group.MapPost("/{workOrderId:guid}/invoice", async (Guid workOrderId, InvoiceWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("InvoiceWorkOrder")
             .WithSummary("Mark a work order as invoiced")

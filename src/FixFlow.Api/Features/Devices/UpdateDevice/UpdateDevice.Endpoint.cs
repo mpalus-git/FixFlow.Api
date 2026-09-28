@@ -11,7 +11,7 @@ public static class UpdateDeviceEndpoint
         group.MapPut("/{deviceId:guid}", async (Guid deviceId, UpdateDeviceRequest request, UpdateDeviceHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(deviceId, request, cancellationToken);
-                return result.Match<IResult>(device => TypedResults.Ok(device), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("UpdateDevice")
             .WithSummary("Update a device")

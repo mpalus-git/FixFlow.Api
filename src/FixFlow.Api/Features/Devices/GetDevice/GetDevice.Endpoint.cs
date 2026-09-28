@@ -9,7 +9,7 @@ public static class GetDeviceEndpoint
         group.MapGet("/{deviceId:guid}", async (Guid deviceId, GetDeviceHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(deviceId, cancellationToken);
-                return result.Match<IResult>(device => TypedResults.Ok(device), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("GetDevice")
             .WithSummary("Get a device")

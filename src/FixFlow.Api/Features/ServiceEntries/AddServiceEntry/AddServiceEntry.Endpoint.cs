@@ -12,7 +12,7 @@ public static class AddServiceEntryEndpoint
         group.MapPost("/", async (Guid workOrderId, AddServiceEntryRequest request, ClaimsPrincipal user, AddServiceEntryHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, request, user, cancellationToken);
-                return result.Match<IResult>(entry => TypedResults.Created((string?)null, entry), errors => errors.ToProblem());
+                return result.ToCreatedOrProblem();
             })
             .WithName("AddServiceEntry")
             .WithSummary("Add a service entry")

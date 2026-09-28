@@ -11,9 +11,7 @@ public static class CreateWorkOrderEndpoint
         group.MapPost("/", async (CreateWorkOrderRequest request, CreateWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.Match<IResult>(
-                    workOrder => TypedResults.Created($"/api/v1/work-orders/{workOrder.Id}", workOrder),
-                    errors => errors.ToProblem());
+                return result.ToCreatedOrProblem(workOrder => $"/api/v1/work-orders/{workOrder.Id}");
             })
             .WithName("CreateWorkOrder")
             .WithSummary("Create a work order")

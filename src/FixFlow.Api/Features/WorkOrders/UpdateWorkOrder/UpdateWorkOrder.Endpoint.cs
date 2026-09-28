@@ -11,7 +11,7 @@ public static class UpdateWorkOrderEndpoint
         group.MapPut("/{workOrderId:guid}", async (Guid workOrderId, UpdateWorkOrderRequest request, UpdateWorkOrderHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(workOrderId, request, cancellationToken);
-                return result.Match<IResult>(workOrder => TypedResults.Ok(workOrder), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("UpdateWorkOrder")
             .WithSummary("Update a work order")

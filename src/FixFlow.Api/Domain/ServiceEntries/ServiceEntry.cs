@@ -67,6 +67,15 @@ public sealed class ServiceEntry
             return ServiceEntryErrors.WorkFinishedInFuture;
         }
 
+        foreach (var quantitiesOfPart in usedParts.GroupBy(usage => usage.Part, usage => usage.Quantity))
+        {
+            var check = quantitiesOfPart.Key.EnsureCanConsume(quantitiesOfPart.Sum());
+            if (check.IsError)
+            {
+                return check.Errors;
+            }
+        }
+
         var entry = new ServiceEntry
         {
             Id = Guid.CreateVersion7(),

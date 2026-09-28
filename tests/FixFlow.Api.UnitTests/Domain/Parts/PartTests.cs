@@ -100,6 +100,17 @@ public sealed class PartTests
     }
 
     [Fact]
+    public void Should_Allow_Consumption_Without_Changing_Stock_When_Checking_Quantity_Within_Stock()
+    {
+        var part = CreatePart();
+
+        var result = part.EnsureCanConsume(12);
+
+        result.IsError.ShouldBeFalse();
+        part.StockQuantity.ShouldBe(12);
+    }
+
+    [Fact]
     public void Should_Reject_Consumption_When_Part_Is_Archived()
     {
         var part = CreatePart();

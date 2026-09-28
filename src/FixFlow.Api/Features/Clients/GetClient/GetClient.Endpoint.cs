@@ -9,7 +9,7 @@ public static class GetClientEndpoint
         group.MapGet("/{clientId:guid}", async (Guid clientId, GetClientHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(clientId, cancellationToken);
-                return result.Match<IResult>(client => TypedResults.Ok(client), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("GetClient")
             .WithSummary("Get a client")

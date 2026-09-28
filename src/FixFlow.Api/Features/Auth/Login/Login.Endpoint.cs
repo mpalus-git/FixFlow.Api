@@ -11,7 +11,7 @@ public static class LoginEndpoint
         group.MapPost("/login", async (LoginRequest request, LoginHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.Match<IResult>(tokens => TypedResults.Ok(tokens), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("Login")
             .WithSummary("Log in with email and password")

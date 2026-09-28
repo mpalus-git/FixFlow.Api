@@ -11,9 +11,7 @@ public static class CreateDeviceEndpoint
         group.MapPost("/", async (CreateDeviceRequest request, CreateDeviceHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.Match<IResult>(
-                    device => TypedResults.Created($"/api/v1/devices/{device.Id}", device),
-                    errors => errors.ToProblem());
+                return result.ToCreatedOrProblem(device => $"/api/v1/devices/{device.Id}");
             })
             .WithName("CreateDevice")
             .WithSummary("Create a device")

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
@@ -15,12 +16,14 @@ namespace FixFlow.Api.IntegrationTests.Caching;
 public sealed class UnavailableRedisTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
     private const string UnreachableRedisConnectionString = "127.0.0.1:1";
+    private const string ShortRedisTimeout = "00:00:00.100";
 
     [Fact]
     public async Task Should_Serve_And_Refresh_Lists_When_Configured_Redis_Is_Unavailable()
     {
-        await using var factoryWithoutRedis = Factory.WithWebHostBuilder(builder =>
-            builder.UseSetting("ConnectionStrings:Redis", UnreachableRedisConnectionString));
+        await using var factoryWithoutRedis = Factory.WithWebHostBuilder(builder => builder
+            .UseSetting("ConnectionStrings:Redis", UnreachableRedisConnectionString)
+            .UseSetting(CachingExtensions.RedisTimeoutKey, ShortRedisTimeout));
         using var client = factoryWithoutRedis.CreateClient();
         var tokens = await client.LoginAsync(await CreateUserAsync(Roles.Dispatcher));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);

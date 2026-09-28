@@ -11,7 +11,7 @@ public static class UpdatePartEndpoint
         group.MapPut("/{partId:guid}", async (Guid partId, UpdatePartRequest request, UpdatePartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(partId, request, cancellationToken);
-                return result.Match<IResult>(part => TypedResults.Ok(part), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("UpdatePart")
             .WithSummary("Update a part")

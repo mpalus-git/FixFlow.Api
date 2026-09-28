@@ -11,7 +11,7 @@ public static class RefreshEndpoint
         group.MapPost("/refresh", async (RefreshRequest request, RefreshHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.Match<IResult>(tokens => TypedResults.Ok(tokens), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("RefreshTokens")
             .WithSummary("Exchange a refresh token for a new token pair")

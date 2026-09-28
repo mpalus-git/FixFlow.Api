@@ -57,6 +57,30 @@ public sealed class ServiceEntryTests
     }
 
     [Fact]
+    public void Should_Leave_Stock_Of_First_Part_Unchanged_When_Second_Part_Has_Insufficient_Stock()
+    {
+        var firstPart = CreatePart(stockQuantity: 5);
+        var secondPart = CreatePart(stockQuantity: 1);
+
+        var result = ServiceEntry.CreateWork(CreateInProgressWorkOrder(), TechnicianId, "Replaced filters", [], Now, Now.AddHours(1), null, [new PartUsage(firstPart, 2), new PartUsage(secondPart, 3)], Now.AddHours(1));
+
+        result.FirstError.ShouldBe(PartErrors.InsufficientStock);
+        firstPart.StockQuantity.ShouldBe(5);
+        secondPart.StockQuantity.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Should_Reject_Work_Entry_And_Keep_Stock_When_Same_Part_Listed_Twice_Exceeds_Stock()
+    {
+        var part = CreatePart(stockQuantity: 4);
+
+        var result = ServiceEntry.CreateWork(CreateInProgressWorkOrder(), TechnicianId, "Replaced filters", [], Now, Now.AddHours(1), null, [new PartUsage(part, 3), new PartUsage(part, 2)], Now.AddHours(1));
+
+        result.FirstError.ShouldBe(PartErrors.InsufficientStock);
+        part.StockQuantity.ShouldBe(4);
+    }
+
+    [Fact]
     public void Should_Reject_Work_Entry_When_Part_Is_Archived()
     {
         var part = CreatePart(stockQuantity: 5);

@@ -5,6 +5,9 @@ namespace FixFlow.Api.Common.Health;
 
 public static class HealthCheckExtensions
 {
+    public const string LivenessPath = "/health";
+    public const string ReadinessPath = "/health/ready";
+
     private const string ReadinessTag = "ready";
 
     public static IServiceCollection AddApplicationHealthChecks(this IServiceCollection services)
@@ -17,11 +20,11 @@ public static class HealthCheckExtensions
 
     public static WebApplication MapHealthEndpoints(this WebApplication app)
     {
-        app.MapHealthChecks("/health", new HealthCheckOptions
+        app.MapHealthChecks(LivenessPath, new HealthCheckOptions
         {
             Predicate = _ => false,
         });
-        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        app.MapHealthChecks(ReadinessPath, new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains(ReadinessTag),
         });

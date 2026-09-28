@@ -11,7 +11,7 @@ public static class RestockPartEndpoint
         group.MapPost("/{partId:guid}/restock", async (Guid partId, RestockPartRequest request, RestockPartHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(partId, request, cancellationToken);
-                return result.Match<IResult>(part => TypedResults.Ok(part), errors => errors.ToProblem());
+                return result.ToOkOrProblem();
             })
             .WithName("RestockPart")
             .WithSummary("Register a part delivery")

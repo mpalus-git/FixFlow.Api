@@ -11,7 +11,7 @@ public static class CreateUserEndpoint
         group.MapPost("/", async (CreateUserRequest request, CreateUserHandler handler, CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(request, cancellationToken);
-                return result.Match<IResult>(user => TypedResults.Created((string?)null, user), errors => errors.ToProblem());
+                return result.ToCreatedOrProblem();
             })
             .WithName("CreateUser")
             .WithSummary("Create a user account")
