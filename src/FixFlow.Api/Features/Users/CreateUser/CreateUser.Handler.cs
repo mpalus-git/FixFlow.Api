@@ -2,6 +2,7 @@ using ErrorOr;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Users;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.Users.CreateUser;
 
@@ -9,8 +10,12 @@ public sealed class CreateUserHandler(UserManager<ApplicationUser> userManager, 
 {
     private static readonly string[] DuplicateErrorCodes = ["DuplicateEmail", "DuplicateUserName"];
 
-    public async Task<ErrorOr<UserResponse>> HandleAsync(CreateUserRequest request, CancellationToken cancellationToken)
+    public Task<ErrorOr<UserResponse>> HandleAsync(CreateUserRequest request, CancellationToken cancellationToken) =>
+        dbContext.Database.CreateExecutionStrategy().ExecuteAsync(request, CreateUserInTransactionAsync, cancellationToken);
+
+    private async Task<ErrorOr<UserResponse>> CreateUserInTransactionAsync(CreateUserRequest request, CancellationToken cancellationToken)
     {
+        dbContext.ChangeTracker.Clear();
         var user = new ApplicationUser
         {
             UserName = request.Email,

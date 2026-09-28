@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -43,7 +43,7 @@ jobs:
   publish-image:
     needs: build-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: write
@@ -78,7 +78,7 @@ jobs:
 
   deploy:
     needs: publish-image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Trigger Render deploy
         env:
