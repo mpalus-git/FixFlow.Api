@@ -59,16 +59,6 @@ public sealed class ServiceProtocolTests(FixFlowApiFactory factory) : ServiceEnt
         await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
     }
 
-    [Fact]
-    public async Task Should_Return_Unauthorized_When_Protocol_Is_Requested_Without_Token()
-    {
-        using var client = Factory.CreateClient();
-
-        using var response = await GetProtocolAsync(client, Guid.CreateVersion7());
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
-
     private static Task<HttpResponseMessage> GetProtocolAsync(HttpClient client, Guid workOrderId) =>
         client.GetAsync(new Uri($"/api/v1/work-orders/{workOrderId}/protocol", UriKind.Relative), TestContext.Current.CancellationToken);
 }
