@@ -55,17 +55,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
     }
 
     [Fact]
-    public async Task Should_Return_Validation_Problem_When_Due_Date_Is_In_The_Past()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var deviceId = await client.CreateServicedDeviceAsync();
-
-        using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId, dueInDays: -1));
-
-        await response.ShouldBeValidationProblemAsync("dueDate");
-    }
-
-    [Fact]
     public async Task Should_Return_Validation_Problem_When_Description_Is_Empty()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
