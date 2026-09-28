@@ -12,6 +12,7 @@ public static class AuthModule
     public static IServiceCollection AddAuthFeatures(this IServiceCollection services)
     {
         services.AddSingleton<PasswordVerificationTimingGuard>();
+        services.AddScoped<AuthSessionIssuer>();
         services.AddScoped<LoginHandler>();
         services.AddSingleton<IValidator<LoginRequest>, LoginRequestValidator>();
         services.AddScoped<RefreshHandler>();
