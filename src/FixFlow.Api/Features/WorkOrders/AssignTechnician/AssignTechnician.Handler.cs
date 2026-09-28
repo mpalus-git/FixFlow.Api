@@ -38,8 +38,9 @@ public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
     }
 
     private Task<bool> IsTechnicianAsync(Guid userId, CancellationToken cancellationToken) =>
-        (from userRole in dbContext.UserRoles
+        (from user in dbContext.Users
+         join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
          join role in dbContext.Roles on userRole.RoleId equals role.Id
-         where userRole.UserId == userId && role.Name == Roles.Technician
+         where user.Id == userId && user.DeactivatedAt == null && role.Name == Roles.Technician
          select userRole).AnyAsync(cancellationToken);
 }
