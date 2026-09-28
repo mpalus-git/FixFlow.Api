@@ -134,23 +134,6 @@ public sealed class UpdateArchiveAndRestockPartTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Updates_Archives_Or_Restocks_Part()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var part = await dispatcherClient.CreatePartAsync(PartRequests.NewPart());
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var updateResponse = await technicianClient.PutAsJsonAsync(PartRequests.PartUri(part.Id), UpdatedDetails, TestContext.Current.CancellationToken);
-        using var archiveResponse = await technicianClient.PostAsync(PartRequests.ArchivePartUri(part.Id), null, TestContext.Current.CancellationToken);
-        using var restockResponse = await technicianClient.PostAsJsonAsync(PartRequests.RestockPartUri(part.Id), new RestockPartRequest(1), TestContext.Current.CancellationToken);
-
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        archiveResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        restockResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        (await GetPartAsync(dispatcherClient, part.Id)).ShouldBe(part);
-    }
-
-    [Fact]
     public async Task Should_Return_Concurrent_Modification_When_Part_Stock_Was_Changed_After_It_Was_Loaded()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

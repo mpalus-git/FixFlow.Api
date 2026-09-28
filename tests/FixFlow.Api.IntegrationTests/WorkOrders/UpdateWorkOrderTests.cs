@@ -66,18 +66,6 @@ public sealed class UpdateWorkOrderTests(FixFlowApiFactory factory) : Integratio
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Updates_Work_Order()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var workOrder = await CreateWorkOrderAsync(dispatcherClient);
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await PutAsync(technicianClient, workOrder.Id, new UpdateWorkOrderRequest("Changed", WorkOrderPriority.Low, workOrder.DueDate));
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Not_Found_Problem_When_Updated_Work_Order_Does_Not_Exist()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Admin);

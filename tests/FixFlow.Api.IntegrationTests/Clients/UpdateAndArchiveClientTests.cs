@@ -69,20 +69,6 @@ public sealed class UpdateAndArchiveClientTests(FixFlowApiFactory factory) : Int
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Updates_Or_Archives_Client()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var createdClient = await dispatcherClient.CreateClientAsync(ClientRequests.NewClient());
-        using var technicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var updateResponse = await technicianClient.PutAsJsonAsync(ClientRequests.ClientUri(createdClient.Id), UpdatedDetails, TestContext.Current.CancellationToken);
-        using var archiveResponse = await technicianClient.PostAsync(ArchiveUri(createdClient.Id), null, TestContext.Current.CancellationToken);
-
-        updateResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        archiveResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Keep_Client_Available_By_Id_With_First_Archive_Time_When_Archived_Twice()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

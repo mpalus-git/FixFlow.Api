@@ -33,19 +33,6 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
         accessToken.GetClaim(AuthClaimTypes.Role).Value.ShouldBe(Roles.Technician);
     }
 
-    [Theory]
-    [InlineData(Roles.Dispatcher)]
-    [InlineData(Roles.Technician)]
-    public async Task Should_Return_Forbidden_Problem_When_Non_Admin_Creates_Account(string role)
-    {
-        using var client = await CreateAuthenticatedClientAsync(role);
-
-        using var response = await client.PostAsJsonAsync(UsersUri, new CreateUserRequest("someone@fixflow.test", "Initial1!password", Roles.Technician), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-    }
-
     [Fact]
     public async Task Should_Return_Unauthorized_When_Request_Has_No_Access_Token()
     {

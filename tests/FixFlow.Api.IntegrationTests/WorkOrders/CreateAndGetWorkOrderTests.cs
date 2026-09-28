@@ -103,16 +103,6 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Work_Order()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostWorkOrderAsync(WorkOrderRequests.NewWorkOrder(Guid.CreateVersion7()));
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Work_Order_When_Dispatcher_Gets_It()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

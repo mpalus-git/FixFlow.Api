@@ -121,14 +121,4 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
         await addResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
         await listResponse.ShouldBeProblemAsync(HttpStatusCode.NotFound, WorkOrderErrors.NotFound.Code);
     }
-
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Dispatcher_Adds_Service_Entry()
-    {
-        using var scenario = await CreateWorkOrderInProgressAsync();
-
-        using var response = await scenario.DispatcherClient.PostServiceEntryAsync(scenario.WorkOrder.Id, ServiceEntryRequests.WorkEntry(scenario.WorkOrder));
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
 }

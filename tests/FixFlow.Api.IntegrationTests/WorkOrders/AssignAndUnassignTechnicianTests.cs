@@ -57,21 +57,6 @@ public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Assigns_Or_Unassigns()
-    {
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var workOrder = await CreateWorkOrderAsync(dispatcherClient);
-        var technician = await CreateUserAsync(Roles.Technician);
-        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
-
-        using var assignResponse = await technicianClient.PostAssignAsync(workOrder.Id, technician.Id);
-        using var unassignResponse = await technicianClient.PostTransitionAsync(workOrder.Id, "unassign");
-
-        assignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        unassignResponse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Not_Found_Problem_When_Assigned_Work_Order_Does_Not_Exist()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

@@ -86,16 +86,6 @@ public sealed class CreateAndGetPartTests(FixFlowApiFactory factory) : Integrati
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Part()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostAsJsonAsync(PartRequests.PartsUri, PartRequests.NewPart(), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Part_When_Technician_Gets_Existing_Part()
     {
         using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

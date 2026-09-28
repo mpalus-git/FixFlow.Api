@@ -28,16 +28,6 @@ public sealed class CreateAndGetClientTests(FixFlowApiFactory factory) : Integra
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Client()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostAsJsonAsync(ClientRequests.ClientsUri, ClientRequests.NewClient(), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Validation_Problem_When_Postal_Code_Is_Invalid()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

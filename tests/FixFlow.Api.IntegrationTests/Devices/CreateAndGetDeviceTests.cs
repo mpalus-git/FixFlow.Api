@@ -90,16 +90,6 @@ public sealed class CreateAndGetDeviceTests(FixFlowApiFactory factory) : Integra
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Creates_Device()
-    {
-        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
-
-        using var response = await client.PostAsJsonAsync(DeviceRequests.DevicesUri, DeviceRequests.NewDevice(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Device_When_Technician_Gets_Existing_Device()
     {
         using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);

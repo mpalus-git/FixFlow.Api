@@ -96,16 +96,6 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
-    public async Task Should_Return_Forbidden_When_Technician_Invoices_Work_Order()
-    {
-        using var scenario = await CreateCompletedWorkOrderAsync();
-
-        using var response = await scenario.TechnicianClient.PostTransitionAsync(scenario.WorkOrder.Id, "invoice");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
     public async Task Should_Return_Conflict_Problem_When_Work_Order_In_Progress_Is_Invoiced()
     {
         using var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();

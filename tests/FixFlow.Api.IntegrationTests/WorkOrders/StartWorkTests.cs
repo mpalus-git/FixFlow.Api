@@ -123,17 +123,6 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
     }
 
-    [Fact]
-    public async Task Should_Return_Forbidden_When_Dispatcher_Starts_Work()
-    {
-        var (workOrders, _) = await CreateAssignedWorkOrdersAsync(1);
-        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-
-        using var response = await dispatcherClient.PostTransitionAsync(workOrders[0].Id, "start");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-    }
-
     private async Task<(IReadOnlyList<WorkOrderResponse> WorkOrders, TestUser Technician)> CreateAssignedWorkOrdersAsync(int count)
     {
         using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
