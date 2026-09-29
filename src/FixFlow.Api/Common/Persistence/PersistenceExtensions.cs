@@ -1,6 +1,8 @@
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -49,6 +51,7 @@ public static class PersistenceExtensions
     {
         await using var scope = app.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+        await dbContext.GetService<IHistoryRepository>().CreateIfNotExistsAsync();
         await dbContext.Database.MigrateAsync();
 
         var identitySeeder = scope.ServiceProvider.GetRequiredService<IdentitySeeder>();
