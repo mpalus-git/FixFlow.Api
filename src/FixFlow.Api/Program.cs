@@ -72,6 +72,7 @@ app.MapDevicesEndpoints();
 app.MapWorkOrdersEndpoints();
 app.MapPartsEndpoints();
 app.MapServiceEntriesEndpoints();
+app.MapDemoDataEndpoints();
 
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {

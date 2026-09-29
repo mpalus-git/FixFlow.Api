@@ -1,11 +1,18 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using ErrorOr;
+using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Persistence.Seeding;
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Users;
+using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.DemoData;
 using FixFlow.Api.Features.DemoData.ResetDemoData;
+using FixFlow.Api.IntegrationTests.Auth;
+using FixFlow.Api.IntegrationTests.Clients;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -83,8 +90,63 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
         result.FirstError.ShouldBe(DemoDataErrors.Disabled);
     }
 
+    [Fact]
+    public async Task Should_Return_No_Content_When_Admin_Resets_Demo_Data()
+    {
+        await using var demoFactory = CreateFactoryWithDemoData();
+        using var adminClient = await CreateAuthenticatedClientAsync(demoFactory, Roles.Admin);
+
+        using var response = await PostResetAsync(adminClient);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Should_Return_Conflict_Problem_When_Resetting_Demo_Data_While_Disabled()
+    {
+        using var adminClient = await CreateAuthenticatedClientAsync(Roles.Admin);
+
+        using var response = await PostResetAsync(adminClient);
+
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, DemoDataErrors.Disabled.Code);
+    }
+
+    [Fact]
+    public async Task Should_Invalidate_Cached_Client_List_When_Demo_Data_Is_Reset()
+    {
+        await using var demoFactory = CreateFactoryWithDemoData();
+        using var dispatcherClient = await CreateAuthenticatedClientAsync(demoFactory, Roles.Dispatcher);
+        using var adminClient = await CreateAuthenticatedClientAsync(demoFactory, Roles.Admin);
+        var clientIdsBeforeReset = await GetClientIdsAsync(dispatcherClient);
+
+        using var response = await PostResetAsync(adminClient);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var clientIdsAfterReset = await GetClientIdsAsync(dispatcherClient);
+        clientIdsAfterReset.Count.ShouldBe(clientIdsBeforeReset.Count);
+        clientIdsAfterReset.ShouldNotContain(clientId => clientIdsBeforeReset.Contains(clientId));
+    }
+
     private WebApplicationFactory<Program> CreateFactoryWithDemoData() =>
         Factory.WithWebHostBuilder(builder => builder.UseSetting("Seed:DemoData:Enabled", "true"));
+
+    private async Task<HttpClient> CreateAuthenticatedClientAsync(WebApplicationFactory<Program> targetFactory, string role)
+    {
+        var user = await CreateUserAsync(role);
+        var client = targetFactory.CreateClient();
+        var tokens = await client.LoginAsync(user);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        return client;
+    }
+
+    private static Task<HttpResponseMessage> PostResetAsync(HttpClient client) =>
+        client.PostAsync(new Uri("/api/v1/demo-data/reset", UriKind.Relative), null, TestContext.Current.CancellationToken);
+
+    private static async Task<List<Guid>> GetClientIdsAsync(HttpClient client)
+    {
+        var page = await client.GetFromJsonAsync<PagedResponse<ClientResponse>>(ClientRequests.ClientsUri, TestContext.Current.CancellationToken);
+        return page.ShouldNotBeNull().Items.Select(item => item.Id).ToList();
+    }
 
     private static async Task<ErrorOr<Success>> ResetDemoDataAsync(WebApplicationFactory<Program> targetFactory)
     {

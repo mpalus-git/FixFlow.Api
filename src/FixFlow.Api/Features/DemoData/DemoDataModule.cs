@@ -10,4 +10,16 @@ public static class DemoDataModule
 
         return services;
     }
+
+    public static IEndpointRouteBuilder MapDemoDataEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.NewVersionedApi("DemoData")
+            .MapGroup("/api/v{version:apiVersion}/demo-data")
+            .HasApiVersion(1)
+            .WithTags("DemoData");
+
+        group.MapResetDemoData();
+
+        return app;
+    }
 }
