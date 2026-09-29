@@ -1,6 +1,7 @@
 using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace FixFlow.Api.Common.Persistence;
@@ -33,6 +34,13 @@ public static class PersistenceExtensions
                 "Demo user passwords are required when demo users seeding is enabled.")
             .ValidateOnStartOutsideBuildTimeGeneration();
         services.AddScoped<IdentitySeeder>();
+        services.AddOptions<DemoDataOptions>()
+            .BindConfiguration(DemoDataOptions.SectionName)
+            .Validate<IOptions<DemoUsersOptions>>(
+                (options, demoUsersOptions) => !options.Enabled || demoUsersOptions.Value.Enabled,
+                "Demo users seeding must be enabled when demo data seeding is enabled.")
+            .ValidateOnStartOutsideBuildTimeGeneration();
+        services.AddScoped<DemoDataSeeder>();
 
         return services;
     }
@@ -45,5 +53,11 @@ public static class PersistenceExtensions
 
         var identitySeeder = scope.ServiceProvider.GetRequiredService<IdentitySeeder>();
         await identitySeeder.SeedAsync();
+
+        if (scope.ServiceProvider.GetRequiredService<IOptions<DemoDataOptions>>().Value.Enabled)
+        {
+            var demoDataSeeder = scope.ServiceProvider.GetRequiredService<DemoDataSeeder>();
+            await demoDataSeeder.SeedIfDatabaseIsEmptyAsync(app.Lifetime.ApplicationStopping);
+        }
     }
 }
