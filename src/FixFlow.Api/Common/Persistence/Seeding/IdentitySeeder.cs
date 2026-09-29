@@ -15,7 +15,7 @@ public sealed class IdentitySeeder(
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                EnsureSucceeded(await roleManager.CreateAsync(new IdentityRole<Guid>(role)), role);
+                (await roleManager.CreateAsync(new IdentityRole<Guid>(role))).ThrowIfFailed(role);
             }
         }
 
@@ -44,16 +44,7 @@ public sealed class IdentitySeeder(
             EmailConfirmed = true,
         };
 
-        EnsureSucceeded(await userManager.CreateAsync(user, password), email);
-        EnsureSucceeded(await userManager.AddToRoleAsync(user, role), email);
-    }
-
-    private static void EnsureSucceeded(IdentityResult result, string subject)
-    {
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(", ", result.Errors.Select(error => error.Description));
-            throw new InvalidOperationException($"Seeding '{subject}' failed: {errors}");
-        }
+        (await userManager.CreateAsync(user, password)).ThrowIfFailed(email);
+        (await userManager.AddToRoleAsync(user, role)).ThrowIfFailed(email);
     }
 }

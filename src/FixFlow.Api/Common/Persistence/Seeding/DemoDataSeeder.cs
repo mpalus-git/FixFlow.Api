@@ -25,18 +25,15 @@ public sealed partial class DemoDataSeeder(
 
     public async Task SeedIfDatabaseIsEmptyAsync(CancellationToken cancellationToken)
     {
-        var seeded = await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(SeedInTransactionAsync, cancellationToken);
+        var seeded = await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(SeedInOwnTransactionAsync, cancellationToken);
         if (seeded)
         {
             await cache.RemoveByTagAsync([CacheTags.Clients, CacheTags.Devices], cancellationToken);
         }
     }
 
-    private async Task<bool> SeedInTransactionAsync(CancellationToken cancellationToken)
+    public async Task<bool> SeedWithinCurrentTransactionAsync(CancellationToken cancellationToken)
     {
-        dbContext.ChangeTracker.Clear();
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
         if (await dbContext.Clients.AnyAsync(cancellationToken))
         {
             LogDemoDataSkipped();
@@ -60,10 +57,18 @@ public sealed partial class DemoDataSeeder(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await markOverdueWorkOrdersHandler.HandleAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         LogDemoDataSeeded(inventory.Clients.Count, inventory.Devices.Count, inventory.Parts.Count, history.WorkOrders.Count);
         return true;
+    }
+
+    private async Task<bool> SeedInOwnTransactionAsync(CancellationToken cancellationToken)
+    {
+        dbContext.ChangeTracker.Clear();
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var seeded = await SeedWithinCurrentTransactionAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return seeded;
     }
 
     private async Task<Guid> FindLoginTechnicianIdAsync()
@@ -87,18 +92,9 @@ public sealed partial class DemoDataSeeder(
             EmailConfirmed = true,
         };
 
-        EnsureSucceeded(await userManager.CreateAsync(technician), email);
-        EnsureSucceeded(await userManager.AddToRoleAsync(technician, Roles.Technician), email);
+        (await userManager.CreateAsync(technician)).ThrowIfFailed(email);
+        (await userManager.AddToRoleAsync(technician, Roles.Technician)).ThrowIfFailed(email);
         return technician.Id;
-    }
-
-    private static void EnsureSucceeded(IdentityResult result, string subject)
-    {
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(", ", result.Errors.Select(error => error.Description));
-            throw new InvalidOperationException($"Seeding '{subject}' failed: {errors}");
-        }
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Demo data skipped because the database already contains clients")]
