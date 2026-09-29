@@ -30,5 +30,7 @@ services:
         sync: false
       - key: Seed__DemoUsers__TechnicianPassword
         sync: false
+      - key: Seed__DemoData__Enabled
+        value: "true"
       - key: Email__Enabled
         value: "false"

@@ -13,7 +13,7 @@ Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-a
 | Dispatcher | `dispatcher@fixflow.local` | `cyTfum-duwcyr-kyjky3` |
 | Technician | `technician@fixflow.local` | `fembag-wupker-Retfi7` |
 
-Token otrzymany z `POST /api/v1/auth/login` wkleja się w Scalar jako `Bearer`.
+Token otrzymany z `POST /api/v1/auth/login` wkleja się w Scalar jako `Bearer`. Instancja zawiera dane demonstracyjne: fikcyjnych klientów z urządzeniami, katalog części i zlecenia we wszystkich statusach, w tym opóźnione, z wpisami serwisowymi i zużyciem części.
 
 ## Architektura
 
@@ -63,7 +63,7 @@ Po starcie dostępne są:
 | http://localhost:8080/health/ready | readiness (z bazą) |
 | http://localhost:8025 | Mailpit, podgląd wysłanych e-maili |
 
-Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`.
+Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`. Przy pustej bazie powstają też dane demonstracyjne: 6 klientów, 13 urządzeń, 11 części, 18 zleceń i dwóch dodatkowych techników bez hasła, na których nie da się zalogować, ale można im przypisywać zlecenia.
 
 Testy wymagają .NET SDK 10 i działającego Dockera (testy integracyjne uruchamiają PostgreSQL i Redis przez Testcontainers):
 
@@ -85,6 +85,7 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `RateLimiting__Auth__PermitLimit` / `RateLimiting__Auth__Window` | limit logowania i odświeżania tokena na adres IP | `10` / `00:01:00` |
 | `Seed__DemoUsers__Enabled` | zakładanie kont demo przy starcie | `false` |
 | `Seed__DemoUsers__AdminPassword`, `...DispatcherPassword`, `...TechnicianPassword` | hasła kont demo, wymagane przy włączonym seedzie | brak |
+| `Seed__DemoData__Enabled` | tworzenie danych demonstracyjnych przy starcie, tylko gdy baza nie zawiera żadnego klienta; wymaga `Seed__DemoUsers__Enabled` | `false` |
 | `Email__Enabled` | wysyłka e-mail; wyłączona oznacza tylko wpis w logu | `false` |
 | `Email__Host`, `Email__Port`, `Email__Security` | serwer SMTP; `Security` przyjmuje `None`, `Auto`, `SslOnConnect`, `StartTls` | brak, `587`, `Auto` |
 | `Email__Username`, `Email__Password` | dane logowania SMTP, opcjonalne | brak |
