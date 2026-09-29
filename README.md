@@ -85,7 +85,7 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `RateLimiting__Auth__PermitLimit` / `RateLimiting__Auth__Window` | limit logowania i odświeżania tokena na adres IP | `10` / `00:01:00` |
 | `Seed__DemoUsers__Enabled` | zakładanie kont demo przy starcie | `false` |
 | `Seed__DemoUsers__AdminPassword`, `...DispatcherPassword`, `...TechnicianPassword` | hasła kont demo, wymagane przy włączonym seedzie | brak |
-| `Seed__DemoData__Enabled` | tworzenie danych demonstracyjnych przy starcie, tylko gdy baza nie zawiera żadnego klienta; wymaga `Seed__DemoUsers__Enabled` | `false` |
+| `Seed__DemoData__Enabled` | tworzenie danych demonstracyjnych przy starcie, tylko gdy baza nie zawiera żadnego klienta, i dostępność resetu danych demo; wymaga `Seed__DemoUsers__Enabled` | `false` |
 | `Email__Enabled` | wysyłka e-mail; wyłączona oznacza tylko wpis w logu | `false` |
 | `Email__Host`, `Email__Port`, `Email__Security` | serwer SMTP; `Security` przyjmuje `None`, `Auto`, `SslOnConnect`, `StartTls` | brak, `587`, `Auto` |
 | `Email__Username`, `Email__Password` | dane logowania SMTP, opcjonalne | brak |
@@ -159,6 +159,7 @@ flowchart LR
 - Render sprawdza `GET /health`, który nie dotyka bazy, więc health check nie wybudza uśpionej bazy Neon. `GET /health/ready` sprawdza połączenie z bazą.
 - Za Renderem żądanie przechodzi przez Cloudflare i proxy Render, dlatego `X-Forwarded-For` ma trzy pozycje, a `ForwardedHeaders__ForwardLimit` wynosi `3`. Adres widziany przez aplikację (i przez limiter logowania) jest zapisywany w logu każdego żądania jako `ClientIp`.
 - Brak sekretu `RENDER_DEPLOY_HOOK_URL` w repozytorium (np. w forku) nie psuje CI: krok wdrożenia jest pomijany z ostrzeżeniem.
+- Workflow [reset-demo-data.yml](.github/workflows/reset-demo-data.yml) codziennie o 2:00 UTC (i ręcznie przez `workflow_dispatch`) wybudza usługę, loguje się jako `admin@fixflow.local` hasłem z sekretu `DEMO_ADMIN_PASSWORD` i wywołuje `POST /api/v1/demo-data/reset`. Reset usuwa klientów, urządzenia, części i zlecenia, tworzy od nowa dane demonstracyjne i przywraca konta demo Dispatcher i Technician (hasła z konfiguracji, aktywne, bez blokady). Endpoint jest dostępny tylko dla Admina i tylko przy `Seed__DemoData__Enabled=true`; bez sekretu workflow kończy się ostrzeżeniem.
 
 ## Ograniczenia
 
@@ -167,7 +168,7 @@ flowchart LR
 - **Cache po awarii Redis.** Zmiana zapisana w czasie niedostępności Redis nie unieważnia wpisów L2. Po powrocie Redis lista klientów lub urządzeń może być nieaktualna maksymalnie przez czas życia wpisu, czyli 5 minut.
 - **Łańcuch proxy zależy od infrastruktury Render.** Wartość `ForwardLimit` odpowiada obecnemu układowi Cloudflare i proxy Render. Jeśli Render go zmieni, limiter może zacząć rozpoznawać adresy błędnie; pole `ClientIp` w logach pozwala to szybko sprawdzić.
 - **Blokada konta po nieudanych logowaniach.** Po 5 błędnych hasłach konto jest blokowane na 5 minut, więc ktoś znający e-mail może celowo zablokować cudze konto. To standardowy kompromis ASP.NET Core Identity; limit prób na adres IP ogranicza skalę takiego działania.
-- **Publiczne konta demo.** Każdy może zalogować się jako Dispatcher lub Technician i zmieniać dane demonstracyjne; nie ma automatycznego resetu bazy.
+- **Publiczne konta demo.** Każdy może zalogować się jako Dispatcher lub Technician i zmieniać dane demonstracyjne. Zmiany znikają przy nocnym resecie, ale do tego czasu widzą je wszyscy odwiedzający. GitHub wyłącza zaplanowane workflow w repozytorium bez aktywności przez 60 dni, wtedy reset trzeba włączyć ponownie w zakładce Actions.
 - **Zdjęcia jako adresy URL.** Wpis serwisowy przechowuje listę adresów zdjęć, API nie przyjmuje plików.
 - **Jedna waluta.** Ceny i sumy w protokole są w PLN.
 

@@ -12,6 +12,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Telemetry;
 using FixFlow.Api.Features.Auth;
 using FixFlow.Api.Features.Clients;
+using FixFlow.Api.Features.DemoData;
 using FixFlow.Api.Features.Devices;
 using FixFlow.Api.Features.Parts;
 using FixFlow.Api.Features.ServiceEntries;
@@ -49,6 +50,7 @@ builder.Services.AddDevicesFeatures();
 builder.Services.AddWorkOrdersFeatures();
 builder.Services.AddPartsFeatures();
 builder.Services.AddServiceEntriesFeatures();
+builder.Services.AddDemoDataFeatures();
 builder.Services.AddScheduledJobs(builder.Configuration);
 builder.Services.AddApplicationTelemetry(builder.Configuration);
 
@@ -70,6 +72,7 @@ app.MapDevicesEndpoints();
 app.MapWorkOrdersEndpoints();
 app.MapPartsEndpoints();
 app.MapServiceEntriesEndpoints();
+app.MapDemoDataEndpoints();
 
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {

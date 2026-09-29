@@ -3187,6 +3187,56 @@
           }
         ]
       }
+    },
+    "/api/v1/demo-data/reset": {
+      "post": {
+        "tags": [
+          "DemoData"
+        ],
+        "summary": "Reset demo data to its initial state",
+        "description": "Deletes all clients, devices, parts, work orders and service entries and recreates the demo data set. Restores the demo dispatcher and technician accounts: configured passwords, active status, no sign-in lockout, and revokes their refresh tokens. Accounts created by administrators are kept. Available to administrators on instances with demo data enabled; otherwise returns 409.",
+        "operationId": "ResetDemoData",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4539,6 +4589,9 @@
     },
     {
       "name": "ServiceEntries"
+    },
+    {
+      "name": "DemoData"
     }
   ]
 }
