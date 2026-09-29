@@ -32,6 +32,7 @@ services:
       POSTGRES_DB: fixflow
       POSTGRES_USER: fixflow
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_INITDB_ARGS: --auth-local=scram-sha-256 --auth-host=scram-sha-256
     ports:
       - "5432:5432"
     volumes:
@@ -54,6 +55,8 @@ services:
 
   mailpit:
     image: axllent/mailpit:v1.31
+    environment:
+      MP_ALLOWED_HOSTS: localhost,127.0.0.1
     ports:
       - "8025:8025"
       - "1025:1025"
