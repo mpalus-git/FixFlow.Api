@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Users;
-using FixFlow.Api.Features.Devices;
+using FixFlow.Api.Features.Devices.ListDevices;
 using FixFlow.Api.IntegrationTests.Clients;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +43,24 @@ public sealed class ListDevicesTests(FixFlowApiFactory factory) : IntegrationTes
 
         page.Items.Select(item => item.SerialNumber).ShouldBe(["SN-2"]);
         page.TotalCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Should_Include_Client_Name_When_Devices_Are_Listed()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var firstOwner = await client.CreateClientAsync(ClientRequests.NewClient("Alfa"));
+        var secondOwner = await client.CreateClientAsync(ClientRequests.NewClient("Bravo"));
+        var firstDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(firstOwner.Id, "SN-1"));
+        var secondDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(secondOwner.Id, "SN-2"));
+
+        var page = await GetPageAsync(client, string.Empty);
+
+        page.Items.ShouldBe(
+        [
+            new DeviceListItemResponse(firstDevice.Id, firstOwner.Id, "Alfa", firstDevice.SerialNumber, firstDevice.Model, firstDevice.Manufacturer, firstDevice.InstallationDate, firstDevice.CreatedAt, null),
+            new DeviceListItemResponse(secondDevice.Id, secondOwner.Id, "Bravo", secondDevice.SerialNumber, secondDevice.Model, secondDevice.Manufacturer, secondDevice.InstallationDate, secondDevice.CreatedAt, null),
+        ]);
     }
 
     [Theory]
@@ -99,11 +117,11 @@ public sealed class ListDevicesTests(FixFlowApiFactory factory) : IntegrationTes
         await response.ShouldBeValidationProblemAsync("search");
     }
 
-    private static async Task<PagedResponse<DeviceResponse>> GetPageAsync(HttpClient client, string query)
+    private static async Task<PagedResponse<DeviceListItemResponse>> GetPageAsync(HttpClient client, string query)
     {
         using var response = await client.GetAsync(new Uri($"/api/v1/devices{query}", UriKind.Relative), TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var page = await response.Content.ReadFromJsonAsync<PagedResponse<DeviceResponse>>(TestContext.Current.CancellationToken);
+        var page = await response.Content.ReadFromJsonAsync<PagedResponse<DeviceListItemResponse>>(TestContext.Current.CancellationToken);
         return page.ShouldNotBeNull();
     }
 

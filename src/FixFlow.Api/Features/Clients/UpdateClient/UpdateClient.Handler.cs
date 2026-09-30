@@ -45,7 +45,7 @@ public sealed class UpdateClientHandler(FixFlowDbContext dbContext, HybridCache 
             return saving.Errors;
         }
 
-        await cache.RemoveByTagAsync(CacheTags.Clients, cancellationToken);
+        await cache.RemoveByTagAsync([CacheTags.Clients, CacheTags.Devices], cancellationToken);
 
         return dbContext.Versioned(client, ClientResponse.FromDomain(client));
     }

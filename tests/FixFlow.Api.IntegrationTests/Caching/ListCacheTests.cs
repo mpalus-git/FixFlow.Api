@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
-using FixFlow.Api.Features.Devices;
+using FixFlow.Api.Features.Devices.ListDevices;
 using FixFlow.Api.Features.Devices.UpdateDevice;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
@@ -69,6 +69,20 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
     }
 
     [Fact]
+    public async Task Should_Return_New_Client_Name_On_Device_List_When_Client_Is_Renamed_After_List_Was_Cached()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var owner = await client.CreateClientAsync(ClientRequests.NewClient("Alfa"));
+        await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id));
+        (await GetDevicesAsync(client)).Items.ShouldHaveSingleItem().ClientName.ShouldBe("Alfa");
+
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(owner.Id), ClientRequests.NewClient("Alfa Serwis"), TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        (await GetDevicesAsync(client)).Items.ShouldHaveSingleItem().ClientName.ShouldBe("Alfa Serwis");
+    }
+
+    [Fact]
     public async Task Should_Return_New_And_Updated_Devices_When_Devices_Change_After_List_Was_Cached()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
@@ -93,9 +107,9 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
         return page.ShouldNotBeNull();
     }
 
-    private static async Task<PagedResponse<DeviceResponse>> GetDevicesAsync(HttpClient client)
+    private static async Task<PagedResponse<DeviceListItemResponse>> GetDevicesAsync(HttpClient client)
     {
-        var page = await client.GetFromJsonAsync<PagedResponse<DeviceResponse>>(DeviceRequests.DevicesUri, TestContext.Current.CancellationToken);
+        var page = await client.GetFromJsonAsync<PagedResponse<DeviceListItemResponse>>(DeviceRequests.DevicesUri, TestContext.Current.CancellationToken);
         return page.ShouldNotBeNull();
     }
 }
