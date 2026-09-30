@@ -62,6 +62,11 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
                 TechnicianEmail = technician == null ? null : technician.Email,
             };
 
+        if (request.ClientId is { } clientId)
+        {
+            rows = rows.Where(row => row.ClientId == clientId);
+        }
+
         var search = request.Search?.Trim();
         if (!string.IsNullOrEmpty(search))
         {

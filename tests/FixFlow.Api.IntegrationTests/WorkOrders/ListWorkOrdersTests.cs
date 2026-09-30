@@ -111,6 +111,49 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
     }
 
     [Fact]
+    public async Task Should_Return_Work_Orders_Of_All_Client_Devices_When_Client_Filter_Is_Provided()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var owner = await client.CreateClientAsync(ClientRequests.NewClient("Biuro Alfa"));
+        var activeDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "SN-ALFA-1"));
+        var archivedDevice = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "SN-ALFA-2"));
+        var activeDeviceWorkOrder = await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(activeDevice.Id, dueInDays: 1));
+        var archivedDeviceWorkOrder = await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(archivedDevice.Id, dueInDays: 2));
+        await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await client.CreateServicedDeviceAsync("SN-OTHER")));
+        var technician = await CreateUserAsync(Roles.Technician);
+        await Factory.AssignTechnicianDirectlyAsync(archivedDeviceWorkOrder.Id, technician.Id);
+        using var archiveResponse = await client.PostAsync(new Uri($"/api/v1/devices/{archivedDevice.Id}/archive", UriKind.Relative), null, TestContext.Current.CancellationToken);
+        archiveResponse.EnsureSuccessStatusCode();
+
+        var byClient = await client.ListWorkOrdersAsync($"?clientId={owner.Id}");
+        var byClientAndStatus = await client.ListWorkOrdersAsync($"?clientId={owner.Id}&status={WorkOrderStatus.Assigned}");
+        var byUnknownClient = await client.ListWorkOrdersAsync($"?clientId={Guid.NewGuid()}");
+
+        byClient.Items.Select(item => item.Id).ShouldBe([activeDeviceWorkOrder.Id, archivedDeviceWorkOrder.Id]);
+        byClientAndStatus.Items.Select(item => item.Id).ShouldBe([archivedDeviceWorkOrder.Id]);
+        byUnknownClient.TotalCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Should_List_Only_Own_Work_Orders_Of_Client_When_Technician_Filters_By_Client()
+    {
+        using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var owner = await dispatcherClient.CreateClientAsync(ClientRequests.NewClient("Biuro Alfa"));
+        var device = await dispatcherClient.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "SN-ALFA-1"));
+        var ownWorkOrder = await dispatcherClient.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(device.Id));
+        var otherWorkOrder = await dispatcherClient.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(device.Id));
+        var technician = await CreateUserAsync(Roles.Technician);
+        var otherTechnician = await CreateUserAsync(Roles.Technician);
+        await Factory.AssignTechnicianDirectlyAsync(ownWorkOrder.Id, technician.Id);
+        await Factory.AssignTechnicianDirectlyAsync(otherWorkOrder.Id, otherTechnician.Id);
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+
+        var page = await technicianClient.ListWorkOrdersAsync($"?clientId={owner.Id}");
+
+        page.Items.Select(item => item.Id).ShouldBe([ownWorkOrder.Id]);
+    }
+
+    [Fact]
     public async Task Should_List_Only_Own_Work_Orders_When_Technician_Lists_Work_Orders()
     {
         using var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
