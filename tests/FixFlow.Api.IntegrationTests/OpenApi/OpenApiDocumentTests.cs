@@ -50,6 +50,21 @@ public sealed class OpenApiDocumentTests(FixFlowApiFactory factory) : Integratio
         schema.GetProperty("description").GetString().ShouldNotBeNullOrWhiteSpace();
     }
 
+    [Theory]
+    [InlineData("sortBy", new[] { "DueDate", "CreatedAt", "Priority", "Status", "ClientName" })]
+    [InlineData("sortDirection", new[] { "Asc", "Desc" })]
+    public async Task Should_List_Allowed_Values_When_Query_Parameter_Accepts_Fixed_Values(string parameterName, string[] allowedValues)
+    {
+        using var document = await GetDocumentAsync();
+
+        var schema = document.RootElement
+            .GetProperty("paths").GetProperty("/api/v1/work-orders").GetProperty("get")
+            .GetProperty("parameters").EnumerateArray()
+            .Single(parameter => parameter.GetProperty("name").GetString() == parameterName)
+            .GetProperty("schema");
+        schema.GetProperty("enum").EnumerateArray().Select(value => value.GetString()).ShouldBe(allowedValues);
+    }
+
     [Fact]
     public async Task Should_Describe_Amount_As_Decimal_Number()
     {

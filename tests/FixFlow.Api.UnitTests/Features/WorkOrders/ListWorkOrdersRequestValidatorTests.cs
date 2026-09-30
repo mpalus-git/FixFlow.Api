@@ -54,6 +54,43 @@ public sealed class ListWorkOrdersRequestValidatorTests
         result.Errors.ShouldContain(error => error.PropertyName == nameof(ListWorkOrdersRequest.Search));
     }
 
+    [Theory]
+    [InlineData("DueDate", "Asc")]
+    [InlineData("CreatedAt", "Desc")]
+    [InlineData("Priority", "Asc")]
+    [InlineData("Status", "Desc")]
+    [InlineData("ClientName", "Asc")]
+    public void Should_Accept_Request_When_Sort_Field_And_Direction_Are_Defined(string sortBy, string sortDirection)
+    {
+        var result = _validator.Validate(new ListWorkOrdersRequest(SortBy: sortBy, SortDirection: sortDirection));
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("dueDate")]
+    [InlineData("Description")]
+    [InlineData("1")]
+    [InlineData("")]
+    public void Should_Reject_Request_When_Sort_Field_Is_Not_Defined(string sortBy)
+    {
+        var result = _validator.Validate(new ListWorkOrdersRequest(SortBy: sortBy));
+
+        result.Errors.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(ListWorkOrdersRequest.SortBy));
+    }
+
+    [Theory]
+    [InlineData("asc")]
+    [InlineData("Ascending")]
+    [InlineData("1")]
+    [InlineData("")]
+    public void Should_Reject_Request_When_Sort_Direction_Is_Not_Defined(string sortDirection)
+    {
+        var result = _validator.Validate(new ListWorkOrdersRequest(SortDirection: sortDirection));
+
+        result.Errors.ShouldHaveSingleItem().PropertyName.ShouldBe(nameof(ListWorkOrdersRequest.SortDirection));
+    }
+
     private static DateOnly? ParseDate(string? date) =>
         date is null ? null : DateOnly.Parse(date, CultureInfo.InvariantCulture);
 }

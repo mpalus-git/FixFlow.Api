@@ -25,6 +25,7 @@ public static class ApiDocumentationExtensions
                 .AddPreciseSchemaTypes()
                 .AddProblemDetailsErrorCode()
                 .AddConditionalRequestHeaders()
+                .AddAllowedQueryValues()
                 .AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Title = "FixFlow API";

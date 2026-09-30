@@ -1,13 +1,28 @@
+using System.Linq.Expressions;
 using System.Security.Claims;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Time;
+using FixFlow.Api.Domain.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 
 public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
 {
+    private static readonly Expression<Func<WorkOrderListRow, int>> PriorityWeight = row =>
+        row.WorkOrder.Priority == WorkOrderPriority.Low ? 0
+        : row.WorkOrder.Priority == WorkOrderPriority.Normal ? 1
+        : row.WorkOrder.Priority == WorkOrderPriority.High ? 2
+        : 3;
+
+    private static readonly Expression<Func<WorkOrderListRow, int>> StatusLifecycleOrder = row =>
+        row.WorkOrder.Status == WorkOrderStatus.New ? 0
+        : row.WorkOrder.Status == WorkOrderStatus.Assigned ? 1
+        : row.WorkOrder.Status == WorkOrderStatus.InProgress ? 2
+        : row.WorkOrder.Status == WorkOrderStatus.Completed ? 3
+        : 4;
+
     public Task<PagedResponse<WorkOrderListItemResponse>> HandleAsync(ListWorkOrdersRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         var query = dbContext.WorkOrders
@@ -77,9 +92,22 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
                 || EF.Functions.ILike(row.ClientName, pattern, LikePattern.EscapeCharacter));
         }
 
-        return rows
-            .OrderBy(row => row.WorkOrder.DueDate)
-            .ThenBy(row => row.WorkOrder.Id)
+        return Sort(rows, Enum.Parse<WorkOrderSortField>(request.SortBy), Enum.Parse<SortDirection>(request.SortDirection))
             .ToPagedResponseAsync(request, WorkOrderListItemResponse.FromRow, cancellationToken);
     }
+
+    private static IOrderedQueryable<WorkOrderListRow> Sort(IQueryable<WorkOrderListRow> rows, WorkOrderSortField sortField, SortDirection direction) =>
+        sortField switch
+        {
+            WorkOrderSortField.CreatedAt => OrderByThenById(rows, row => row.WorkOrder.CreatedAt, direction),
+            WorkOrderSortField.Priority => OrderByThenById(rows, PriorityWeight, direction),
+            WorkOrderSortField.Status => OrderByThenById(rows, StatusLifecycleOrder, direction),
+            WorkOrderSortField.ClientName => OrderByThenById(rows, row => row.ClientName, direction),
+            _ => OrderByThenById(rows, row => row.WorkOrder.DueDate, direction),
+        };
+
+    private static IOrderedQueryable<WorkOrderListRow> OrderByThenById<TKey>(IQueryable<WorkOrderListRow> rows, Expression<Func<WorkOrderListRow, TKey>> key, SortDirection direction) =>
+        direction == SortDirection.Desc
+            ? rows.OrderByDescending(key).ThenByDescending(row => row.WorkOrder.Id)
+            : rows.OrderBy(key).ThenBy(row => row.WorkOrder.Id);
 }
