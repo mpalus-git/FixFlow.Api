@@ -1665,7 +1665,7 @@
           "WorkOrders"
         ],
         "summary": "List work orders",
-        "description": "Returns one page of work orders ordered by due date, with the serial number and model of the device, the client name and the technician email, optionally filtered by status, technician, device, overdue flag and due date range, and searched by a fragment of the description, serial number or client name. Technicians only see work orders assigned to them.",
+        "description": "Returns one page of work orders sorted by the requested field and direction, by default by due date ascending, with ties ordered by identifier so that pages neither skip nor repeat work orders. Each work order comes with the serial number and model of the device, the client name and the technician email. The list can be filtered by status, technician, device, client, overdue flag and due date range, and searched by a fragment of the description, serial number or client name. Technicians only see work orders assigned to them.",
         "operationId": "ListWorkOrders",
         "parameters": [
           {
@@ -1715,6 +1715,15 @@
             }
           },
           {
+            "name": "clientId",
+            "in": "query",
+            "description": "Identifier of the client whose devices were serviced.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "isOverdue",
             "in": "query",
             "description": "When true, lists only overdue work orders; when false, only work orders that are not overdue.",
@@ -1746,6 +1755,35 @@
             "description": "Case-insensitive fragment of the fault description, the device serial number or the client name.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Field the work orders are sorted by. Priority is sorted by importance from Low to Critical and status in lifecycle order from New to Invoiced.",
+            "schema": {
+              "enum": [
+                "DueDate",
+                "CreatedAt",
+                "Priority",
+                "Status",
+                "ClientName"
+              ],
+              "type": "string",
+              "default": "DueDate"
+            }
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "description": "Direction of sorting: Asc for ascending, Desc for descending.",
+            "schema": {
+              "enum": [
+                "Asc",
+                "Desc"
+              ],
+              "type": "string",
+              "default": "Asc"
             }
           }
         ],
