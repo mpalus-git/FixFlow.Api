@@ -7,4 +7,4 @@ public sealed record UpdateDeviceRequest(
     [property: Description("Serial number, unique across all devices regardless of letter case and surrounding spaces.")] string SerialNumber,
     [property: Description("Device model.")] string Model,
     [property: Description("Device manufacturer.")] string Manufacturer,
-    [property: Description("Calendar date when the device was installed; cannot be in the future.")] DateOnly InstallationDate) : IDeviceDetails;
+    [property: Description("Calendar date when the device was installed; cannot be in the future in the Europe/Warsaw time zone.")] DateOnly InstallationDate) : IDeviceDetails;

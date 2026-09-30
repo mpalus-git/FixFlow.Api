@@ -3560,7 +3560,7 @@
           },
           "installationDate": {
             "type": "string",
-            "description": "Calendar date when the device was installed; cannot be in the future.",
+            "description": "Calendar date when the device was installed; cannot be in the future in the Europe/Warsaw time zone.",
             "format": "date"
           }
         },
@@ -4348,7 +4348,7 @@
           },
           "installationDate": {
             "type": "string",
-            "description": "Calendar date when the device was installed; cannot be in the future.",
+            "description": "Calendar date when the device was installed; cannot be in the future in the Europe/Warsaw time zone.",
             "format": "date"
           }
         },

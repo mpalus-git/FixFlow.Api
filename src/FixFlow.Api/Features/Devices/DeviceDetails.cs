@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Time;
 using FluentValidation;
 
 namespace FixFlow.Api.Features.Devices;
@@ -22,7 +23,7 @@ public sealed class DeviceDetailsValidator : AbstractValidator<IDeviceDetails>
         RuleFor(details => details.Manufacturer).NotEmpty().MaximumLength(100);
         RuleFor(details => details.InstallationDate)
             .NotEmpty()
-            .LessThanOrEqualTo(_ => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime))
+            .LessThanOrEqualTo(_ => DateOnly.FromDateTime(BusinessTime.From(timeProvider.GetUtcNow()).DateTime))
             .WithMessage("Installation date cannot be in the future.");
     }
 }
