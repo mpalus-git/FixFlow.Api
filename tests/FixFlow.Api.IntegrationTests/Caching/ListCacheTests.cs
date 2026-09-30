@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Clients;
-using FixFlow.Api.Features.Devices;
+using FixFlow.Api.Features.Devices.ListDevices;
 using FixFlow.Api.Features.Devices.UpdateDevice;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
@@ -93,9 +93,9 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
         return page.ShouldNotBeNull();
     }
 
-    private static async Task<PagedResponse<DeviceResponse>> GetDevicesAsync(HttpClient client)
+    private static async Task<PagedResponse<DeviceListItemResponse>> GetDevicesAsync(HttpClient client)
     {
-        var page = await client.GetFromJsonAsync<PagedResponse<DeviceResponse>>(DeviceRequests.DevicesUri, TestContext.Current.CancellationToken);
+        var page = await client.GetFromJsonAsync<PagedResponse<DeviceListItemResponse>>(DeviceRequests.DevicesUri, TestContext.Current.CancellationToken);
         return page.ShouldNotBeNull();
     }
 }

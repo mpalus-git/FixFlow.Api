@@ -8,18 +8,18 @@ namespace FixFlow.Api.Features.Devices.ListDevices;
 
 public sealed class ListDevicesHandler(FixFlowDbContext dbContext, HybridCache cache)
 {
-    public async Task<PagedResponse<DeviceResponse>> HandleAsync(ListDevicesRequest request, CancellationToken cancellationToken)
+    public async Task<PagedResponse<DeviceListItemResponse>> HandleAsync(ListDevicesRequest request, CancellationToken cancellationToken)
     {
         var search = request.Search?.Trim();
 
         return await cache.GetOrCreateAsync(
-            $"devices:list:{request.Page}:{request.PageSize}:{request.ClientId}:{search}",
+            $"devices:list-items:{request.Page}:{request.PageSize}:{request.ClientId}:{search}",
             async token => await QueryAsync(request, search, token),
             tags: [CacheTags.Devices],
             cancellationToken: cancellationToken);
     }
 
-    private Task<PagedResponse<DeviceResponse>> QueryAsync(ListDevicesRequest request, string? search, CancellationToken cancellationToken)
+    private Task<PagedResponse<DeviceListItemResponse>> QueryAsync(ListDevicesRequest request, string? search, CancellationToken cancellationToken)
     {
         var query = dbContext.Devices
             .AsNoTracking()
@@ -39,8 +39,13 @@ public sealed class ListDevicesHandler(FixFlowDbContext dbContext, HybridCache c
                 || EF.Functions.ILike(device.Manufacturer, pattern, LikePattern.EscapeCharacter));
         }
 
-        return query
-            .OrderBy(device => device.SerialNumber)
-            .ToPagedResponseAsync(request, DeviceResponse.FromDomain, cancellationToken);
+        var rows =
+            from device in query
+            join client in dbContext.Clients on device.ClientId equals client.Id
+            select new DeviceListRow { Device = device, ClientName = client.Name };
+
+        return rows
+            .OrderBy(row => row.Device.SerialNumber)
+            .ToPagedResponseAsync(request, DeviceListItemResponse.FromRow, cancellationToken);
     }
 }

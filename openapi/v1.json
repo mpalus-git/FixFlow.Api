@@ -1216,7 +1216,7 @@
           "Devices"
         ],
         "summary": "List active devices",
-        "description": "Returns one page of active devices ordered by serial number. Archived devices are not listed. The optional client filter limits the list to devices of one client, and the optional search matches a fragment of the serial number, model or manufacturer regardless of letter case.",
+        "description": "Returns one page of active devices ordered by serial number, each with the name of the client that owns it. Archived devices are not listed. The optional client filter limits the list to devices of one client, and the optional search matches a fragment of the serial number, model or manufacturer regardless of letter case.",
         "operationId": "ListDevices",
         "parameters": [
           {
@@ -1263,7 +1263,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResponseOfDeviceResponse"
+                  "$ref": "#/components/schemas/PagedResponseOfDeviceListItemResponse"
                 }
               }
             }
@@ -3648,6 +3648,67 @@
         },
         "description": "Data of a new work order."
       },
+      "DeviceListItemResponse": {
+        "required": [
+          "id",
+          "clientId",
+          "clientName",
+          "serialNumber",
+          "model",
+          "manufacturer",
+          "installationDate",
+          "createdAt",
+          "archivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the device.",
+            "format": "uuid"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of the client that owns the device.",
+            "format": "uuid"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Name of the client that owns the device."
+          },
+          "serialNumber": {
+            "type": "string",
+            "description": "Unique serial number, stored trimmed and in upper case."
+          },
+          "model": {
+            "type": "string",
+            "description": "Device model."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Device manufacturer."
+          },
+          "installationDate": {
+            "type": "string",
+            "description": "Calendar date when the device was installed.",
+            "format": "date"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC time when the device was created.",
+            "format": "date-time"
+          },
+          "archivedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "UTC time when the device was archived; null for active devices.",
+            "format": "date-time"
+          }
+        },
+        "description": "Device on a list, with the name of the client that owns it."
+      },
       "DeviceResponse": {
         "required": [
           "id",
@@ -3814,7 +3875,7 @@
         },
         "description": "One page of a list."
       },
-      "PagedResponseOfDeviceResponse": {
+      "PagedResponseOfDeviceListItemResponse": {
         "required": [
           "items",
           "page",
@@ -3826,7 +3887,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/DeviceResponse"
+              "$ref": "#/components/schemas/DeviceListItemResponse"
             },
             "description": "Items on the requested page."
           },
