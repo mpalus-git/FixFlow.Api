@@ -69,6 +69,20 @@ public sealed class ListCacheTests(FixFlowApiFactory factory) : IntegrationTestB
     }
 
     [Fact]
+    public async Task Should_Return_New_Client_Name_On_Device_List_When_Client_Is_Renamed_After_List_Was_Cached()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var owner = await client.CreateClientAsync(ClientRequests.NewClient("Alfa"));
+        await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id));
+        (await GetDevicesAsync(client)).Items.ShouldHaveSingleItem().ClientName.ShouldBe("Alfa");
+
+        using var response = await client.PutWithCurrentETagAsync(ClientRequests.ClientUri(owner.Id), ClientRequests.NewClient("Alfa Serwis"), TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        (await GetDevicesAsync(client)).Items.ShouldHaveSingleItem().ClientName.ShouldBe("Alfa Serwis");
+    }
+
+    [Fact]
     public async Task Should_Return_New_And_Updated_Devices_When_Devices_Change_After_List_Was_Cached()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
