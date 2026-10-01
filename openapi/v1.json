@@ -3226,6 +3226,53 @@
         ]
       }
     },
+    "/api/v1/dashboard/summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get dashboard summary",
+        "description": "Returns aggregated work order counts read from a single consistent database snapshot: the number of work orders in each status in lifecycle order (including zeros), the number of work orders flagged as overdue (the same criterion as the isOverdue=true filter of the work order list), and the workload of every active technician sorted by email, including technicians without work orders. The current week runs from Monday to Sunday in the Europe/Warsaw time zone; its bounds are returned as calendar dates usable as dueFrom and dueTo of the work order list. Available to dispatchers and administrators.",
+        "operationId": "GetDashboardSummary",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/demo-data/reset": {
       "post": {
         "tags": [
@@ -3647,6 +3694,54 @@
           }
         },
         "description": "Data of a new work order."
+      },
+      "DashboardSummaryResponse": {
+        "required": [
+          "generatedAt",
+          "weekStart",
+          "weekEnd",
+          "statusCounts",
+          "overdueCount",
+          "technicians"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "description": "UTC time when the summary was calculated.",
+            "format": "date-time"
+          },
+          "weekStart": {
+            "type": "string",
+            "description": "Monday of the current week in the Europe/Warsaw time zone.",
+            "format": "date"
+          },
+          "weekEnd": {
+            "type": "string",
+            "description": "Sunday of the current week in the Europe/Warsaw time zone.",
+            "format": "date"
+          },
+          "statusCounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkOrderStatusCountResponse"
+            },
+            "description": "Number of work orders in each status, in lifecycle order, including statuses without work orders."
+          },
+          "overdueCount": {
+            "type": "integer",
+            "description": "Number of work orders flagged as overdue.",
+            "format": "int32"
+          },
+          "technicians": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechnicianWorkloadResponse"
+            },
+            "description": "Workload of every active technician, sorted by email."
+          }
+        },
+        "description": "Aggregated work order counts for the dispatcher dashboard."
       },
       "DeviceListItemResponse": {
         "required": [
@@ -4290,6 +4385,49 @@
         "type": "string",
         "format": "binary"
       },
+      "TechnicianWorkloadResponse": {
+        "required": [
+          "technicianId",
+          "email",
+          "assignedCount",
+          "inProgressCount",
+          "overdueCount",
+          "dueThisWeekCount"
+        ],
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "description": "Identifier of the technician.",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email of the technician."
+          },
+          "assignedCount": {
+            "type": "integer",
+            "description": "Number of work orders assigned to the technician and not started yet.",
+            "format": "int32"
+          },
+          "inProgressCount": {
+            "type": "integer",
+            "description": "Number of work orders in progress; at most one.",
+            "format": "int32"
+          },
+          "overdueCount": {
+            "type": "integer",
+            "description": "Number of assigned or in-progress work orders flagged as overdue.",
+            "format": "int32"
+          },
+          "dueThisWeekCount": {
+            "type": "integer",
+            "description": "Number of assigned or in-progress work orders due in the current week.",
+            "format": "int32"
+          }
+        },
+        "description": "Open work orders of one active technician."
+      },
       "UpdateClientRequest": {
         "required": [
           "name",
@@ -4656,6 +4794,25 @@
         ],
         "type": "string",
         "description": "Status of a work order. Allowed transitions: New -> Assigned -> InProgress -> Completed -> Invoiced, and Assigned -> New when the technician is unassigned."
+      },
+      "WorkOrderStatusCountResponse": {
+        "required": [
+          "status",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Status of the work orders.",
+            "$ref": "#/components/schemas/WorkOrderStatus"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of work orders in the status.",
+            "format": "int32"
+          }
+        },
+        "description": "Number of work orders in one status."
       }
     },
     "securitySchemes": {
@@ -4688,6 +4845,9 @@
     },
     {
       "name": "ServiceEntries"
+    },
+    {
+      "name": "Dashboard"
     },
     {
       "name": "DemoData"

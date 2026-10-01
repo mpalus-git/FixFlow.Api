@@ -19,4 +19,22 @@ public sealed class BusinessTimeTests
         startOfDay.ShouldBe(DateTimeOffset.Parse(expectedUtc, CultureInfo.InvariantCulture));
         startOfDay.Offset.ShouldBe(TimeSpan.Zero);
     }
+
+    [Theory]
+    [InlineData("2026-01-14T10:00:00Z", "2026-01-12")]
+    [InlineData("2026-01-12T00:00:00Z", "2026-01-12")]
+    [InlineData("2026-01-18T22:30:00Z", "2026-01-12")]
+    [InlineData("2026-01-18T23:30:00Z", "2026-01-19")]
+    [InlineData("2026-07-05T21:30:00Z", "2026-06-29")]
+    [InlineData("2026-07-05T22:30:00Z", "2026-07-06")]
+    [InlineData("2026-03-29T21:30:00Z", "2026-03-23")]
+    [InlineData("2026-03-29T22:30:00Z", "2026-03-30")]
+    [InlineData("2026-10-25T22:30:00Z", "2026-10-19")]
+    [InlineData("2026-10-25T23:30:00Z", "2026-10-26")]
+    public void Should_Return_Warsaw_Monday_When_Start_Of_Week_Is_Requested(string moment, string expectedMonday)
+    {
+        var startOfWeek = BusinessTime.StartOfWeek(DateTimeOffset.Parse(moment, CultureInfo.InvariantCulture));
+
+        startOfWeek.ShouldBe(DateOnly.Parse(expectedMonday, CultureInfo.InvariantCulture));
+    }
 }
