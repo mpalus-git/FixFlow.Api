@@ -11,4 +11,11 @@ public static class BusinessTime
         var localMidnight = date.ToDateTime(TimeOnly.MinValue);
         return new DateTimeOffset(localMidnight, Zone.GetUtcOffset(localMidnight)).ToUniversalTime();
     }
+
+    public static DateOnly StartOfWeek(DateTimeOffset moment)
+    {
+        var day = DateOnly.FromDateTime(From(moment).DateTime);
+        var daysSinceMonday = ((int)day.DayOfWeek + 6) % 7;
+        return day.AddDays(-daysSinceMonday);
+    }
 }
