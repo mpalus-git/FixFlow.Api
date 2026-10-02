@@ -61,6 +61,7 @@ Po starcie dostępne są:
 | http://localhost:8080/openapi/v1.json | dokument OpenAPI |
 | http://localhost:8080/health | liveness (bez bazy) |
 | http://localhost:8080/health/ready | readiness (z bazą) |
+| http://localhost:8080/api/v1/system/ready | readiness (z bazą) dla panelu webowego |
 | http://localhost:8025 | Mailpit, podgląd wysłanych e-maili |
 
 Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`. Przy pustej bazie powstają też dane demonstracyjne: 6 klientów, 13 urządzeń, 11 części, 18 zleceń i dwóch dodatkowych techników bez hasła, na których nie da się zalogować, ale można im przypisywać zlecenia.
@@ -156,7 +157,7 @@ flowchart LR
 - Usługa Render jest opisana w [render.yaml](render.yaml) i wdraża gotowy obraz z GHCR, a nie buduje go z Dockerfile. Sekrety (connection stringi, hasła kont demo) podaje się przy zakładaniu usługi; klucz JWT generuje Render.
 - Baza to Neon z bezpośrednim connection stringiem (bez `-pooler`) i `SSL Mode=Require`, cache to Upstash Redis z TLS (`ssl=True`).
 - Migracje wykonują się przy starcie aplikacji przez `MigrateAsync`.
-- Render sprawdza `GET /health`, który nie dotyka bazy, więc health check nie wybudza uśpionej bazy Neon. `GET /health/ready` sprawdza połączenie z bazą.
+- Render sprawdza `GET /health`, który nie dotyka bazy, więc health check nie wybudza uśpionej bazy Neon. `GET /health/ready` sprawdza połączenie z bazą. Panel webowy sprawdza gotowość przez `GET /api/v1/system/ready` (to samo sprawdzenie bazy), bo blokery reklam z listą EasyPrivacy blokują żądania do `onrender.com/health*`.
 - Za Renderem żądanie przechodzi przez Cloudflare i proxy Render, dlatego `X-Forwarded-For` ma trzy pozycje, a `ForwardedHeaders__ForwardLimit` wynosi `3`. Adres widziany przez aplikację (i przez limiter logowania) jest zapisywany w logu każdego żądania jako `ClientIp`.
 - Brak sekretu `RENDER_DEPLOY_HOOK_URL` w repozytorium (np. w forku) nie psuje CI: krok wdrożenia jest pomijany z ostrzeżeniem.
 - Workflow [reset-demo-data.yml](.github/workflows/reset-demo-data.yml) codziennie o 2:00 UTC (i ręcznie przez `workflow_dispatch`) wybudza usługę, loguje się jako `admin@fixflow.local` hasłem z sekretu `DEMO_ADMIN_PASSWORD` i wywołuje `POST /api/v1/demo-data/reset`. Reset usuwa klientów, urządzenia, części i zlecenia, tworzy od nowa dane demonstracyjne i przywraca konta demo Dispatcher i Technician (hasła z konfiguracji, aktywne, bez blokady). Endpoint jest dostępny tylko dla Admina i tylko przy `Seed__DemoData__Enabled=true`; bez sekretu workflow kończy się ostrzeżeniem.
