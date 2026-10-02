@@ -17,11 +17,13 @@ public sealed partial class DemoDataSeeder(
 {
     public const string AnnaKowalczykEmail = "anna.kowalczyk@fixflow.local";
     public const string TomaszWojcikEmail = "tomasz.wojcik@fixflow.local";
+    public const string PiotrZielinskiEmail = "piotr.zielinski@fixflow.local";
 
-    public static readonly IReadOnlyList<string> AdditionalTechnicianEmails = [AnnaKowalczykEmail, TomaszWojcikEmail];
+    public static readonly IReadOnlyList<string> AdditionalTechnicianEmails = [AnnaKowalczykEmail, TomaszWojcikEmail, PiotrZielinskiEmail];
 
     private static readonly TimeSpan InventoryAge = TimeSpan.FromDays(90);
     private static readonly TimeSpan RetiredItemsAge = TimeSpan.FromDays(7);
+    private static readonly TimeSpan FormerTechnicianDeactivationAge = TimeSpan.FromDays(56);
 
     public async Task SeedIfDatabaseIsEmptyAsync(CancellationToken cancellationToken)
     {
@@ -40,12 +42,13 @@ public sealed partial class DemoDataSeeder(
             return false;
         }
 
+        var now = timeProvider.GetUtcNow();
         var technicians = new DemoTechnicians(
             await FindLoginTechnicianIdAsync(),
-            await EnsureTechnicianWithoutPasswordAsync(AnnaKowalczykEmail),
-            await EnsureTechnicianWithoutPasswordAsync(TomaszWojcikEmail));
+            (await EnsureTechnicianWithoutPasswordAsync(AnnaKowalczykEmail)).Id,
+            (await EnsureTechnicianWithoutPasswordAsync(TomaszWojcikEmail)).Id,
+            await EnsureDeactivatedTechnicianAsync(PiotrZielinskiEmail, now - FormerTechnicianDeactivationAge));
 
-        var now = timeProvider.GetUtcNow();
         var inventory = DemoInventory.Create(now - InventoryAge);
         var history = DemoWorkOrderHistory.Create(inventory, technicians, now);
         inventory.ArchiveRetiredItems(now - RetiredItemsAge);
@@ -78,11 +81,23 @@ public sealed partial class DemoDataSeeder(
         return loginTechnician.Id;
     }
 
-    private async Task<Guid> EnsureTechnicianWithoutPasswordAsync(string email)
+    private async Task<Guid> EnsureDeactivatedTechnicianAsync(string email, DateTimeOffset deactivatedAt)
+    {
+        var technician = await EnsureTechnicianWithoutPasswordAsync(email);
+        if (technician.IsActive)
+        {
+            technician.Deactivate(deactivatedAt);
+            (await userManager.UpdateAsync(technician)).ThrowIfFailed(email);
+        }
+
+        return technician.Id;
+    }
+
+    private async Task<ApplicationUser> EnsureTechnicianWithoutPasswordAsync(string email)
     {
         if (await userManager.FindByEmailAsync(email) is { } existingTechnician)
         {
-            return existingTechnician.Id;
+            return existingTechnician;
         }
 
         var technician = new ApplicationUser
@@ -94,7 +109,7 @@ public sealed partial class DemoDataSeeder(
 
         (await userManager.CreateAsync(technician)).ThrowIfFailed(email);
         (await userManager.AddToRoleAsync(technician, Roles.Technician)).ThrowIfFailed(email);
-        return technician.Id;
+        return technician;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Demo data skipped because the database already contains clients")]
