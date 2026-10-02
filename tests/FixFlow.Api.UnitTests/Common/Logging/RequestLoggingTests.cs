@@ -24,6 +24,7 @@ public sealed class RequestLoggingTests
     [Theory]
     [InlineData("/health")]
     [InlineData("/health/ready")]
+    [InlineData("/api/v1/system/ready")]
     public void Should_Log_At_Verbose_Level_When_Health_Check_Succeeds(string path)
     {
         var level = LoggingExtensions.GetRequestLogLevel(CreateHttpContext(path, StatusCodes.Status200OK), 1, null);
