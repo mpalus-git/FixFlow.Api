@@ -13,7 +13,7 @@ public sealed class EndpointAuthorizationTests(FixFlowApiFactory factory)
         "POST /api/v{version:apiVersion}/auth/refresh",
     ];
 
-    private static readonly string[] AnonymousInfrastructureRoutePrefixes = ["/health", "/openapi/", "/scalar"];
+    private static readonly string[] AnonymousInfrastructureRoutePrefixes = ["/health", "/api/v1/system/ready", "/openapi/", "/scalar"];
 
     [Fact]
     public void Should_Require_Authorization_When_Endpoint_Is_Not_Explicitly_Anonymous()

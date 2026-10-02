@@ -61,6 +61,7 @@ public static class LoggingExtensions
         }
 
         return httpContext.Request.Path.StartsWithSegments(HealthCheckExtensions.LivenessPath, StringComparison.OrdinalIgnoreCase)
+            || httpContext.Request.Path.StartsWithSegments(HealthCheckExtensions.SystemReadinessPath, StringComparison.OrdinalIgnoreCase)
             ? LogEventLevel.Verbose
             : LogEventLevel.Information;
     }

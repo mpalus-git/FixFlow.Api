@@ -7,6 +7,7 @@ public static class HealthCheckExtensions
 {
     public const string LivenessPath = "/health";
     public const string ReadinessPath = "/health/ready";
+    public const string SystemReadinessPath = "/api/v1/system/ready";
 
     private const string ReadinessTag = "ready";
 
@@ -25,6 +26,10 @@ public static class HealthCheckExtensions
             Predicate = _ => false,
         });
         app.MapHealthChecks(ReadinessPath, new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains(ReadinessTag),
+        });
+        app.MapHealthChecks(SystemReadinessPath, new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains(ReadinessTag),
         });
