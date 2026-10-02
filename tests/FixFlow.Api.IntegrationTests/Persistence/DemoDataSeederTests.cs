@@ -29,7 +29,7 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
         (await dbContext.Devices.CountAsync(device => device.ArchivedAt != null, cancellationToken)).ShouldBe(1);
         (await dbContext.Parts.CountAsync(cancellationToken)).ShouldBe(11);
         (await dbContext.Parts.CountAsync(part => part.ArchivedAt != null, cancellationToken)).ShouldBe(1);
-        (await dbContext.WorkOrders.CountAsync(cancellationToken)).ShouldBe(18);
+        (await dbContext.WorkOrders.CountAsync(cancellationToken)).ShouldBe(23);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
             [WorkOrderStatus.Assigned] = 3,
             [WorkOrderStatus.InProgress] = 3,
             [WorkOrderStatus.Completed] = 3,
-            [WorkOrderStatus.Invoiced] = 5,
+            [WorkOrderStatus.Invoiced] = 10,
         },
         ignoreOrder: true);
         workOrders.Count(workOrder => workOrder.IsOverdue).ShouldBe(3);
@@ -67,12 +67,14 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
             part => part.CatalogNumber,
             part => part.StockQuantity,
             TestContext.Current.CancellationToken);
-        stockByCatalogNumber["RLR-FEED-01"].ShouldBe(27);
+        stockByCatalogNumber["RLR-FEED-01"].ShouldBe(26);
         stockByCatalogNumber["FSR-UNI-220"].ShouldBe(2);
         stockByCatalogNumber["REF-R32-1KG"].ShouldBe(23);
-        stockByCatalogNumber["FLT-AC-100"].ShouldBe(36);
+        stockByCatalogNumber["FLT-AC-100"].ShouldBe(34);
         stockByCatalogNumber["SNS-NTC-10K"].ShouldBe(18);
         stockByCatalogNumber["BLT-TRF-01"].ShouldBe(1);
+        stockByCatalogNumber["PMP-CND-01"].ShouldBe(5);
+        stockByCatalogNumber["TNR-RIC-C3000-K"].ShouldBe(7);
         stockByCatalogNumber["FLT-CARB-OLD"].ShouldBe(3);
         (await dbContext.ServiceEntries.CountAsync(entry => entry.IsCorrection, TestContext.Current.CancellationToken)).ShouldBe(1);
     }
@@ -90,6 +92,24 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
             (await userManager.IsInRoleAsync(technician, Roles.Technician)).ShouldBeTrue();
             (await userManager.HasPasswordAsync(technician)).ShouldBeFalse();
         }
+    }
+
+    [Fact]
+    public async Task Should_Seed_Deactivated_Technician_With_Invoiced_History_When_Demo_Data_Is_Seeded()
+    {
+        await SeedDemoDataAsync();
+
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var formerTechnician = (await userManager.FindByEmailAsync(DemoDataSeeder.PiotrZielinskiEmail)).ShouldNotBeNull();
+        formerTechnician.IsActive.ShouldBeFalse();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+        var statuses = await dbContext.WorkOrders
+            .Where(workOrder => workOrder.TechnicianId == formerTechnician.Id)
+            .Select(workOrder => workOrder.Status)
+            .ToListAsync(TestContext.Current.CancellationToken);
+        statuses.Count.ShouldBe(5);
+        statuses.ShouldAllBe(status => status == WorkOrderStatus.Invoiced);
     }
 
     [Fact]
@@ -142,7 +162,7 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
 
         await using var scope = factoryWithDemoData.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
-        (await dbContext.WorkOrders.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(18);
+        (await dbContext.WorkOrders.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(23);
     }
 
     [Fact]

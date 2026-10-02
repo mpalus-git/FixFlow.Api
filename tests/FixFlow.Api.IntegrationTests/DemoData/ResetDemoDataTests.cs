@@ -46,7 +46,7 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
         var clientIds = await verificationDbContext.Clients.Select(client => client.Id).ToListAsync(cancellationToken);
         clientIds.Count.ShouldBe(6);
         clientIds.ShouldNotContain(clientId => seededClientIds.Contains(clientId));
-        (await verificationDbContext.WorkOrders.CountAsync(cancellationToken)).ShouldBe(18);
+        (await verificationDbContext.WorkOrders.CountAsync(cancellationToken)).ShouldBe(23);
         (await verificationDbContext.Parts.CountAsync(cancellationToken)).ShouldBe(11);
         (await verificationDbContext.Users.AnyAsync(user => user.Id == accountCreatedByAdmin.Id, cancellationToken)).ShouldBeTrue();
     }
@@ -80,6 +80,27 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
         restoredTechnician.IsActive.ShouldBeTrue();
         var verificationDbContext = verificationScope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
         (await verificationDbContext.RefreshTokens.AnyAsync(token => token.UserId == restoredTechnician.Id && token.RevokedAt == null, cancellationToken)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Should_Deactivate_Former_Technician_Again_When_Demo_Data_Is_Reset_After_Activation()
+    {
+        await using var demoFactory = CreateFactoryWithDemoData();
+        await using (var scope = demoFactory.Services.CreateAsyncScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var formerTechnician = (await userManager.FindByEmailAsync(DemoDataSeeder.PiotrZielinskiEmail)).ShouldNotBeNull();
+            formerTechnician.Activate();
+            (await userManager.UpdateAsync(formerTechnician)).Succeeded.ShouldBeTrue();
+        }
+
+        var result = await ResetDemoDataAsync(demoFactory);
+
+        result.IsError.ShouldBeFalse();
+        await using var verificationScope = demoFactory.Services.CreateAsyncScope();
+        var verificationUserManager = verificationScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var restoredTechnician = (await verificationUserManager.FindByEmailAsync(DemoDataSeeder.PiotrZielinskiEmail)).ShouldNotBeNull();
+        restoredTechnician.IsActive.ShouldBeFalse();
     }
 
     [Fact]

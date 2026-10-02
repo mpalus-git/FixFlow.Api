@@ -40,6 +40,7 @@ public sealed class DemoWorkOrderHistory
         history.AddLoginTechnicianWorkOrders(technicians.LoginTechnicianId);
         history.AddAnnaKowalczykWorkOrders(technicians.AnnaKowalczykId);
         history.AddTomaszWojcikWorkOrders(technicians.TomaszWojcikId);
+        history.AddPiotrZielinskiWorkOrders(technicians.PiotrZielinskiId);
         history.AddUnassignedWorkOrders();
         return history;
     }
@@ -101,6 +102,30 @@ public sealed class DemoWorkOrderHistory
             .Work("Wymieniono czujnik temperatury parownika. Obserwacja pracy w trybie grzania w toku.", startedDaysAgo: 1.1, hours: 1.5, ("SNS-NTC-10K", 1));
         Open("TOS-ES5018A-1178214", "Zacięcia papieru w finiszerze przy zszywaniu.", WorkOrderPriority.Normal, createdDaysAgo: 0.8, dueDaysAfterCreation: 5)
             .AssignTo(technicianId);
+    }
+
+    private void AddPiotrZielinskiWorkOrders(Guid technicianId)
+    {
+        Open("MIT-MSZLN25-8812034", "Coroczny przegląd klimatyzatorów w pokojach hotelowych.", WorkOrderPriority.Low, createdDaysAgo: 85, dueDaysAfterCreation: 14)
+            .AssignTo(technicianId).Start(daysAgo: 80)
+            .Work("Przegląd dwóch jednostek wewnętrznych, wymieniono filtry, wyczyszczono tace skroplin.", startedDaysAgo: 80, hours: 3, ("FLT-AC-100", 2))
+            .Complete(daysAgo: 79.9).Invoice(daysAgo: 75);
+        Open("CAN-IR2425-2271840", "Urządzenie nie pobiera papieru z kasety nr 1.", WorkOrderPriority.Normal, createdDaysAgo: 78, dueDaysAfterCreation: 5)
+            .AssignTo(technicianId).Start(daysAgo: 76)
+            .Work("Wymieniono zużytą rolkę podającą kasety nr 1, wyczyszczono czujnik obecności papieru.", startedDaysAgo: 76, hours: 1, ("RLR-FEED-01", 1))
+            .Complete(daysAgo: 75.95).Invoice(daysAgo: 72);
+        Open("DAI-FTXF50D-3310552", "Skropliny kapią z jednostki wewnętrznej w serwerowni.", WorkOrderPriority.High, createdDaysAgo: 72, dueDaysAfterCreation: 2)
+            .AssignTo(technicianId).Start(daysAgo: 71.5)
+            .Work("Wymieniono uszkodzoną pompkę skroplin, sprawdzono drożność odpływu i szczelność połączeń.", startedDaysAgo: 71.5, hours: 2, ("PMP-CND-01", 1))
+            .Complete(daysAgo: 71.4).Invoice(daysAgo: 68);
+        Open("RIC-IMC3000-7F21A4", "Wymiana tonera czarnego i blade wydruki w trybie monochromatycznym.", WorkOrderPriority.Low, createdDaysAgo: 66, dueDaysAfterCreation: 7)
+            .AssignTo(technicianId).Start(daysAgo: 65)
+            .Work("Wymieniono toner czarny, wyczyszczono zespół ładujący i wykonano kalibrację gęstości.", startedDaysAgo: 65, hours: 1, ("TNR-RIC-C3000-K", 1))
+            .Complete(daysAgo: 64.95).Invoice(daysAgo: 62);
+        Open("HP-M528DN-CNB2K4101", "Zablokowany moduł dupleksu, komunikat 13.B9.", WorkOrderPriority.Normal, createdDaysAgo: 62, dueDaysAfterCreation: 3)
+            .AssignTo(technicianId).Start(daysAgo: 61)
+            .Work("Usunięto zacięty fragment papieru z modułu dupleksu, wyczyszczono czujniki toru papieru.", startedDaysAgo: 61, hours: 0.5)
+            .Complete(daysAgo: 60.95).Invoice(daysAgo: 58);
     }
 
     private void AddUnassignedWorkOrders()
