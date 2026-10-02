@@ -7,6 +7,17 @@ namespace FixFlow.Api.Common.Persistence.Seeding;
 
 public sealed class DemoWorkOrderHistory
 {
+    private const string WallAirConditionerPhotoUrl =
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Air_conditioner_ballu.jpg/960px-Air_conditioner_ballu.jpg";
+    private const string AgedWallAirConditionerPhotoUrl =
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/HYUNDAI_-_Air_conditioner_mini_split_%28model_BMS-12HD%29.jpg/960px-HYUNDAI_-_Air_conditioner_mini_split_%28model_BMS-12HD%29.jpg";
+    private const string VrfOutdoorUnitsPhotoUrl =
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Daikin_Ac_Repair_Maintenance_at_godawori_nepal.jpg/960px-Daikin_Ac_Repair_Maintenance_at_godawori_nepal.jpg";
+    private const string ProductionCopierPhotoUrl =
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/The_Closest_Photocopier_%283594209596%29.jpg/960px-The_Closest_Photocopier_%283594209596%29.jpg";
+    private const string TonerCartridgePhotoUrl =
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Tonerkassette_Laserdrucker_HP.jpg/960px-Tonerkassette_Laserdrucker_HP.jpg";
+
     private static readonly TimeSpan EntryRecordingDelay = TimeSpan.FromMinutes(10);
 
     private static readonly Dictionary<string, GpsLocation> LocationsByCity = new()
@@ -53,18 +64,18 @@ public sealed class DemoWorkOrderHistory
             .Complete(daysAgo: 38.8).Invoice(daysAgo: 35);
         Open("DAI-FTXM35R-3302117", "Klimatyzator w sali konferencyjnej nie chłodzi, podejrzenie ubytku czynnika.", WorkOrderPriority.High, createdDaysAgo: 6, dueDaysAfterCreation: 4)
             .AssignTo(technicianId).Start(daysAgo: 4.2)
-            .Work("Zlokalizowano i uszczelniono nieszczelność na kielichu. Próba ciśnieniowa, próżnia, uzupełniono czynnik R32.", startedDaysAgo: 4.2, hours: 2.5, ("REF-R32-1KG", 2))
+            .Work("Zlokalizowano i uszczelniono nieszczelność na kielichu. Próba ciśnieniowa, próżnia, uzupełniono czynnik R32.", startedDaysAgo: 4.2, hours: 2.5, [WallAirConditionerPhotoUrl], ("REF-R32-1KG", 2))
             .Complete(daysAgo: 4.05);
         Open("MIT-MSZLN35-8812035", "Wyciek wody z jednostki wewnętrznej w pokoju 204.", WorkOrderPriority.High, createdDaysAgo: 1.5, dueDaysAfterCreation: 2)
             .AssignTo(technicianId).Start(daysAgo: 0.1)
-            .Work("Diagnoza: niedrożny odpływ skroplin i uszkodzona pompka. Udrożniono odpływ, pompka do wymiany.", startedDaysAgo: 0.1, hours: 1);
+            .Work("Diagnoza: niedrożny odpływ skroplin i uszkodzona pompka. Udrożniono odpływ, pompka do wymiany.", startedDaysAgo: 0.1, hours: 1, [AgedWallAirConditionerPhotoUrl]);
         Open("KYO-TA2554CI-0093312", "Smugi na wydrukach kolorowych, głównie w kolorze magenta.", WorkOrderPriority.Normal, createdDaysAgo: 5, dueDaysAfterCreation: 3)
             .AssignTo(technicianId);
         Open("CAN-IR2425-2271840", "Wymiana bębna po przekroczeniu licznika eksploatacji.", WorkOrderPriority.Low, createdDaysAgo: 1, dueDaysAfterCreation: 6)
             .AssignTo(technicianId);
         Open("KM-C450I-6610032", "Błąd zespołu utrwalającego C2557, urządzenie zablokowane.", WorkOrderPriority.High, createdDaysAgo: 25, dueDaysAfterCreation: 2)
             .AssignTo(technicianId).Start(daysAgo: 24)
-            .Work("Wymieniono zespół utrwalający i rolki podające. Skasowano błąd, wykonano kalibrację.", startedDaysAgo: 24, hours: 3, ("FSR-UNI-220", 1), ("RLR-FEED-01", 2))
+            .Work("Wymieniono zespół utrwalający i rolki podające. Skasowano błąd, wykonano kalibrację.", startedDaysAgo: 24, hours: 3, [ProductionCopierPhotoUrl], ("FSR-UNI-220", 1), ("RLR-FEED-01", 2))
             .Correction("Korekta: jedna rolka podająca nie została zamontowana, zwrócono ją na magazyn.", daysAgo: 23.8, ("RLR-FEED-01", 1))
             .Complete(daysAgo: 23.75).Invoice(daysAgo: 20);
     }
@@ -73,7 +84,7 @@ public sealed class DemoWorkOrderHistory
     {
         Open("LG-ARUM100-4410298", "Przegląd okresowy systemu VRF przed sezonem letnim.", WorkOrderPriority.Low, createdDaysAgo: 60, dueDaysAfterCreation: 14)
             .AssignTo(technicianId).Start(daysAgo: 50)
-            .Work("Przegląd jednostki zewnętrznej i czterech jednostek wewnętrznych. Wymieniono filtry, wymieniono uszkodzony czujnik temperatury.", startedDaysAgo: 50, hours: 4, ("FLT-AC-100", 4), ("SNS-NTC-10K", 1))
+            .Work("Przegląd jednostki zewnętrznej i czterech jednostek wewnętrznych. Wymieniono filtry, wymieniono uszkodzony czujnik temperatury.", startedDaysAgo: 50, hours: 4, [VrfOutdoorUnitsPhotoUrl, WallAirConditionerPhotoUrl], ("FLT-AC-100", 4), ("SNS-NTC-10K", 1))
             .Complete(daysAgo: 49.8).Invoice(daysAgo: 45);
         Open("SAM-AR12TXEA-5520411", "Głośna praca wentylatora jednostki wewnętrznej w gabinecie nr 3.", WorkOrderPriority.Normal, createdDaysAgo: 10, dueDaysAfterCreation: 5)
             .AssignTo(technicianId).Start(daysAgo: 8)
@@ -120,7 +131,7 @@ public sealed class DemoWorkOrderHistory
             .Complete(daysAgo: 71.4).Invoice(daysAgo: 68);
         Open("RIC-IMC3000-7F21A4", "Wymiana tonera czarnego i blade wydruki w trybie monochromatycznym.", WorkOrderPriority.Low, createdDaysAgo: 66, dueDaysAfterCreation: 7)
             .AssignTo(technicianId).Start(daysAgo: 65)
-            .Work("Wymieniono toner czarny, wyczyszczono zespół ładujący i wykonano kalibrację gęstości.", startedDaysAgo: 65, hours: 1, ("TNR-RIC-C3000-K", 1))
+            .Work("Wymieniono toner czarny, wyczyszczono zespół ładujący i wykonano kalibrację gęstości.", startedDaysAgo: 65, hours: 1, [TonerCartridgePhotoUrl], ("TNR-RIC-C3000-K", 1))
             .Complete(daysAgo: 64.95).Invoice(daysAgo: 62);
         Open("HP-M528DN-CNB2K4101", "Zablokowany moduł dupleksu, komunikat 13.B9.", WorkOrderPriority.Normal, createdDaysAgo: 62, dueDaysAfterCreation: 3)
             .AssignTo(technicianId).Start(daysAgo: 61)
@@ -183,7 +194,15 @@ public sealed class DemoWorkOrderHistory
             return this;
         }
 
-        public WorkOrderTimeline Work(string note, double startedDaysAgo, double hours, params (string CatalogNumber, int Quantity)[] parts)
+        public WorkOrderTimeline Work(string note, double startedDaysAgo, double hours, params (string CatalogNumber, int Quantity)[] parts) =>
+            Work(note, startedDaysAgo, hours, [], parts);
+
+        public WorkOrderTimeline Work(
+            string note,
+            double startedDaysAgo,
+            double hours,
+            IReadOnlyList<string> photoUrls,
+            params (string CatalogNumber, int Quantity)[] parts)
         {
             var startedAt = history.DaysAgo(startedDaysAgo);
             var finishedAt = (startedAt + TimeSpan.FromHours(hours)).ToDatabasePrecision();
@@ -191,7 +210,7 @@ public sealed class DemoWorkOrderHistory
                 workOrder,
                 TechnicianId,
                 note,
-                [],
+                photoUrls,
                 startedAt,
                 finishedAt,
                 location,

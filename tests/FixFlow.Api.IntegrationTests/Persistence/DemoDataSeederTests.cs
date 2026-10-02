@@ -113,6 +113,20 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
     }
 
     [Fact]
+    public async Task Should_Attach_Https_Photos_To_Service_Entries_When_Demo_Data_Is_Seeded()
+    {
+        await SeedDemoDataAsync();
+
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+        var entries = await dbContext.ServiceEntries.AsNoTracking().ToListAsync(TestContext.Current.CancellationToken);
+        var photoUrls = entries.SelectMany(entry => entry.PhotoUrls).ToList();
+        entries.Count(entry => entry.PhotoUrls.Count > 0).ShouldBe(5);
+        entries.ShouldContain(entry => entry.PhotoUrls.Count > 1);
+        photoUrls.ShouldAllBe(url => url.StartsWith("https://", StringComparison.Ordinal) && Uri.IsWellFormedUriString(url, UriKind.Absolute));
+    }
+
+    [Fact]
     public async Task Should_Generate_Service_Protocol_For_Seeded_WorkOrder_With_Correction()
     {
         await SeedDemoDataAsync();
