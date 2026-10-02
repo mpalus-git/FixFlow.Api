@@ -79,7 +79,7 @@ public sealed class DemoInventory
         new("Filtr powietrza do klimatyzatora ściennego", "FLT-AC-100", 40, 45.00m),
         new("Czynnik chłodniczy R32 (1 kg)", "REF-R32-1KG", 25, 89.90m),
         new("Kondensator rozruchowy 35 µF", "CAP-35UF", 15, 38.50m),
-        new("Pompka skroplin", "PMP-CND-01", 6, 210.00m),
+        new("Pompka skroplin", "PMP-CND-01", 1, 210.00m),
         new("Czujnik temperatury NTC 10 kΩ", "SNS-NTC-10K", 20, 24.90m),
         new("Toner czarny do Ricoh IM C3000", "TNR-RIC-C3000-K", 8, 219.00m),
         new("Bęben światłoczuły", "DRM-UNI-01", 5, 480.00m),

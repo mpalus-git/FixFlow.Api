@@ -73,7 +73,7 @@ public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : Integration
         stockByCatalogNumber["FLT-AC-100"].ShouldBe(34);
         stockByCatalogNumber["SNS-NTC-10K"].ShouldBe(18);
         stockByCatalogNumber["BLT-TRF-01"].ShouldBe(1);
-        stockByCatalogNumber["PMP-CND-01"].ShouldBe(5);
+        stockByCatalogNumber["PMP-CND-01"].ShouldBe(0);
         stockByCatalogNumber["TNR-RIC-C3000-K"].ShouldBe(7);
         stockByCatalogNumber["FLT-CARB-OLD"].ShouldBe(3);
         (await dbContext.ServiceEntries.CountAsync(entry => entry.IsCorrection, TestContext.Current.CancellationToken)).ShouldBe(1);
