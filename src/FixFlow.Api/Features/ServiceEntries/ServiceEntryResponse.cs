@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using FixFlow.Api.Domain.Parts;
 using FixFlow.Api.Domain.ServiceEntries;
 
 namespace FixFlow.Api.Features.ServiceEntries;
@@ -18,7 +19,7 @@ public sealed record ServiceEntryResponse(
     [property: Description("Parts used in a work entry or returned in a correction.")] IReadOnlyList<ServiceEntryPartResponse> Parts,
     [property: Description("UTC time when the entry was added.")] DateTimeOffset CreatedAt)
 {
-    public static ServiceEntryResponse FromDomain(ServiceEntry entry) => new(
+    public static ServiceEntryResponse FromDomain(ServiceEntry entry, IReadOnlyDictionary<Guid, Part> parts) => new(
         entry.Id,
         entry.WorkOrderId,
         entry.TechnicianId,
@@ -29,12 +30,14 @@ public sealed record ServiceEntryResponse(
         entry.WorkFinishedAt,
         entry.Latitude,
         entry.Longitude,
-        [.. entry.Parts.Select(part => new ServiceEntryPartResponse(part.PartId, part.Quantity, part.UnitPrice))],
+        [.. entry.Parts.Select(part => new ServiceEntryPartResponse(part.PartId, parts[part.PartId].Name, parts[part.PartId].CatalogNumber, part.Quantity, part.UnitPrice))],
         entry.CreatedAt);
 }
 
-[Description("Quantity of one part in a service entry with its unit price at the time of use.")]
+[Description("Quantity of one part in a service entry with its catalog details and unit price at the time of use.")]
 public sealed record ServiceEntryPartResponse(
     [property: Description("Identifier of the part.")] Guid PartId,
+    [property: Description("Current name of the part in the catalog, also for archived parts.")] string PartName,
+    [property: Description("Current catalog number of the part, also for archived parts.")] string CatalogNumber,
     [property: Description("Number of used or returned units.")] int Quantity,
     [property: Description("Net unit price in PLN at the time the part was used; for a correction, the price of the last use on the work order.")] decimal UnitPrice);

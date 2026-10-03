@@ -50,6 +50,24 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
     }
 
     [Fact]
+    public async Task Should_Return_Part_Name_And_Catalog_Number_When_Used_Part_Was_Archived()
+    {
+        using var scenario = await CreateWorkOrderInProgressAsync();
+        var part = await scenario.DispatcherClient.CreatePartAsync(PartRequests.NewPart("CMP-200", "Kompresor"));
+        var workEntry = await scenario.TechnicianClient.AddServiceEntryAsync(scenario.WorkOrder.Id, ServiceEntryRequests.WorkEntry(scenario.WorkOrder, new ServiceEntryPartRequest(part.Id, 1)));
+        await scenario.DispatcherClient.ArchivePartAsync(part.Id);
+
+        var listedEntry = (await scenario.DispatcherClient.ListServiceEntriesAsync(scenario.WorkOrder.Id)).ShouldHaveSingleItem();
+
+        var addedPart = workEntry.Parts.ShouldHaveSingleItem();
+        addedPart.PartName.ShouldBe("Kompresor");
+        addedPart.CatalogNumber.ShouldBe("CMP-200");
+        var listedPart = listedEntry.Parts.ShouldHaveSingleItem();
+        listedPart.PartName.ShouldBe("Kompresor");
+        listedPart.CatalogNumber.ShouldBe("CMP-200");
+    }
+
+    [Fact]
     public async Task Should_Return_Conflict_Problem_When_Correction_Returns_More_Than_Was_Used()
     {
         using var scenario = await CreateWorkOrderInProgressAsync();
