@@ -12,7 +12,7 @@ public sealed class ListUsersHandler(FixFlowDbContext dbContext)
             from user in dbContext.Users.AsNoTracking()
             join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
             join role in dbContext.Roles on userRole.RoleId equals role.Id
-            select new { user.Id, Email = user.Email!, Role = role.Name!, IsActive = user.DeactivatedAt == null };
+            select new { user.Id, Email = user.Email!, user.FullName, Role = role.Name!, IsActive = user.DeactivatedAt == null };
 
         if (request.Role is not null)
         {
@@ -25,8 +25,9 @@ public sealed class ListUsersHandler(FixFlowDbContext dbContext)
         }
 
         return query
-            .OrderBy(user => user.Email)
+            .OrderBy(user => user.FullName)
+            .ThenBy(user => user.Email)
             .ThenBy(user => user.Id)
-            .ToPagedResponseAsync(request, user => new UserResponse(user.Id, user.Email, user.Role, user.IsActive), cancellationToken);
+            .ToPagedResponseAsync(request, user => new UserResponse(user.Id, user.Email, user.FullName, user.Role, user.IsActive), cancellationToken);
     }
 }

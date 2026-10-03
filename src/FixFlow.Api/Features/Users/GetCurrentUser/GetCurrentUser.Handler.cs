@@ -16,7 +16,7 @@ public sealed class GetCurrentUserHandler(FixFlowDbContext dbContext)
             join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
             join role in dbContext.Roles on userRole.RoleId equals role.Id
             where user.Id == userId
-            select new UserResponse(user.Id, user.Email!, role.Name!, user.DeactivatedAt == null))
+            select new UserResponse(user.Id, user.Email!, user.FullName, role.Name!, user.DeactivatedAt == null))
             .SingleOrDefaultAsync(cancellationToken);
 
         return currentUser is null ? UserErrors.NotFound : currentUser;

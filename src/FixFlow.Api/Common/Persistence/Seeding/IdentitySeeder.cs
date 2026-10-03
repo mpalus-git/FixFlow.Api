@@ -25,15 +25,16 @@ public sealed class IdentitySeeder(
             return;
         }
 
-        await EnsureDemoUserAsync(DemoUsersOptions.AdminEmail, demoUsers.AdminPassword, Roles.Admin);
-        await EnsureDemoUserAsync(DemoUsersOptions.DispatcherEmail, demoUsers.DispatcherPassword, Roles.Dispatcher);
-        await EnsureDemoUserAsync(DemoUsersOptions.TechnicianEmail, demoUsers.TechnicianPassword, Roles.Technician);
+        await EnsureDemoUserAsync(DemoUsersOptions.AdminEmail, DemoUsersOptions.AdminFullName, demoUsers.AdminPassword, Roles.Admin);
+        await EnsureDemoUserAsync(DemoUsersOptions.DispatcherEmail, DemoUsersOptions.DispatcherFullName, demoUsers.DispatcherPassword, Roles.Dispatcher);
+        await EnsureDemoUserAsync(DemoUsersOptions.TechnicianEmail, DemoUsersOptions.TechnicianFullName, demoUsers.TechnicianPassword, Roles.Technician);
     }
 
-    private async Task EnsureDemoUserAsync(string email, string password, string role)
+    private async Task EnsureDemoUserAsync(string email, string fullName, string password, string role)
     {
-        if (await userManager.FindByEmailAsync(email) is not null)
+        if (await userManager.FindByEmailAsync(email) is { } existingUser)
         {
+            await userManager.EnsureFullNameAsync(existingUser, fullName);
             return;
         }
 
@@ -43,6 +44,7 @@ public sealed class IdentitySeeder(
             Email = email,
             EmailConfirmed = true,
         };
+        user.ChangeFullName(fullName);
 
         (await userManager.CreateAsync(user, password)).ThrowIfFailed(email);
         (await userManager.AddToRoleAsync(user, role)).ThrowIfFailed(email);

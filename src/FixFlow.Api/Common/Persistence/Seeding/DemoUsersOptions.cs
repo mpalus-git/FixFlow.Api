@@ -7,6 +7,9 @@ public sealed class DemoUsersOptions
     public const string AdminEmail = "admin@fixflow.local";
     public const string DispatcherEmail = "dispatcher@fixflow.local";
     public const string TechnicianEmail = "technician@fixflow.local";
+    public const string AdminFullName = "Agnieszka Wiśniewska";
+    public const string DispatcherFullName = "Katarzyna Nowak";
+    public const string TechnicianFullName = "Jan Kowalski";
 
     public bool Enabled { get; init; }
 

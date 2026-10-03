@@ -8,6 +8,7 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
     public CreateUserRequestValidator()
     {
         RuleFor(request => request.Email).NotEmpty().EmailAddress().MaximumLength(256);
+        RuleFor(request => request.FullName).NotEmpty().MaximumLength(ApplicationUser.FullNameMaxLength);
         RuleFor(request => request.Password).NotEmpty().MinimumLength(8).MaximumLength(128);
         RuleFor(request => request.Role)
             .NotEmpty()

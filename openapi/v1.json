@@ -261,7 +261,7 @@
           "Users"
         ],
         "summary": "List user accounts",
-        "description": "Returns one page of user accounts ordered by email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
+        "description": "Returns one page of user accounts ordered by full name and email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
         "operationId": "ListUsers",
         "parameters": [
           {
@@ -3646,6 +3646,7 @@
       "CreateUserRequest": {
         "required": [
           "email",
+          "fullName",
           "password",
           "role"
         ],
@@ -3654,6 +3655,10 @@
           "email": {
             "type": "string",
             "description": "Email address used as the login of the new account."
+          },
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the user, up to 100 characters."
           },
           "password": {
             "type": "string",
@@ -4554,6 +4559,7 @@
         "required": [
           "id",
           "email",
+          "fullName",
           "role",
           "isActive"
         ],
@@ -4567,6 +4573,10 @@
           "email": {
             "type": "string",
             "description": "Email address of the user account."
+          },
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the user shown in clients instead of the email."
           },
           "role": {
             "type": "string",
