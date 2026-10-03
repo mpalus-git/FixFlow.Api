@@ -15,7 +15,7 @@ public static class AssignTechnicianEndpoint
             })
             .WithName("AssignTechnician")
             .WithSummary("Assign a technician to a work order")
-            .WithDescription("Assigns an active user with the Technician role to a work order in the New status and moves it to Assigned. To change the technician, unassign the current one first. Available to dispatchers and administrators.")
+            .WithDescription("Assigns an active user with the Technician role to a work order in the New status and moves it to Assigned, optionally changing the deadline in the same operation. To change the technician of an assigned work order, use reassign. Available to dispatchers and administrators.")
             .RequireAuthorization(AuthorizationPolicies.DispatcherOrAdmin)
             .WithRequestValidation<AssignTechnicianRequest>()
             .Produces<WorkOrderResponse>()

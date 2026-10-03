@@ -15,6 +15,7 @@ using FixFlow.Api.Features.Users.ResetPassword;
 using FixFlow.Api.Features.Users.UpdateUser;
 using FixFlow.Api.Features.ServiceEntries.AddServiceEntry;
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
+using FixFlow.Api.Features.WorkOrders.ReassignTechnician;
 using FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
 using FixFlow.Api.IntegrationTests.Devices;
 using FixFlow.Api.IntegrationTests.WorkOrders;
@@ -61,6 +62,12 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
             HttpMethod.Post,
             $"work-orders/{MissingId}/assign",
             new AssignTechnicianRequest(Guid.CreateVersion7()),
+            WorkOrderErrors.NotFound.Code),
+        ["reassign technician"] = new(
+            Roles.Dispatcher,
+            HttpMethod.Post,
+            $"work-orders/{MissingId}/reassign",
+            new ReassignTechnicianRequest(Guid.CreateVersion7()),
             WorkOrderErrors.NotFound.Code),
         ["unassign technician"] = new(Roles.Dispatcher, HttpMethod.Post, $"work-orders/{MissingId}/unassign", null, WorkOrderErrors.NotFound.Code),
         ["start work"] = new(Roles.Technician, HttpMethod.Post, $"work-orders/{MissingId}/start", null, WorkOrderErrors.NotFound.Code),

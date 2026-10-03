@@ -121,7 +121,7 @@ public sealed class ServiceEntryTests
     public void Should_Reject_Work_Entry_When_Work_Order_Is_Not_In_Progress()
     {
         var assignedWorkOrder = WorkOrder.Create(CreateDevice(), "Noisy fan", WorkOrderPriority.Low, Now.AddDays(2), Now).Value;
-        assignedWorkOrder.Assign(TechnicianId);
+        assignedWorkOrder.Assign(TechnicianId, null, Now);
 
         var result = ServiceEntry.CreateWork(assignedWorkOrder, TechnicianId, "Replaced filters", [], Now, Now.AddHours(1), null, [], Now.AddHours(1));
 
@@ -270,7 +270,7 @@ public sealed class ServiceEntryTests
     private static WorkOrder CreateInProgressWorkOrder()
     {
         var workOrder = WorkOrder.Create(CreateDevice(), "Air conditioner is leaking", WorkOrderPriority.Normal, Now.AddDays(2), Now).Value;
-        workOrder.Assign(TechnicianId);
+        workOrder.Assign(TechnicianId, null, Now);
         workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now);
         return workOrder;
     }
