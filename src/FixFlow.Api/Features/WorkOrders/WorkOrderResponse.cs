@@ -1,16 +1,24 @@
 using System.ComponentModel;
+using FixFlow.Api.Common.Concurrency;
+using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
+using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders;
 
-[Description("Service work order for a device.")]
+[Description("Service work order with basic details of its device, client and technician.")]
 public sealed record WorkOrderResponse(
     [property: Description("Identifier of the work order.")] Guid Id,
     [property: Description("Identifier of the serviced device.")] Guid DeviceId,
+    [property: Description("Serial number of the serviced device.")] string DeviceSerialNumber,
+    [property: Description("Model of the serviced device.")] string DeviceModel,
+    [property: Description("Identifier of the client owning the device.")] Guid ClientId,
+    [property: Description("Name of the client owning the device.")] string ClientName,
     [property: Description("Description of the fault.")] string Description,
     [property: Description("Priority of the work order.")] WorkOrderPriority Priority,
     [property: Description("Current status. Allowed transitions: New -> Assigned -> InProgress -> Completed -> Invoiced, and Assigned -> New when the technician is unassigned.")] WorkOrderStatus Status,
     [property: Description("Identifier of the assigned technician; null when no technician is assigned.")] Guid? TechnicianId,
+    [property: Description("Email of the assigned technician; null when no technician is assigned.")] string? TechnicianEmail,
     [property: Description("UTC deadline of the work order.")] DateTimeOffset DueDate,
     [property: Description("True when the deadline has passed and the work order is neither completed nor invoiced. Set by an hourly job and recalculated immediately when the deadline changes.")] bool IsOverdue,
     [property: Description("UTC time when the work order was created.")] DateTimeOffset CreatedAt,
@@ -18,17 +26,38 @@ public sealed record WorkOrderResponse(
     [property: Description("UTC time when the work order was completed; null before completion.")] DateTimeOffset? CompletedAt,
     [property: Description("UTC time when the work order was invoiced; null before invoicing.")] DateTimeOffset? InvoicedAt)
 {
-    public static WorkOrderResponse FromDomain(WorkOrder workOrder) => new(
-        workOrder.Id,
-        workOrder.DeviceId,
-        workOrder.Description,
-        workOrder.Priority,
-        workOrder.Status,
-        workOrder.TechnicianId,
-        workOrder.DueDate,
-        workOrder.IsOverdue,
-        workOrder.CreatedAt,
-        workOrder.StartedAt,
-        workOrder.CompletedAt,
-        workOrder.InvoicedAt);
+    public static WorkOrderResponse FromRow(WorkOrderRow row) => new(
+        row.WorkOrder.Id,
+        row.WorkOrder.DeviceId,
+        row.DeviceSerialNumber,
+        row.DeviceModel,
+        row.ClientId,
+        row.ClientName,
+        row.WorkOrder.Description,
+        row.WorkOrder.Priority,
+        row.WorkOrder.Status,
+        row.WorkOrder.TechnicianId,
+        row.TechnicianEmail,
+        row.WorkOrder.DueDate,
+        row.WorkOrder.IsOverdue,
+        row.WorkOrder.CreatedAt,
+        row.WorkOrder.StartedAt,
+        row.WorkOrder.CompletedAt,
+        row.WorkOrder.InvoicedAt);
+}
+
+public static class WorkOrderResponses
+{
+    public static async Task<Versioned<WorkOrderResponse>> VersionedWorkOrderResponseAsync(
+        this FixFlowDbContext dbContext,
+        WorkOrder workOrder,
+        CancellationToken cancellationToken)
+    {
+        var row = await dbContext.WorkOrders
+            .Where(candidate => candidate.Id == workOrder.Id)
+            .WithRelatedDetails(dbContext)
+            .SingleAsync(cancellationToken);
+
+        return dbContext.Versioned(workOrder, WorkOrderResponse.FromRow(row));
+    }
 }

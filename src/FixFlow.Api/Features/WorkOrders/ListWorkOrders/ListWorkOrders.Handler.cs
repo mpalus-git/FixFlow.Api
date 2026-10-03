@@ -10,13 +10,13 @@ namespace FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 
 public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
 {
-    private static readonly Expression<Func<WorkOrderListRow, int>> PriorityWeight = row =>
+    private static readonly Expression<Func<WorkOrderRow, int>> PriorityWeight = row =>
         row.WorkOrder.Priority == WorkOrderPriority.Low ? 0
         : row.WorkOrder.Priority == WorkOrderPriority.Normal ? 1
         : row.WorkOrder.Priority == WorkOrderPriority.High ? 2
         : 3;
 
-    private static readonly Expression<Func<WorkOrderListRow, int>> StatusLifecycleOrder = row =>
+    private static readonly Expression<Func<WorkOrderRow, int>> StatusLifecycleOrder = row =>
         row.WorkOrder.Status == WorkOrderStatus.New ? 0
         : row.WorkOrder.Status == WorkOrderStatus.Assigned ? 1
         : row.WorkOrder.Status == WorkOrderStatus.InProgress ? 2
@@ -61,21 +61,7 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             query = query.Where(workOrder => workOrder.DueDate < rangeEnd);
         }
 
-        var rows =
-            from workOrder in query
-            join device in dbContext.Devices on workOrder.DeviceId equals device.Id
-            join client in dbContext.Clients on device.ClientId equals client.Id
-            join technician in dbContext.Users on workOrder.TechnicianId equals technician.Id into technicians
-            from technician in technicians.DefaultIfEmpty()
-            select new WorkOrderListRow
-            {
-                WorkOrder = workOrder,
-                DeviceSerialNumber = device.SerialNumber,
-                DeviceModel = device.Model,
-                ClientId = client.Id,
-                ClientName = client.Name,
-                TechnicianEmail = technician == null ? null : technician.Email,
-            };
+        var rows = query.WithRelatedDetails(dbContext);
 
         if (request.ClientId is { } clientId)
         {
@@ -96,7 +82,7 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             .ToPagedResponseAsync(request, WorkOrderListItemResponse.FromRow, cancellationToken);
     }
 
-    private static IOrderedQueryable<WorkOrderListRow> Sort(IQueryable<WorkOrderListRow> rows, WorkOrderSortField sortField, SortDirection direction) =>
+    private static IOrderedQueryable<WorkOrderRow> Sort(IQueryable<WorkOrderRow> rows, WorkOrderSortField sortField, SortDirection direction) =>
         sortField switch
         {
             WorkOrderSortField.CreatedAt => OrderByThenById(rows, row => row.WorkOrder.CreatedAt, direction),
@@ -106,7 +92,7 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             _ => OrderByThenById(rows, row => row.WorkOrder.DueDate, direction),
         };
 
-    private static IOrderedQueryable<WorkOrderListRow> OrderByThenById<TKey>(IQueryable<WorkOrderListRow> rows, Expression<Func<WorkOrderListRow, TKey>> key, SortDirection direction) =>
+    private static IOrderedQueryable<WorkOrderRow> OrderByThenById<TKey>(IQueryable<WorkOrderRow> rows, Expression<Func<WorkOrderRow, TKey>> key, SortDirection direction) =>
         direction == SortDirection.Desc
             ? rows.OrderByDescending(key).ThenByDescending(row => row.WorkOrder.Id)
             : rows.OrderBy(key).ThenBy(row => row.WorkOrder.Id);

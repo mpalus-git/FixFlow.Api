@@ -28,6 +28,6 @@ public sealed class InvoiceWorkOrderHandler(FixFlowDbContext dbContext, TimeProv
             return saving.Errors;
         }
 
-        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
+        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
     }
 }
