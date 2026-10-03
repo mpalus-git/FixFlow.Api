@@ -100,7 +100,7 @@ Po włączeniu OpenTelemetry aplikacja zbiera ślady żądań HTTP (z trasą end
 
 ## Reguły biznesowe
 
-Zlecenie przechodzi przez statusy `New -> Assigned -> InProgress -> Completed -> Invoiced`. Jedynym dozwolonym cofnięciem jest `Assigned -> New` (odpięcie technika), każde inne przejście kończy się `409 WorkOrder.InvalidStatusTransition`.
+Zlecenie przechodzi przez statusy `New -> Assigned -> InProgress -> Completed -> Invoiced`. Jedynym dozwolonym cofnięciem jest `Assigned -> New` (odpięcie technika), każde inne przejście kończy się `409 WorkOrder.InvalidStatusTransition`. Zlecenie przypisane, ale jeszcze nierozpoczęte, dyspozytor przenosi na innego technika lub inny termin jedną operacją (`POST /api/v1/work-orders/{id}/reassign`), więc zlecenie nie wraca po drodze do `New`; zlecenia w toku nie da się przenieść (`409 WorkOrder.NotReassignable`). Przypisanie technika (`/assign`) może od razu zmienić termin.
 
 | Reguła | Gdzie jest wymuszona | Błąd |
 |---|---|---|
