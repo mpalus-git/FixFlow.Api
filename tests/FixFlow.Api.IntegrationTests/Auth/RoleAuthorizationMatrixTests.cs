@@ -41,6 +41,7 @@ public sealed partial class RoleAuthorizationMatrixTests(FixFlowApiFactory facto
         new("PUT", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}", AuthorizationPolicies.DispatcherOrAdmin),
         new("POST", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}/assign", AuthorizationPolicies.DispatcherOrAdmin),
         new("POST", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}/unassign", AuthorizationPolicies.DispatcherOrAdmin),
+        new("POST", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}/reassign", AuthorizationPolicies.DispatcherOrAdmin),
         new("POST", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}/start", AuthorizationPolicies.TechnicianOnly),
         new("POST", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}/invoice", AuthorizationPolicies.DispatcherOrAdmin),
         new("POST", "/api/v{version:apiVersion}/work-orders/{workOrderId:guid}/service-entries/", AuthorizationPolicies.TechnicianOnly),

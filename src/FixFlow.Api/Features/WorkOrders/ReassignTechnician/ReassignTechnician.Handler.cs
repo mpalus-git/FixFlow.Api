@@ -4,11 +4,11 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 
-namespace FixFlow.Api.Features.WorkOrders.AssignTechnician;
+namespace FixFlow.Api.Features.WorkOrders.ReassignTechnician;
 
-public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
+public sealed class ReassignTechnicianHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, AssignTechnicianRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, ReassignTechnicianRequest request, CancellationToken cancellationToken)
     {
         var workOrder = await dbContext.WorkOrders.SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
         if (workOrder is null)
@@ -21,10 +21,10 @@ public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
             return WorkOrderErrors.TechnicianNotFound;
         }
 
-        var assignment = workOrder.Assign(request.TechnicianId);
-        if (assignment.IsError)
+        var reassignment = workOrder.Reassign(request.TechnicianId, request.DueDate?.ToDatabasePrecision(), timeProvider.GetUtcNow());
+        if (reassignment.IsError)
         {
-            return assignment.Errors;
+            return reassignment.Errors;
         }
 
         var saving = await dbContext.SaveChangesOrConflictAsync(cancellationToken);

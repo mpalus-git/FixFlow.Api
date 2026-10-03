@@ -6,6 +6,7 @@ using FixFlow.Api.Features.WorkOrders.GetWorkOrder;
 using FixFlow.Api.Features.WorkOrders.InvoiceWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
+using FixFlow.Api.Features.WorkOrders.ReassignTechnician;
 using FixFlow.Api.Features.WorkOrders.SendDailySummary;
 using FixFlow.Api.Features.WorkOrders.StartWork;
 using FixFlow.Api.Features.WorkOrders.UnassignTechnician;
@@ -27,6 +28,8 @@ public static class WorkOrdersModule
         services.AddSingleton<IValidator<UpdateWorkOrderRequest>, UpdateWorkOrderRequestValidator>();
         services.AddScoped<AssignTechnicianHandler>();
         services.AddSingleton<IValidator<AssignTechnicianRequest>, AssignTechnicianRequestValidator>();
+        services.AddScoped<ReassignTechnicianHandler>();
+        services.AddSingleton<IValidator<ReassignTechnicianRequest>, ReassignTechnicianRequestValidator>();
         services.AddScoped<UnassignTechnicianHandler>();
         services.AddScoped<StartWorkHandler>();
         services.AddScoped<CompleteWorkOrderHandler>();
@@ -51,6 +54,7 @@ public static class WorkOrdersModule
         group.MapListWorkOrders();
         group.MapUpdateWorkOrder();
         group.MapAssignTechnician();
+        group.MapReassignTechnician();
         group.MapUnassignTechnician();
         group.MapStartWork();
         group.MapCompleteWorkOrder();

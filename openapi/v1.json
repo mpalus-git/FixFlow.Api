@@ -2219,6 +2219,112 @@
         ]
       }
     },
+    "/api/v1/work-orders/{workOrderId}/reassign": {
+      "post": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "Move an assigned work order to another technician or date",
+        "description": "Changes the technician and optionally the deadline of a work order in the Assigned status in one operation, so the work order is never left unassigned in between. The same technician can be passed to change only the deadline. Work orders in progress cannot be reassigned. Available to dispatchers and administrators.",
+        "operationId": "ReassignTechnician",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignTechnicianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Current version of the resource, to be sent in If-Match when changing it.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/work-orders/{workOrderId}/unassign": {
       "post": {
         "tags": [
@@ -4293,6 +4399,28 @@
           }
         },
         "description": "Error response in the RFC 9457 problem details format."
+      },
+      "ReassignTechnicianRequest": {
+        "required": [
+          "technicianId"
+        ],
+        "type": "object",
+        "properties": {
+          "technicianId": {
+            "type": "string",
+            "description": "Identifier of an active user with the Technician role; may be the currently assigned technician when only the deadline changes.",
+            "format": "uuid"
+          },
+          "dueDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "New UTC deadline; it must be in the future when it differs from the current one. When omitted, the deadline does not change.",
+            "format": "date-time"
+          }
+        },
+        "description": "Technician and optional new deadline of an assigned work order."
       },
       "RefreshRequest": {
         "required": [
