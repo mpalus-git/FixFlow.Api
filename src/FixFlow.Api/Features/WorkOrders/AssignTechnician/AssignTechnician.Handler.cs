@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders.AssignTechnician;
 
-public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
+public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
     public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, AssignTechnicianRequest request, CancellationToken cancellationToken)
     {
@@ -21,7 +21,7 @@ public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
             return WorkOrderErrors.TechnicianNotFound;
         }
 
-        var assignment = workOrder.Assign(request.TechnicianId);
+        var assignment = workOrder.Assign(request.TechnicianId, request.DueDate?.ToDatabasePrecision(), timeProvider.GetUtcNow());
         if (assignment.IsError)
         {
             return assignment.Errors;

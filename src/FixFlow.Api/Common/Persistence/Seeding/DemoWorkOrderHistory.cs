@@ -184,7 +184,7 @@ public sealed class DemoWorkOrderHistory
 
         public WorkOrderTimeline AssignTo(Guid technicianId)
         {
-            Expect(workOrder.Assign(technicianId));
+            Expect(workOrder.Assign(technicianId, null, workOrder.CreatedAt));
             return this;
         }
 

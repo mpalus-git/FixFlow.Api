@@ -74,7 +74,7 @@ public static class WorkOrderRequests
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
         var workOrder = await dbContext.WorkOrders.SingleAsync(item => item.Id == workOrderId, TestContext.Current.CancellationToken);
-        workOrder.Assign(technicianId).IsError.ShouldBeFalse();
+        workOrder.Assign(technicianId, null, DateTimeOffset.UtcNow).IsError.ShouldBeFalse();
         await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 }

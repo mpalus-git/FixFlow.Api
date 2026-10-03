@@ -2119,7 +2119,7 @@
           "WorkOrders"
         ],
         "summary": "Assign a technician to a work order",
-        "description": "Assigns an active user with the Technician role to a work order in the New status and moves it to Assigned. To change the technician, unassign the current one first. Available to dispatchers and administrators.",
+        "description": "Assigns an active user with the Technician role to a work order in the New status and moves it to Assigned, optionally changing the deadline in the same operation. To change the technician of an assigned work order, use reassign. Available to dispatchers and administrators.",
         "operationId": "AssignTechnician",
         "parameters": [
           {
@@ -3600,9 +3600,17 @@
             "type": "string",
             "description": "Identifier of a user with the Technician role.",
             "format": "uuid"
+          },
+          "dueDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "New UTC deadline; it must be in the future when it differs from the current one. When omitted, the deadline does not change.",
+            "format": "date-time"
           }
         },
-        "description": "Technician to assign to a work order."
+        "description": "Technician to assign to a work order and an optional new deadline."
       },
       "AuthTokensResponse": {
         "required": [

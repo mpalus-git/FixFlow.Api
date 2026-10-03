@@ -1,7 +1,9 @@
 using System.Net;
+using System.Net.Http.Json;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
+using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 
 namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
@@ -24,6 +26,26 @@ public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) 
         assignedWorkOrder.TechnicianName.ShouldBe(technician.FullName);
         using var technicianClient = await CreateAuthenticatedClientAsync(technician);
         (await technicianClient.GetWorkOrderAsync(workOrder.Id)).ShouldBe(assignedWorkOrder);
+    }
+
+    [Fact]
+    public async Task Should_Change_Due_Date_When_Dispatcher_Assigns_Technician_With_New_Due_Date()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var workOrder = await CreateWorkOrderAsync(client);
+        var technician = await CreateUserAsync(Roles.Technician);
+        var newDueDate = workOrder.DueDate.AddDays(4);
+
+        using var response = await client.PostAsJsonAsync(
+            new Uri($"/api/v1/work-orders/{workOrder.Id}/assign", UriKind.Relative),
+            new AssignTechnicianRequest(technician.Id, newDueDate),
+            ApiJson.Options,
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var assignedWorkOrder = await response.ReadWorkOrderAsync();
+        assignedWorkOrder.TechnicianId.ShouldBe(technician.Id);
+        assignedWorkOrder.DueDate.ShouldBe(newDueDate);
     }
 
     [Fact]

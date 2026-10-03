@@ -102,7 +102,7 @@ public sealed class WorkOrderTests
     {
         var workOrder = CreateWorkOrder();
 
-        var result = workOrder.Assign(TechnicianId);
+        var result = workOrder.Assign(TechnicianId, null, Now);
 
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
@@ -110,11 +110,35 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Change_Due_Date_When_Technician_Is_Assigned_With_New_Due_Date()
+    {
+        var workOrder = CreateWorkOrder();
+
+        var result = workOrder.Assign(TechnicianId, DueDate.AddDays(5), Now.AddHours(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.TechnicianId.ShouldBe(TechnicianId);
+        workOrder.DueDate.ShouldBe(DueDate.AddDays(5));
+    }
+
+    [Fact]
+    public void Should_Reject_Assigning_Technician_When_Changed_Due_Date_Is_Not_In_Future()
+    {
+        var workOrder = CreateWorkOrder();
+
+        var result = workOrder.Assign(TechnicianId, Now.AddHours(1), Now.AddHours(2));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.DueDateNotInFuture);
+        workOrder.Status.ShouldBe(WorkOrderStatus.New);
+        workOrder.TechnicianId.ShouldBeNull();
+    }
+
+    [Fact]
     public void Should_Reject_Assigning_Technician_When_Work_Order_Is_Already_Assigned()
     {
         var workOrder = CreateAssignedWorkOrder();
 
-        var result = workOrder.Assign(Guid.CreateVersion7());
+        var result = workOrder.Assign(Guid.CreateVersion7(), null, Now);
 
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
         workOrder.TechnicianId.ShouldBe(TechnicianId);
@@ -498,7 +522,7 @@ public sealed class WorkOrderTests
     private static WorkOrder CreateAssignedWorkOrder()
     {
         var workOrder = CreateWorkOrder();
-        workOrder.Assign(TechnicianId);
+        workOrder.Assign(TechnicianId, null, Now);
         return workOrder;
     }
 

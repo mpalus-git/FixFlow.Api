@@ -99,15 +99,24 @@ public sealed class WorkOrder
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Assign(Guid technicianId)
+    public ErrorOr<Updated> Assign(Guid technicianId, DateTimeOffset? dueDate, DateTimeOffset now)
     {
         if (Status != WorkOrderStatus.New)
         {
             return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.Assigned);
         }
 
+        if (dueDate is { } newDueDate && !IsAcceptableDueDate(newDueDate, now))
+        {
+            return WorkOrderErrors.DueDateNotInFuture;
+        }
+
         TechnicianId = technicianId;
         Status = WorkOrderStatus.Assigned;
+        if (dueDate is { } changedDueDate)
+        {
+            ChangeDueDate(changedDueDate, now);
+        }
 
         return Result.Updated;
     }
