@@ -23,7 +23,7 @@ public sealed record WorkOrderListItemResponse(
     [property: Description("UTC time when the work order was completed; null before completion.")] DateTimeOffset? CompletedAt,
     [property: Description("UTC time when the work order was invoiced; null before invoicing.")] DateTimeOffset? InvoicedAt)
 {
-    public static WorkOrderListItemResponse FromRow(WorkOrderListRow row) => new(
+    public static WorkOrderListItemResponse FromRow(WorkOrderRow row) => new(
         row.WorkOrder.Id,
         row.WorkOrder.DeviceId,
         row.DeviceSerialNumber,
@@ -41,19 +41,4 @@ public sealed record WorkOrderListItemResponse(
         row.WorkOrder.StartedAt,
         row.WorkOrder.CompletedAt,
         row.WorkOrder.InvoicedAt);
-}
-
-public sealed class WorkOrderListRow
-{
-    public required WorkOrder WorkOrder { get; init; }
-
-    public required string DeviceSerialNumber { get; init; }
-
-    public required string DeviceModel { get; init; }
-
-    public required Guid ClientId { get; init; }
-
-    public required string ClientName { get; init; }
-
-    public string? TechnicianEmail { get; init; }
 }
