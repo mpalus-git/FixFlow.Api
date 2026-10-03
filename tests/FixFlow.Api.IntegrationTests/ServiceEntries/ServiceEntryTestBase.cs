@@ -9,7 +9,7 @@ public abstract class ServiceEntryTestBase(FixFlowApiFactory factory) : Integrat
     protected async Task<WorkOrderInProgress> CreateWorkOrderInProgressAsync()
     {
         var dispatcherClient = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var technician = await CreateUserAsync(Roles.Technician);
+        var technician = await CreateUserAsync(Roles.Technician, "Jan Kowalski");
         var technicianClient = await CreateAuthenticatedClientAsync(technician);
         var workOrder = await dispatcherClient.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(await dispatcherClient.CreateServicedDeviceAsync()));
         using var assignResponse = await dispatcherClient.PostAssignAsync(workOrder.Id, technician.Id);

@@ -29,9 +29,9 @@ public sealed class GetServiceProtocolHandler(FixFlowDbContext dbContext, TimePr
 
         var device = await dbContext.Devices.AsNoTracking().SingleAsync(device => device.Id == workOrder.DeviceId, cancellationToken);
         var client = await dbContext.Clients.AsNoTracking().SingleAsync(client => client.Id == device.ClientId, cancellationToken);
-        var technicianEmail = await dbContext.Users
+        var technicianName = await dbContext.Users
             .Where(user => user.Id == workOrder.TechnicianId)
-            .Select(user => user.Email)
+            .Select(user => user.FullName)
             .SingleOrDefaultAsync(cancellationToken);
         var serviceEntries = await dbContext.ServiceEntries
             .AsNoTracking()
@@ -44,7 +44,7 @@ public sealed class GetServiceProtocolHandler(FixFlowDbContext dbContext, TimePr
             workOrder,
             device,
             client,
-            technicianEmail,
+            technicianName,
             serviceEntries,
             await DescribeUsedPartsAsync(serviceEntries, cancellationToken),
             timeProvider.GetUtcNow());

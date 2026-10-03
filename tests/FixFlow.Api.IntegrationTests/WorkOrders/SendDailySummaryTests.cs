@@ -53,7 +53,7 @@ public sealed class SendDailySummaryTests(FixFlowApiFactory factory) : ServiceEn
         body.ShouldContain("| no technician");
         body.ShouldContain("Completed on ");
         body.ShouldContain("- AC-1001 | completed ");
-        body.ShouldContain("| technician technician-");
+        body.ShouldContain("| technician Jan Kowalski");
     }
 
     [Fact]
