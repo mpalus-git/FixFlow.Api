@@ -121,6 +121,71 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Change_Technician_And_Due_Date_When_Assigned_Work_Order_Is_Reassigned()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+        var otherTechnicianId = Guid.CreateVersion7();
+
+        var result = workOrder.Reassign(otherTechnicianId, DueDate.AddDays(3), Now.AddHours(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
+        workOrder.TechnicianId.ShouldBe(otherTechnicianId);
+        workOrder.DueDate.ShouldBe(DueDate.AddDays(3));
+    }
+
+    [Fact]
+    public void Should_Clear_Overdue_Flag_When_Overdue_Work_Order_Is_Reassigned_To_Same_Technician_With_Future_Due_Date()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+        workOrder.Update("Air conditioner is leaking", WorkOrderPriority.Normal, DueDate, DueDate.AddHours(1));
+        workOrder.IsOverdue.ShouldBeTrue();
+
+        var result = workOrder.Reassign(TechnicianId, DueDate.AddDays(1), DueDate.AddHours(2));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.TechnicianId.ShouldBe(TechnicianId);
+        workOrder.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Keep_Due_Date_When_Work_Order_Is_Reassigned_Without_Due_Date()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+
+        var result = workOrder.Reassign(Guid.CreateVersion7(), null, Now.AddHours(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.DueDate.ShouldBe(DueDate);
+    }
+
+    [Fact]
+    public void Should_Reject_Reassigning_When_Changed_Due_Date_Is_Not_In_Future()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+
+        var result = workOrder.Reassign(Guid.CreateVersion7(), Now.AddHours(1), Now.AddHours(2));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.DueDateNotInFuture);
+        workOrder.TechnicianId.ShouldBe(TechnicianId);
+        workOrder.DueDate.ShouldBe(DueDate);
+    }
+
+    [Theory]
+    [InlineData(WorkOrderStatus.New)]
+    [InlineData(WorkOrderStatus.InProgress)]
+    [InlineData(WorkOrderStatus.Completed)]
+    public void Should_Reject_Reassigning_When_Work_Order_Is_Not_Assigned(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+
+        var result = workOrder.Reassign(Guid.CreateVersion7(), null, Now.AddHours(4));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.NotReassignable);
+        workOrder.Status.ShouldBe(status);
+    }
+
+    [Fact]
     public void Should_Return_To_New_Without_Technician_When_Assigned_Work_Order_Is_Unassigned()
     {
         var workOrder = CreateAssignedWorkOrder();

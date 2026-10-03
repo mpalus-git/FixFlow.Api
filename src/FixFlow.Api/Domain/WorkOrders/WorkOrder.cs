@@ -87,15 +87,14 @@ public sealed class WorkOrder
             return WorkOrderErrors.Closed;
         }
 
-        if (dueDate != DueDate && dueDate <= now)
+        if (!IsAcceptableDueDate(dueDate, now))
         {
             return WorkOrderErrors.DueDateNotInFuture;
         }
 
         Description = description;
         Priority = priority;
-        DueDate = dueDate;
-        IsOverdue = dueDate < now;
+        ChangeDueDate(dueDate, now);
 
         return Result.Updated;
     }
@@ -109,6 +108,27 @@ public sealed class WorkOrder
 
         TechnicianId = technicianId;
         Status = WorkOrderStatus.Assigned;
+
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> Reassign(Guid technicianId, DateTimeOffset? dueDate, DateTimeOffset now)
+    {
+        if (Status != WorkOrderStatus.Assigned)
+        {
+            return WorkOrderErrors.NotReassignable;
+        }
+
+        if (dueDate is { } newDueDate && !IsAcceptableDueDate(newDueDate, now))
+        {
+            return WorkOrderErrors.DueDateNotInFuture;
+        }
+
+        TechnicianId = technicianId;
+        if (dueDate is { } changedDueDate)
+        {
+            ChangeDueDate(changedDueDate, now);
+        }
 
         return Result.Updated;
     }
@@ -197,5 +217,13 @@ public sealed class WorkOrder
         }
 
         return Result.Success;
+    }
+
+    private bool IsAcceptableDueDate(DateTimeOffset dueDate, DateTimeOffset now) => dueDate == DueDate || dueDate > now;
+
+    private void ChangeDueDate(DateTimeOffset dueDate, DateTimeOffset now)
+    {
+        DueDate = dueDate;
+        IsOverdue = dueDate < now;
     }
 }

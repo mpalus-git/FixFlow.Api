@@ -34,6 +34,10 @@ public static class WorkOrderErrors
         "WorkOrder.NotCompleted",
         "Service protocol is available only for completed or invoiced work orders.");
 
+    public static readonly Error NotReassignable = Error.Conflict(
+        "WorkOrder.NotReassignable",
+        "Only an assigned work order that has not been started can be reassigned.");
+
     public static Error InvalidStatusTransition(WorkOrderStatus from, WorkOrderStatus to) => Error.Conflict(
         "WorkOrder.InvalidStatusTransition",
         $"Work order status cannot change from {from} to {to}.");
