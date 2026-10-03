@@ -6,7 +6,7 @@
 
 FixFlow to backend systemu obsługi zleceń serwisowych w terenie dla firmy naprawiającej klimatyzację i urządzenia biurowe. Dyspozytor prowadzi kartotekę klientów, urządzeń i części, tworzy zlecenia i przypisuje je technikom. Technik realizuje zlecenie w terenie: rozpoczyna pracę, dodaje wpisy serwisowe z czasem pracy, zdjęciami i zużytymi częściami, a na końcu zamyka zlecenie i pobiera protokół serwisowy w PDF. Repozytorium zawiera wyłącznie API; klienci (panel webowy React i aplikacja mobilna MAUI) korzystają z kontraktu opisanego w [openapi/v1.json](openapi/v1.json).
 
-Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-api-us2p.onrender.com/scalar). Usługa działa na darmowym planie Render, więc pierwsze wejście po okresie bezczynności może trwać do minuty. Konta demonstracyjne:
+Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-api-us2p.onrender.com/scalar), panel dyspozytora korzystający z tego API: [fix-flow-web.vercel.app](https://fix-flow-web.vercel.app). Usługa działa na darmowym planie Render, więc pierwsze wejście po okresie bezczynności może trwać do minuty. Konta demonstracyjne:
 
 | Rola | E-mail | Hasło |
 |---|---|---|
@@ -170,6 +170,7 @@ flowchart LR
 - **Łańcuch proxy zależy od infrastruktury Render.** Wartość `ForwardLimit` odpowiada obecnemu układowi Cloudflare i proxy Render. Jeśli Render go zmieni, limiter może zacząć rozpoznawać adresy błędnie; pole `ClientIp` w logach pozwala to szybko sprawdzić.
 - **Blokada konta po nieudanych logowaniach.** Po 5 błędnych hasłach konto jest blokowane na 5 minut, więc ktoś znający e-mail może celowo zablokować cudze konto. To standardowy kompromis ASP.NET Core Identity; limit prób na adres IP ogranicza skalę takiego działania.
 - **Publiczne konta demo.** Każdy może zalogować się jako Dispatcher lub Technician i zmieniać dane demonstracyjne. Zmiany znikają przy nocnym resecie, ale do tego czasu widzą je wszyscy odwiedzający. GitHub wyłącza zaplanowane workflow w repozytorium bez aktywności przez 60 dni, wtedy reset trzeba włączyć ponownie w zakładce Actions.
+- **Refresh token w treści odpowiedzi.** Login i odświeżenie zwracają refresh token w JSON, więc panel webowy przechowuje go w pamięci dostępnej dla JavaScriptu i błąd XSS w panelu pozwoliłby go przejąć. To konsekwencja jednego kontraktu dla panelu webowego i aplikacji MAUI, która trzyma tokeny w bezpiecznym magazynie urządzenia i nie korzysta z ciasteczek. Ciasteczko `HttpOnly` dla panelu wymagałoby osobnego trybu sesji, a ponieważ panel (`vercel.app`) i API (`onrender.com`) to różne witryny, także proxy po stronie panelu, bo przeglądarki blokują ciasteczka między witrynami.
 - **Zdjęcia jako adresy URL.** Wpis serwisowy przechowuje listę adresów zdjęć, API nie przyjmuje plików.
 - **Jedna waluta.** Ceny i sumy w protokole są w PLN.
 
