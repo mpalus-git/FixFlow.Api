@@ -42,6 +42,6 @@ public sealed class UpdateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
             return saving.Errors;
         }
 
-        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
+        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
     }
 }

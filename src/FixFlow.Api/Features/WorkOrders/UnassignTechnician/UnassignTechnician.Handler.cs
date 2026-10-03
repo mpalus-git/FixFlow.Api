@@ -28,6 +28,6 @@ public sealed class UnassignTechnicianHandler(FixFlowDbContext dbContext)
             return saving.Errors;
         }
 
-        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
+        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
     }
 }

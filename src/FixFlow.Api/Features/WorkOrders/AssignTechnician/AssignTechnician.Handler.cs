@@ -34,7 +34,7 @@ public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext)
             return saving.Errors;
         }
 
-        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
+        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
     }
 
     private Task<bool> IsTechnicianAsync(Guid userId, CancellationToken cancellationToken) =>

@@ -8,10 +8,10 @@ namespace FixFlow.Api.IntegrationTests.WorkOrders;
 public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {
     [Fact]
-    public async Task Should_Create_New_Unassigned_Work_Order_With_Location_When_Dispatcher_Creates_It()
+    public async Task Should_Create_New_Unassigned_Work_Order_With_Device_And_Client_Details_When_Dispatcher_Creates_It()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
-        var deviceId = await client.CreateServicedDeviceAsync();
+        var deviceId = await client.CreateServicedDeviceAsync("AC-2002");
         var request = WorkOrderRequests.NewWorkOrder(deviceId);
 
         using var response = await client.PostWorkOrderAsync(request);
@@ -21,9 +21,13 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
         response.Headers.Location.ShouldBe(WorkOrderRequests.WorkOrderUri(workOrder.Id));
         response.ETag().ShouldBe(await client.GetETagAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken));
         workOrder.DeviceId.ShouldBe(deviceId);
+        workOrder.DeviceSerialNumber.ShouldBe("AC-2002");
+        workOrder.DeviceModel.ShouldBe("Split 3.5 kW");
+        workOrder.ClientName.ShouldBe("Klimat-Serwis");
         workOrder.Priority.ShouldBe(WorkOrderPriority.High);
         workOrder.Status.ShouldBe(WorkOrderStatus.New);
         workOrder.TechnicianId.ShouldBeNull();
+        workOrder.TechnicianEmail.ShouldBeNull();
         workOrder.StartedAt.ShouldBeNull();
     }
 

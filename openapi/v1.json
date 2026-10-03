@@ -4710,10 +4710,15 @@
         "required": [
           "id",
           "deviceId",
+          "deviceSerialNumber",
+          "deviceModel",
+          "clientId",
+          "clientName",
           "description",
           "priority",
           "status",
           "technicianId",
+          "technicianEmail",
           "dueDate",
           "isOverdue",
           "createdAt",
@@ -4732,6 +4737,23 @@
             "type": "string",
             "description": "Identifier of the serviced device.",
             "format": "uuid"
+          },
+          "deviceSerialNumber": {
+            "type": "string",
+            "description": "Serial number of the serviced device."
+          },
+          "deviceModel": {
+            "type": "string",
+            "description": "Model of the serviced device."
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Identifier of the client owning the device.",
+            "format": "uuid"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Name of the client owning the device."
           },
           "description": {
             "type": "string",
@@ -4752,6 +4774,13 @@
             ],
             "description": "Identifier of the assigned technician; null when no technician is assigned.",
             "format": "uuid"
+          },
+          "technicianEmail": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Email of the assigned technician; null when no technician is assigned."
           },
           "dueDate": {
             "type": "string",
@@ -4792,7 +4821,7 @@
             "format": "date-time"
           }
         },
-        "description": "Service work order for a device."
+        "description": "Service work order with basic details of its device, client and technician."
       },
       "WorkOrderStatus": {
         "enum": [

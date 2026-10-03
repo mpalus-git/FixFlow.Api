@@ -11,10 +11,12 @@ public sealed class GetWorkOrderHandler(FixFlowDbContext dbContext)
 {
     public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
-        var workOrder = await dbContext.WorkOrders
+        var row = await dbContext.WorkOrders
             .VisibleTo(user)
-            .SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
+            .Where(workOrder => workOrder.Id == workOrderId)
+            .WithRelatedDetails(dbContext)
+            .SingleOrDefaultAsync(cancellationToken);
 
-        return workOrder is null ? WorkOrderErrors.NotFound : dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
+        return row is null ? WorkOrderErrors.NotFound : dbContext.Versioned(row.WorkOrder, WorkOrderResponse.FromRow(row));
     }
 }

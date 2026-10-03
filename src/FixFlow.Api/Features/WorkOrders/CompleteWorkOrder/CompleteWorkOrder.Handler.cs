@@ -33,6 +33,6 @@ public sealed class CompleteWorkOrderHandler(FixFlowDbContext dbContext, TimePro
             return saving.Errors;
         }
 
-        return dbContext.Versioned(workOrder, WorkOrderResponse.FromDomain(workOrder));
+        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
     }
 }

@@ -28,6 +28,6 @@ public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
         dbContext.WorkOrders.Add(creation.Value);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return dbContext.Versioned(creation.Value, WorkOrderResponse.FromDomain(creation.Value));
+        return await dbContext.VersionedWorkOrderResponseAsync(creation.Value, cancellationToken);
     }
 }
