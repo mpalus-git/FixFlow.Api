@@ -33,7 +33,7 @@ public static class DailySummaryEmail
 
         foreach (var workOrder in summary.OverdueWorkOrders)
         {
-            body.AppendLine(CultureInfo.InvariantCulture, $"- {workOrder.DeviceSerialNumber} | {workOrder.Priority} | due {FormatBusinessTime(workOrder.DueDate)} | {DescribeTechnician(workOrder.TechnicianName)}");
+            body.AppendLine(CultureInfo.InvariantCulture, $"- {workOrder.Number} | {workOrder.DeviceSerialNumber} | {workOrder.Priority} | due {FormatBusinessTime(workOrder.DueDate)} | {DescribeTechnician(workOrder.TechnicianName)}");
         }
 
         body.AppendLine()
@@ -45,7 +45,7 @@ public static class DailySummaryEmail
 
         foreach (var workOrder in summary.CompletedWorkOrders)
         {
-            body.AppendLine(CultureInfo.InvariantCulture, $"- {workOrder.DeviceSerialNumber} | completed {FormatBusinessTime(workOrder.CompletedAt)} | {DescribeTechnician(workOrder.TechnicianName)}");
+            body.AppendLine(CultureInfo.InvariantCulture, $"- {workOrder.Number} | {workOrder.DeviceSerialNumber} | completed {FormatBusinessTime(workOrder.CompletedAt)} | {DescribeTechnician(workOrder.TechnicianName)}");
         }
 
         return new EmailMessage(recipients, $"FixFlow daily summary for {day}", body.ToString());

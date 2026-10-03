@@ -10,7 +10,7 @@ namespace FixFlow.Api.Features.WorkOrders.GetServiceProtocol;
 
 public sealed class GetServiceProtocolHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<byte[]>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
+    public async Task<ErrorOr<ServiceProtocolFile>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         var workOrder = await dbContext.WorkOrders
             .AsNoTracking()
@@ -49,7 +49,7 @@ public sealed class GetServiceProtocolHandler(FixFlowDbContext dbContext, TimePr
             await DescribeUsedPartsAsync(serviceEntries, cancellationToken),
             timeProvider.GetUtcNow());
 
-        return new ServiceProtocolDocument(protocol).GeneratePdf();
+        return ServiceProtocolFile.For(workOrder, new ServiceProtocolDocument(protocol).GeneratePdf());
     }
 
     private async Task<List<ProtocolPartLine>> DescribeUsedPartsAsync(List<ServiceEntry> serviceEntries, CancellationToken cancellationToken)
