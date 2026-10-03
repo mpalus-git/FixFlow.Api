@@ -16,7 +16,7 @@ public sealed record ListWorkOrdersRequest(
     [FromQuery(Name = "isOverdue")][property: Description("When true, lists only overdue work orders; when false, only work orders that are not overdue.")] bool? IsOverdue = null,
     [FromQuery(Name = "dueFrom")][property: Description("First day of the due date range, inclusive, as a calendar date in the Europe/Warsaw time zone.")] DateOnly? DueFrom = null,
     [FromQuery(Name = "dueTo")][property: Description("Last day of the due date range, inclusive, as a calendar date in the Europe/Warsaw time zone.")] DateOnly? DueTo = null,
-    [FromQuery(Name = "search")][property: Description("Case-insensitive fragment of the fault description, the device serial number or the client name.")] string? Search = null,
+    [FromQuery(Name = "search")][property: Description("Case-insensitive fragment of the work order number, the fault description, the device serial number or the client name.")] string? Search = null,
     [FromQuery(Name = "sortBy")][property: Description("Field the work orders are sorted by. Priority is sorted by importance from Low to Critical and status in lifecycle order from New to Invoiced.")][property: AllowedValues(nameof(WorkOrderSortField.DueDate), nameof(WorkOrderSortField.CreatedAt), nameof(WorkOrderSortField.Priority), nameof(WorkOrderSortField.Status), nameof(WorkOrderSortField.ClientName))] string SortBy = nameof(WorkOrderSortField.DueDate),
     [FromQuery(Name = "sortDirection")][property: Description("Direction of sorting: Asc for ascending, Desc for descending.")][property: AllowedValues(nameof(ListWorkOrders.SortDirection.Asc), nameof(ListWorkOrders.SortDirection.Desc))] string SortDirection = nameof(ListWorkOrders.SortDirection.Asc)) : IPagedRequest;
 

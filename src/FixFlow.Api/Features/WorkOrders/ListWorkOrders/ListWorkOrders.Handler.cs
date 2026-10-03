@@ -73,7 +73,8 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
         {
             var pattern = LikePattern.Contains(search);
             rows = rows.Where(row =>
-                EF.Functions.ILike(row.WorkOrder.Description, pattern, LikePattern.EscapeCharacter)
+                EF.Functions.ILike(row.WorkOrder.Number, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(row.WorkOrder.Description, pattern, LikePattern.EscapeCharacter)
                 || EF.Functions.ILike(row.DeviceSerialNumber, pattern, LikePattern.EscapeCharacter)
                 || EF.Functions.ILike(row.ClientName, pattern, LikePattern.EscapeCharacter));
         }
