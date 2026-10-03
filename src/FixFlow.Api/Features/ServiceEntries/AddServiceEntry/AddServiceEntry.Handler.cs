@@ -70,7 +70,8 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
             return saving.Errors;
         }
 
-        return ServiceEntryResponse.FromDomain(creation.Value);
+        var usedParts = partUsages.Value.Select(usage => usage.Part).DistinctBy(part => part.Id).ToDictionary(part => part.Id);
+        return ServiceEntryResponse.FromDomain(creation.Value, usedParts);
     }
 
     private async Task<ErrorOr<List<PartUsage>>> LoadPartUsagesAsync(IReadOnlyList<ServiceEntryPartRequest> requestedParts, CancellationToken cancellationToken)

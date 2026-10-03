@@ -20,6 +20,8 @@ services:
         sync: false
       - key: ConnectionStrings__Redis
         sync: false
+      - key: Cors__AllowedOrigins__0
+        sync: false
       - key: Jwt__SigningKey
         generateValue: true
       - key: Seed__DemoUsers__Enabled

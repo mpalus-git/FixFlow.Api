@@ -4264,6 +4264,8 @@
       "ServiceEntryPartResponse": {
         "required": [
           "partId",
+          "partName",
+          "catalogNumber",
           "quantity",
           "unitPrice"
         ],
@@ -4273,6 +4275,14 @@
             "type": "string",
             "description": "Identifier of the part.",
             "format": "uuid"
+          },
+          "partName": {
+            "type": "string",
+            "description": "Current name of the part in the catalog, also for archived parts."
+          },
+          "catalogNumber": {
+            "type": "string",
+            "description": "Current catalog number of the part, also for archived parts."
           },
           "quantity": {
             "type": "integer",
@@ -4285,7 +4295,7 @@
             "format": "decimal"
           }
         },
-        "description": "Quantity of one part in a service entry with its unit price at the time of use."
+        "description": "Quantity of one part in a service entry with its catalog details and unit price at the time of use."
       },
       "ServiceEntryResponse": {
         "required": [
