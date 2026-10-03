@@ -4703,6 +4703,7 @@
       "WorkOrderListItemResponse": {
         "required": [
           "id",
+          "number",
           "deviceId",
           "deviceSerialNumber",
           "deviceModel",
@@ -4727,6 +4728,10 @@
             "type": "string",
             "description": "Identifier of the work order.",
             "format": "uuid"
+          },
+          "number": {
+            "type": "string",
+            "description": "Readable number of the work order, for example ZL/2026/0042, numbered from 1 in each year of creation in the Europe/Warsaw time zone."
           },
           "deviceId": {
             "type": "string",
@@ -4838,6 +4843,7 @@
       "WorkOrderResponse": {
         "required": [
           "id",
+          "number",
           "deviceId",
           "deviceSerialNumber",
           "deviceModel",
@@ -4862,6 +4868,10 @@
             "type": "string",
             "description": "Identifier of the work order.",
             "format": "uuid"
+          },
+          "number": {
+            "type": "string",
+            "description": "Readable number of the work order, for example ZL/2026/0042, numbered from 1 in each year of creation in the Europe/Warsaw time zone."
           },
           "deviceId": {
             "type": "string",

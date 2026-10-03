@@ -26,6 +26,8 @@ public sealed class FixFlowDbContext(DbContextOptions<FixFlowDbContext> options)
 
     public DbSet<ServiceEntry> ServiceEntries => Set<ServiceEntry>();
 
+    public DbSet<WorkOrderNumberCounter> WorkOrderNumberCounters => Set<WorkOrderNumberCounter>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

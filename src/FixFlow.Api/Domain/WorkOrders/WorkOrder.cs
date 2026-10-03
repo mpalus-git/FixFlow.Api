@@ -12,6 +12,8 @@ public sealed class WorkOrder
 
     public Guid Id { get; private set; }
 
+    public string Number { get; private set; } = string.Empty;
+
     public Guid DeviceId { get; private set; }
 
     public string Description { get; private set; } = string.Empty;
@@ -66,6 +68,16 @@ public sealed class WorkOrder
             Status = WorkOrderStatus.New,
             CreatedAt = now,
         };
+    }
+
+    public void AssignNumber(string number)
+    {
+        if (Number.Length > 0)
+        {
+            throw new InvalidOperationException($"Work order {Id} already has number {Number}.");
+        }
+
+        Number = number;
     }
 
     public ErrorOr<Updated> Update(string description, WorkOrderPriority priority, DateTimeOffset dueDate, DateTimeOffset now)

@@ -29,6 +29,17 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Reject_Assigning_Number_When_Work_Order_Already_Has_Number()
+    {
+        var workOrder = WorkOrder.Create(CreateDevice(), "Air conditioner is leaking", WorkOrderPriority.High, DueDate, Now).Value;
+        workOrder.AssignNumber("ZL/2026/0001");
+
+        Should.Throw<InvalidOperationException>(() => workOrder.AssignNumber("ZL/2026/0002"));
+
+        workOrder.Number.ShouldBe("ZL/2026/0001");
+    }
+
+    [Fact]
     public void Should_Reject_Creating_Work_Order_When_Device_Is_Archived()
     {
         var device = CreateDevice();
