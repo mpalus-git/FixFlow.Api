@@ -9,8 +9,12 @@ namespace FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 
 public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken)
+    public Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken) =>
+        dbContext.Database.CreateExecutionStrategy().ExecuteAsync(request, CreateWorkOrderInTransactionAsync, cancellationToken);
+
+    private async Task<ErrorOr<Versioned<WorkOrderResponse>>> CreateWorkOrderInTransactionAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken)
     {
+        dbContext.ChangeTracker.Clear();
         var device = await dbContext.Devices
             .AsNoTracking()
             .SingleOrDefaultAsync(device => device.Id == request.DeviceId, cancellationToken);
@@ -25,8 +29,11 @@ public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
             return creation.Errors;
         }
 
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await dbContext.AssignNextNumberAsync(creation.Value, cancellationToken);
         dbContext.WorkOrders.Add(creation.Value);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return await dbContext.VersionedWorkOrderResponseAsync(creation.Value, cancellationToken);
     }

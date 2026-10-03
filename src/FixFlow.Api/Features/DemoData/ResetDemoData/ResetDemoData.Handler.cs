@@ -46,6 +46,7 @@ public sealed partial class ResetDemoDataHandler(
         await dbContext.Devices.ExecuteDeleteAsync(cancellationToken);
         await dbContext.Clients.ExecuteDeleteAsync(cancellationToken);
         await dbContext.Parts.ExecuteDeleteAsync(cancellationToken);
+        await dbContext.WorkOrderNumberCounters.ExecuteDeleteAsync(cancellationToken);
 
         await identitySeeder.SeedAsync();
         var demoUsers = demoUsersOptions.Value;

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.GetServiceProtocol;
@@ -18,7 +19,7 @@ public sealed class ServiceProtocolTests(FixFlowApiFactory factory) : ServiceEnt
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Content.Headers.ContentType?.MediaType.ShouldBe(GetServiceProtocolEndpoint.PdfContentType);
-        response.Content.Headers.ContentDisposition?.FileName.ShouldBe($"protokol-{scenario.WorkOrder.Id}.pdf");
+        response.Content.Headers.ContentDisposition?.FileName.ShouldBe($"protokol-ZL-{BusinessTime.From(scenario.WorkOrder.CreatedAt).Year}-0001.pdf");
         var pdf = Encoding.Latin1.GetString(await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
         pdf.ShouldStartWith("%PDF");
         pdf.ShouldContain("+NotoSans-Regular");

@@ -5,9 +5,11 @@ using ErrorOr;
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Persistence.Seeding;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Users;
+using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.DemoData;
 using FixFlow.Api.Features.DemoData.ResetDemoData;
@@ -49,6 +51,26 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
         (await verificationDbContext.WorkOrders.CountAsync(cancellationToken)).ShouldBe(23);
         (await verificationDbContext.Parts.CountAsync(cancellationToken)).ShouldBe(11);
         (await verificationDbContext.Users.AnyAsync(user => user.Id == accountCreatedByAdmin.Id, cancellationToken)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_Number_Demo_Work_Orders_Chronologically_From_One_When_Demo_Data_Is_Reset()
+    {
+        await using var demoFactory = CreateFactoryWithDemoData();
+
+        var result = await ResetDemoDataAsync(demoFactory);
+
+        result.IsError.ShouldBeFalse();
+        await using var scope = demoFactory.Services.CreateAsyncScope();
+        var workOrders = await scope.ServiceProvider.GetRequiredService<FixFlowDbContext>().WorkOrders
+            .OrderBy(workOrder => workOrder.CreatedAt)
+            .ThenBy(workOrder => workOrder.Id)
+            .ToListAsync(TestContext.Current.CancellationToken);
+        foreach (var workOrdersOfYear in workOrders.GroupBy(workOrder => BusinessTime.From(workOrder.CreatedAt).Year))
+        {
+            workOrdersOfYear.Select(workOrder => workOrder.Number)
+                .ShouldBe(workOrdersOfYear.Select((_, index) => WorkOrderNumber.Format(workOrdersOfYear.Key, index + 1)));
+        }
     }
 
     [Fact]

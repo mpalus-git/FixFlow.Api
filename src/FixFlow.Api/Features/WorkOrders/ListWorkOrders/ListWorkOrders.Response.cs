@@ -6,6 +6,7 @@ namespace FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 [Description("Work order on a list, with basic details of its device, client and technician.")]
 public sealed record WorkOrderListItemResponse(
     [property: Description("Identifier of the work order.")] Guid Id,
+    [property: Description("Readable number of the work order, for example ZL/2026/0042, numbered from 1 in each year of creation in the Europe/Warsaw time zone.")] string Number,
     [property: Description("Identifier of the serviced device.")] Guid DeviceId,
     [property: Description("Serial number of the serviced device.")] string DeviceSerialNumber,
     [property: Description("Model of the serviced device.")] string DeviceModel,
@@ -26,6 +27,7 @@ public sealed record WorkOrderListItemResponse(
 {
     public static WorkOrderListItemResponse FromRow(WorkOrderRow row) => new(
         row.WorkOrder.Id,
+        row.WorkOrder.Number,
         row.WorkOrder.DeviceId,
         row.DeviceSerialNumber,
         row.DeviceModel,

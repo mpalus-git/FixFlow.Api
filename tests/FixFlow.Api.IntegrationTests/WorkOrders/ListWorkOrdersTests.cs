@@ -71,7 +71,9 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
     [InlineData("JAMS", "Biuro Alfa")]
     [InlineData("beta-2", "Hotel Beta")]
     [InlineData("hotel", "Hotel Beta")]
-    public async Task Should_Find_Work_Orders_By_Description_Serial_Number_Or_Client_Name_When_Search_Is_Provided(string search, string expectedClientName)
+    [InlineData("/0001", "Biuro Alfa")]
+    [InlineData("0002", "Hotel Beta")]
+    public async Task Should_Find_Work_Orders_By_Number_Description_Serial_Number_Or_Client_Name_When_Search_Is_Provided(string search, string expectedClientName)
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         await CreateWorkOrderForClientAsync(client, "Biuro Alfa", "SN-ALFA-1", "Printer jams paper");

@@ -21,6 +21,12 @@ public sealed record ServiceProtocol(
         .Aggregate(TimeSpan.Zero, (total, entry) => total + (entry.WorkFinishedAt!.Value - entry.WorkStartedAt!.Value));
 }
 
+public sealed record ServiceProtocolFile(string FileName, byte[] Content)
+{
+    public static ServiceProtocolFile For(WorkOrder workOrder, byte[] content) =>
+        new($"protokol-{workOrder.Number.Replace('/', '-')}.pdf", content);
+}
+
 public sealed record ProtocolPartLine(string Name, string CatalogNumber, int Quantity, decimal UnitPrice)
 {
     public decimal Value => Quantity * UnitPrice;

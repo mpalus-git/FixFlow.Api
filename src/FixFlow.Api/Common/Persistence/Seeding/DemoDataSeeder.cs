@@ -1,5 +1,6 @@
 using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Domain.Users;
+using FixFlow.Api.Features.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,11 @@ public sealed partial class DemoDataSeeder(
         var inventory = DemoInventory.Create(now - InventoryAge);
         var history = DemoWorkOrderHistory.Create(inventory, technicians, now);
         inventory.ArchiveRetiredItems(now - RetiredItemsAge);
+        foreach (var workOrder in history.WorkOrders.OrderBy(workOrder => workOrder.CreatedAt).ThenBy(workOrder => workOrder.Id))
+        {
+            await dbContext.AssignNextNumberAsync(workOrder, cancellationToken);
+        }
+
         dbContext.Clients.AddRange(inventory.Clients);
         dbContext.Devices.AddRange(inventory.Devices);
         dbContext.Parts.AddRange(inventory.Parts);

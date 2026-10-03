@@ -10,6 +10,6 @@ public sealed record DailySummary(
 
 public sealed record WorkOrderStatusCount(WorkOrderStatus Status, int Count);
 
-public sealed record OverdueWorkOrderSummary(string DeviceSerialNumber, WorkOrderPriority Priority, DateTimeOffset DueDate, string? TechnicianName);
+public sealed record OverdueWorkOrderSummary(string Number, string DeviceSerialNumber, WorkOrderPriority Priority, DateTimeOffset DueDate, string? TechnicianName);
 
-public sealed record CompletedWorkOrderSummary(string DeviceSerialNumber, DateTimeOffset CompletedAt, string? TechnicianName);
+public sealed record CompletedWorkOrderSummary(string Number, string DeviceSerialNumber, DateTimeOffset CompletedAt, string? TechnicianName);

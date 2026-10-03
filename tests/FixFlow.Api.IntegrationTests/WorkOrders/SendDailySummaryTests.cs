@@ -49,10 +49,10 @@ public sealed class SendDailySummaryTests(FixFlowApiFactory factory) : ServiceEn
         body.ShouldContain("- In progress: 0");
         body.ShouldContain("- Completed, awaiting invoice: 1");
         body.ShouldContain("Overdue work orders (1)");
-        body.ShouldContain("- SN-OVERDUE | High | due ");
+        body.ShouldContain(" | SN-OVERDUE | High | due ");
         body.ShouldContain("| no technician");
         body.ShouldContain("Completed on ");
-        body.ShouldContain("- AC-1001 | completed ");
+        body.ShouldContain($"- {scenario.WorkOrder.Number} | AC-1001 | completed ");
         body.ShouldContain("| technician Jan Kowalski");
     }
 

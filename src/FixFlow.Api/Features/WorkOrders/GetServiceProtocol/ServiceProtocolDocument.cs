@@ -15,7 +15,7 @@ public sealed class ServiceProtocolDocument(ServiceProtocol protocol) : IDocumen
 
     public DocumentMetadata GetMetadata() => new()
     {
-        Title = $"Protokół serwisowy {protocol.WorkOrder.Id}",
+        Title = $"Protokół serwisowy {protocol.WorkOrder.Number}",
         Author = "FixFlow",
         Language = "pl-PL",
         CreationDate = protocol.IssuedAt,
@@ -60,7 +60,7 @@ public sealed class ServiceProtocolDocument(ServiceProtocol protocol) : IDocumen
             row.RelativeItem().Column(column =>
             {
                 column.Item().Text("Protokół serwisowy").FontSize(18).Bold();
-                column.Item().Text($"Zlecenie {protocol.WorkOrder.Id}").FontColor(Colors.Grey.Darken2);
+                column.Item().Text($"Zlecenie {protocol.WorkOrder.Number}").FontColor(Colors.Grey.Darken2);
             });
             row.AutoItem().AlignBottom().Text($"Wystawiono: {FormatDateTime(protocol.IssuedAt)}");
         });
