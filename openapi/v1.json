@@ -3831,7 +3831,7 @@
             "items": {
               "$ref": "#/components/schemas/TechnicianWorkloadResponse"
             },
-            "description": "Workload of every active technician, sorted by email."
+            "description": "Workload of every active technician, sorted by full name and email."
           }
         },
         "description": "Aggregated work order counts for the dispatcher dashboard."
@@ -4395,6 +4395,7 @@
           "id",
           "workOrderId",
           "technicianId",
+          "technicianName",
           "note",
           "isCorrection",
           "photoUrls",
@@ -4421,6 +4422,10 @@
             "type": "string",
             "description": "Identifier of the technician who added the entry.",
             "format": "uuid"
+          },
+          "technicianName": {
+            "type": "string",
+            "description": "First and last name of the technician who added the entry."
           },
           "note": {
             "type": "string",
@@ -4492,6 +4497,7 @@
         "required": [
           "technicianId",
           "email",
+          "fullName",
           "assignedCount",
           "inProgressCount",
           "overdueCount",
@@ -4507,6 +4513,10 @@
           "email": {
             "type": "string",
             "description": "Email of the technician."
+          },
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the technician."
           },
           "assignedCount": {
             "type": "integer",
@@ -4703,6 +4713,7 @@
           "status",
           "technicianId",
           "technicianEmail",
+          "technicianName",
           "dueDate",
           "isOverdue",
           "createdAt",
@@ -4765,6 +4776,13 @@
               "string"
             ],
             "description": "Email of the assigned technician; null when no technician is assigned."
+          },
+          "technicianName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First and last name of the assigned technician; null when no technician is assigned."
           },
           "dueDate": {
             "type": "string",
@@ -4830,6 +4848,7 @@
           "status",
           "technicianId",
           "technicianEmail",
+          "technicianName",
           "dueDate",
           "isOverdue",
           "createdAt",
@@ -4892,6 +4911,13 @@
               "string"
             ],
             "description": "Email of the assigned technician; null when no technician is assigned."
+          },
+          "technicianName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First and last name of the assigned technician; null when no technician is assigned."
           },
           "dueDate": {
             "type": "string",

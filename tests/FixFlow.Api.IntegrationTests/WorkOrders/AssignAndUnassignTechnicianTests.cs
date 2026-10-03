@@ -21,6 +21,7 @@ public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) 
         assignedWorkOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
         assignedWorkOrder.TechnicianId.ShouldBe(technician.Id);
         assignedWorkOrder.TechnicianEmail.ShouldBe(technician.Email);
+        assignedWorkOrder.TechnicianName.ShouldBe(technician.FullName);
         using var technicianClient = await CreateAuthenticatedClientAsync(technician);
         (await technicianClient.GetWorkOrderAsync(workOrder.Id)).ShouldBe(assignedWorkOrder);
     }

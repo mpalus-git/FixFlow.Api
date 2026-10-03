@@ -63,8 +63,8 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
             join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
             join role in dbContext.Roles on userRole.RoleId equals role.Id
             where role.Name == Roles.Technician && user.DeactivatedAt == null && user.Email != null
-            orderby user.Email
-            select new { user.Id, Email = user.Email! })
+            orderby user.FullName, user.Email
+            select new { user.Id, Email = user.Email!, user.FullName })
             .ToListAsync(cancellationToken);
 
         var workloads = await dbContext.WorkOrders
@@ -86,10 +86,11 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
             ? new TechnicianWorkloadResponse(
                 technician.Id,
                 technician.Email,
+                technician.FullName,
                 workload.AssignedCount,
                 workload.InProgressCount,
                 workload.OverdueCount,
                 workload.DueThisWeekCount)
-            : new TechnicianWorkloadResponse(technician.Id, technician.Email, 0, 0, 0, 0));
+            : new TechnicianWorkloadResponse(technician.Id, technician.Email, technician.FullName, 0, 0, 0, 0));
     }
 }
