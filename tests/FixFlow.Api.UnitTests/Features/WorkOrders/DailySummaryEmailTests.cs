@@ -14,7 +14,7 @@ public sealed class DailySummaryEmailTests
         var summary = new DailySummary(
             Day,
             [new(WorkOrderStatus.New, 2), new(WorkOrderStatus.InProgress, 1), new(WorkOrderStatus.Completed, 3)],
-            [new("AC-1001", WorkOrderPriority.Critical, new DateTimeOffset(2026, 9, 23, 12, 0, 0, TimeSpan.Zero), "technician@fixflow.test")],
+            [new("AC-1001", WorkOrderPriority.Critical, new DateTimeOffset(2026, 9, 23, 12, 0, 0, TimeSpan.Zero), "Jan Kowalski")],
             [new("AC-2002", new DateTimeOffset(2026, 9, 24, 14, 30, 0, TimeSpan.Zero), null)]);
 
         var message = DailySummaryEmail.Create(summary, Recipients);
@@ -25,7 +25,7 @@ public sealed class DailySummaryEmailTests
         message.Body.ShouldContain("- In progress: 1");
         message.Body.ShouldContain("- Completed, awaiting invoice: 3");
         message.Body.ShouldContain("Overdue work orders (1)");
-        message.Body.ShouldContain("- AC-1001 | Critical | due 2026-09-23 14:00 | technician technician@fixflow.test");
+        message.Body.ShouldContain("- AC-1001 | Critical | due 2026-09-23 14:00 | technician Jan Kowalski");
         message.Body.ShouldContain("Completed on 2026-09-24 (1)");
         message.Body.ShouldContain("- AC-2002 | completed 2026-09-24 16:30 | no technician");
     }

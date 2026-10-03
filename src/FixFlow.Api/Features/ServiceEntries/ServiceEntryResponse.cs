@@ -9,6 +9,7 @@ public sealed record ServiceEntryResponse(
     [property: Description("Identifier of the service entry.")] Guid Id,
     [property: Description("Identifier of the work order.")] Guid WorkOrderId,
     [property: Description("Identifier of the technician who added the entry.")] Guid TechnicianId,
+    [property: Description("First and last name of the technician who added the entry.")] string TechnicianName,
     [property: Description("Description of the performed work or the reason of the correction.")] string Note,
     [property: Description("True for a correction entry whose parts were returned to stock.")] bool IsCorrection,
     [property: Description("Addresses of attached photos.")] IReadOnlyList<string> PhotoUrls,
@@ -19,10 +20,11 @@ public sealed record ServiceEntryResponse(
     [property: Description("Parts used in a work entry or returned in a correction.")] IReadOnlyList<ServiceEntryPartResponse> Parts,
     [property: Description("UTC time when the entry was added.")] DateTimeOffset CreatedAt)
 {
-    public static ServiceEntryResponse FromDomain(ServiceEntry entry, IReadOnlyDictionary<Guid, Part> parts) => new(
+    public static ServiceEntryResponse FromDomain(ServiceEntry entry, string technicianName, IReadOnlyDictionary<Guid, Part> parts) => new(
         entry.Id,
         entry.WorkOrderId,
         entry.TechnicianId,
+        technicianName,
         entry.Note,
         entry.IsCorrection,
         entry.PhotoUrls,

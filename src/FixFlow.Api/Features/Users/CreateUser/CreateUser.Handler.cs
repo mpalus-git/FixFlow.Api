@@ -22,6 +22,7 @@ public sealed class CreateUserHandler(UserManager<ApplicationUser> userManager, 
             Email = request.Email,
             EmailConfirmed = true,
         };
+        user.ChangeFullName(request.FullName);
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -39,7 +40,7 @@ public sealed class CreateUserHandler(UserManager<ApplicationUser> userManager, 
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new UserResponse(user.Id, request.Email, request.Role, user.IsActive);
+        return new UserResponse(user.Id, request.Email, user.FullName, request.Role, user.IsActive);
     }
 
     private static List<Error> ToErrors(IdentityResult result)

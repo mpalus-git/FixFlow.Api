@@ -9,7 +9,7 @@ public sealed record ServiceProtocol(
     WorkOrder WorkOrder,
     Device Device,
     Client Client,
-    string? TechnicianEmail,
+    string? TechnicianName,
     IReadOnlyList<ServiceEntry> ServiceEntries,
     IReadOnlyList<ProtocolPartLine> PartLines,
     DateTimeOffset IssuedAt)

@@ -13,6 +13,16 @@ public sealed class ApplicationUserTests
     }
 
     [Fact]
+    public void Should_Store_Trimmed_Full_Name_When_Full_Name_Is_Changed()
+    {
+        var user = new ApplicationUser();
+
+        user.ChangeFullName("  Jan Kowalski ");
+
+        user.FullName.ShouldBe("Jan Kowalski");
+    }
+
+    [Fact]
     public void Should_Keep_First_Deactivation_Time_When_Deactivated_Twice()
     {
         var user = new ApplicationUser();

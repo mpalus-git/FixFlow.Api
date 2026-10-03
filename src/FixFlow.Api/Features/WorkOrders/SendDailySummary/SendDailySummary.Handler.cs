@@ -68,7 +68,7 @@ public sealed partial class SendDailySummaryHandler(
         join user in dbContext.Users on workOrder.TechnicianId equals (Guid?)user.Id into technicians
         from technician in technicians.DefaultIfEmpty()
         orderby workOrder.DueDate, workOrder.Id
-        select new OverdueWorkOrderSummary(device.SerialNumber, workOrder.Priority, workOrder.DueDate, technician.Email))
+        select new OverdueWorkOrderSummary(device.SerialNumber, workOrder.Priority, workOrder.DueDate, technician.FullName))
         .ToListAsync(cancellationToken);
 
     private Task<List<CompletedWorkOrderSummary>> GetCompletedWorkOrdersAsync(SummaryPeriod period, CancellationToken cancellationToken) => (
@@ -78,7 +78,7 @@ public sealed partial class SendDailySummaryHandler(
         join user in dbContext.Users on workOrder.TechnicianId equals (Guid?)user.Id into technicians
         from technician in technicians.DefaultIfEmpty()
         orderby workOrder.CompletedAt, workOrder.Id
-        select new CompletedWorkOrderSummary(device.SerialNumber, workOrder.CompletedAt!.Value, technician.Email))
+        select new CompletedWorkOrderSummary(device.SerialNumber, workOrder.CompletedAt!.Value, technician.FullName))
         .ToListAsync(cancellationToken);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Sent daily summary for {Day} to {RecipientCount} recipients")]

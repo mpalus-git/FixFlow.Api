@@ -52,7 +52,7 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
     }
 
     [Fact]
-    public async Task Should_Restore_Demo_Account_Access_When_Demo_Data_Is_Reset()
+    public async Task Should_Restore_Demo_Account_Access_And_Names_When_Demo_Data_Is_Reset()
     {
         await using var demoFactory = CreateFactoryWithDemoData();
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -63,7 +63,11 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
             (await userManager.ChangePasswordAsync(technician, Factory.DemoUsersPassword, $"Ch1!{Guid.NewGuid():N}")).Succeeded.ShouldBeTrue();
             (await userManager.SetLockoutEndDateAsync(technician, DateTimeOffset.UtcNow.AddHours(1))).Succeeded.ShouldBeTrue();
             technician.Deactivate(DateTimeOffset.UtcNow);
+            technician.ChangeFullName("Renamed Technician");
             (await userManager.UpdateAsync(technician)).Succeeded.ShouldBeTrue();
+            var additionalTechnician = (await userManager.FindByEmailAsync(DemoDataSeeder.AnnaKowalczykEmail)).ShouldNotBeNull();
+            additionalTechnician.ChangeFullName("Renamed Additional Technician");
+            (await userManager.UpdateAsync(additionalTechnician)).Succeeded.ShouldBeTrue();
             var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
             dbContext.RefreshTokens.Add(RefreshToken.Issue(technician.Id, Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow, TimeSpan.FromDays(7)));
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -78,6 +82,8 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
         (await verificationUserManager.CheckPasswordAsync(restoredTechnician, Factory.DemoUsersPassword)).ShouldBeTrue();
         (await verificationUserManager.IsLockedOutAsync(restoredTechnician)).ShouldBeFalse();
         restoredTechnician.IsActive.ShouldBeTrue();
+        restoredTechnician.FullName.ShouldBe(DemoUsersOptions.TechnicianFullName);
+        (await verificationUserManager.FindByEmailAsync(DemoDataSeeder.AnnaKowalczykEmail)).ShouldNotBeNull().FullName.ShouldBe("Anna Kowalczyk");
         var verificationDbContext = verificationScope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
         (await verificationDbContext.RefreshTokens.AnyAsync(token => token.UserId == restoredTechnician.Id && token.RevokedAt == null, cancellationToken)).ShouldBeFalse();
     }

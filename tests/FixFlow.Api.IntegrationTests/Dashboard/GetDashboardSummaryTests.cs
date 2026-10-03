@@ -95,20 +95,19 @@ public sealed class GetDashboardSummaryTests(FixFlowApiFactory factory) : Integr
     }
 
     [Fact]
-    public async Task Should_List_Only_Active_Technicians_Sorted_By_Email_When_Summary_Is_Requested()
+    public async Task Should_List_Only_Active_Technicians_Sorted_By_Full_Name_When_Summary_Is_Requested()
     {
         using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
         await CreateUserAsync(Roles.Admin);
-        var firstTechnician = await CreateUserAsync(Roles.Technician);
-        var secondTechnician = await CreateUserAsync(Roles.Technician);
+        var technicianNamedZofia = await CreateUserAsync(Roles.Technician, "Zofia Adamska");
+        var technicianNamedAdam = await CreateUserAsync(Roles.Technician, "Adam Zawadzki");
         var deactivatedTechnician = await CreateUserAsync(Roles.Technician);
         await DeactivateUserDirectlyAsync(deactivatedTechnician.Id);
 
         var summary = await GetSummaryAsync(client);
 
-        var expectedTechnicians = new[] { firstTechnician, secondTechnician }
-            .OrderBy(technician => technician.Email, StringComparer.Ordinal)
-            .Select(technician => new TechnicianWorkloadResponse(technician.Id, technician.Email, 0, 0, 0, 0));
+        var expectedTechnicians = new[] { technicianNamedAdam, technicianNamedZofia }
+            .Select(technician => new TechnicianWorkloadResponse(technician.Id, technician.Email, technician.FullName, 0, 0, 0, 0));
         summary.Technicians.ShouldBe(expectedTechnicians);
     }
 

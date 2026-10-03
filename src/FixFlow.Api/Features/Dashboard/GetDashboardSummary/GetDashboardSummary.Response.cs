@@ -10,7 +10,7 @@ public sealed record DashboardSummaryResponse(
     [property: Description("Sunday of the current week in the Europe/Warsaw time zone.")] DateOnly WeekEnd,
     [property: Description("Number of work orders in each status, in lifecycle order, including statuses without work orders.")] IReadOnlyList<WorkOrderStatusCountResponse> StatusCounts,
     [property: Description("Number of work orders flagged as overdue.")] int OverdueCount,
-    [property: Description("Workload of every active technician, sorted by email.")] IReadOnlyList<TechnicianWorkloadResponse> Technicians);
+    [property: Description("Workload of every active technician, sorted by full name and email.")] IReadOnlyList<TechnicianWorkloadResponse> Technicians);
 
 [Description("Number of work orders in one status.")]
 public sealed record WorkOrderStatusCountResponse(
@@ -21,6 +21,7 @@ public sealed record WorkOrderStatusCountResponse(
 public sealed record TechnicianWorkloadResponse(
     [property: Description("Identifier of the technician.")] Guid TechnicianId,
     [property: Description("Email of the technician.")] string Email,
+    [property: Description("First and last name of the technician.")] string FullName,
     [property: Description("Number of work orders assigned to the technician and not started yet.")] int AssignedCount,
     [property: Description("Number of work orders in progress; at most one.")] int InProgressCount,
     [property: Description("Number of assigned or in-progress work orders flagged as overdue.")] int OverdueCount,

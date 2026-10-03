@@ -79,7 +79,7 @@ public sealed class ServiceProtocolDocument(ServiceProtocol protocol) : IDocumen
                 {
                     left.Item().Element(container => Field(container, "Priorytet", DescribePriority(workOrder.Priority)));
                     left.Item().Element(container => Field(container, "Status", DescribeStatus(workOrder.Status)));
-                    left.Item().Element(container => Field(container, "Technik", protocol.TechnicianEmail ?? "-"));
+                    left.Item().Element(container => Field(container, "Technik", protocol.TechnicianName ?? "-"));
                 });
                 row.RelativeItem().Column(right =>
                 {

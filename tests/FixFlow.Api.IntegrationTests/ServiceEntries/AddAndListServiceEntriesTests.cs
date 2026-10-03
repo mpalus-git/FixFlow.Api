@@ -25,6 +25,7 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
         var entry = (await scenario.DispatcherClient.ListServiceEntriesAsync(scenario.WorkOrder.Id)).ShouldHaveSingleItem();
         entry.WorkOrderId.ShouldBe(scenario.WorkOrder.Id);
         entry.TechnicianId.ShouldBe(scenario.WorkOrder.TechnicianId.ShouldNotBeNull());
+        entry.TechnicianName.ShouldBe(scenario.WorkOrder.TechnicianName.ShouldNotBeNull());
         entry.IsCorrection.ShouldBeFalse();
         entry.PhotoUrls.ShouldBe(request.PhotoUrls);
         entry.WorkStartedAt.ShouldBe(request.WorkStartedAt);

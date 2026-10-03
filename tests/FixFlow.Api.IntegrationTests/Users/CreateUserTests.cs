@@ -17,7 +17,7 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
     public async Task Should_Create_Account_That_Can_Log_In_With_Role_When_Admin_Creates_It()
     {
         using var adminClient = await CreateAuthenticatedClientAsync(Roles.Admin);
-        var request = new CreateUserRequest("new.technician@fixflow.test", "Initial1!password", Roles.Technician);
+        var request = new CreateUserRequest("new.technician@fixflow.test", "  Anna Kowalczyk ", "Initial1!password", Roles.Technician);
 
         using var response = await adminClient.PostAsJsonAsync(UsersUri, request, TestContext.Current.CancellationToken);
 
@@ -25,9 +25,10 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
         var createdUser = await response.Content.ReadFromJsonAsync<UserResponse>(TestContext.Current.CancellationToken);
         createdUser.ShouldNotBeNull();
         createdUser.Email.ShouldBe(request.Email);
+        createdUser.FullName.ShouldBe("Anna Kowalczyk");
         createdUser.Role.ShouldBe(Roles.Technician);
         using var anonymousClient = Factory.CreateClient();
-        var tokens = await anonymousClient.LoginAsync(new TestUser(createdUser.Id, request.Email, request.Password));
+        var tokens = await anonymousClient.LoginAsync(new TestUser(createdUser.Id, request.Email, request.Password, createdUser.FullName));
         var accessToken = new JsonWebTokenHandler().ReadJsonWebToken(tokens.AccessToken);
         accessToken.Subject.ShouldBe(createdUser.Id.ToString());
         accessToken.GetClaim(AuthClaimTypes.Role).Value.ShouldBe(Roles.Technician);
@@ -38,7 +39,7 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
     {
         using var client = Factory.CreateClient();
 
-        using var response = await client.PostAsJsonAsync(UsersUri, new CreateUserRequest("someone@fixflow.test", "Initial1!password", Roles.Technician), TestContext.Current.CancellationToken);
+        using var response = await client.PostAsJsonAsync(UsersUri, new CreateUserRequest("someone@fixflow.test", "Someone", "Initial1!password", Roles.Technician), TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -49,7 +50,7 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
         var existingUser = await CreateUserAsync(Roles.Dispatcher);
         using var adminClient = await CreateAuthenticatedClientAsync(Roles.Admin);
 
-        using var response = await adminClient.PostAsJsonAsync(UsersUri, new CreateUserRequest(existingUser.Email, "Initial1!password", Roles.Technician), TestContext.Current.CancellationToken);
+        using var response = await adminClient.PostAsJsonAsync(UsersUri, new CreateUserRequest(existingUser.Email, "Existing User", "Initial1!password", Roles.Technician), TestContext.Current.CancellationToken);
 
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, UserErrors.DuplicateEmail.Code);
     }
@@ -58,7 +59,7 @@ public sealed class CreateUserTests(FixFlowApiFactory factory) : IntegrationTest
     public async Task Should_Return_Validation_Problem_And_Not_Create_Account_When_Password_Does_Not_Meet_Policy()
     {
         using var adminClient = await CreateAuthenticatedClientAsync(Roles.Admin);
-        var request = new CreateUserRequest("weak.password@fixflow.test", "alllowercase1", Roles.Technician);
+        var request = new CreateUserRequest("weak.password@fixflow.test", "Weak Password", "alllowercase1", Roles.Technician);
 
         using var response = await adminClient.PostAsJsonAsync(UsersUri, request, TestContext.Current.CancellationToken);
 

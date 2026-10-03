@@ -261,7 +261,7 @@
           "Users"
         ],
         "summary": "List user accounts",
-        "description": "Returns one page of user accounts ordered by email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
+        "description": "Returns one page of user accounts ordered by full name and email, optionally limited to one role and to active or deactivated accounts, for example role=Technician&isActive=true when a dispatcher chooses a technician for a work order. Available to dispatchers and administrators.",
         "operationId": "ListUsers",
         "parameters": [
           {
@@ -658,6 +658,94 @@
           },
           "204": {
             "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{userId}": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update a user account",
+        "description": "Changes the first and last name of any account. The email, role and password are not changed. Available to administrators.",
+        "operationId": "UpdateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
@@ -3646,6 +3734,7 @@
       "CreateUserRequest": {
         "required": [
           "email",
+          "fullName",
           "password",
           "role"
         ],
@@ -3654,6 +3743,10 @@
           "email": {
             "type": "string",
             "description": "Email address used as the login of the new account."
+          },
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the user, up to 100 characters."
           },
           "password": {
             "type": "string",
@@ -3738,7 +3831,7 @@
             "items": {
               "$ref": "#/components/schemas/TechnicianWorkloadResponse"
             },
-            "description": "Workload of every active technician, sorted by email."
+            "description": "Workload of every active technician, sorted by full name and email."
           }
         },
         "description": "Aggregated work order counts for the dispatcher dashboard."
@@ -4302,6 +4395,7 @@
           "id",
           "workOrderId",
           "technicianId",
+          "technicianName",
           "note",
           "isCorrection",
           "photoUrls",
@@ -4328,6 +4422,10 @@
             "type": "string",
             "description": "Identifier of the technician who added the entry.",
             "format": "uuid"
+          },
+          "technicianName": {
+            "type": "string",
+            "description": "First and last name of the technician who added the entry."
           },
           "note": {
             "type": "string",
@@ -4399,6 +4497,7 @@
         "required": [
           "technicianId",
           "email",
+          "fullName",
           "assignedCount",
           "inProgressCount",
           "overdueCount",
@@ -4414,6 +4513,10 @@
           "email": {
             "type": "string",
             "description": "Email of the technician."
+          },
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the technician."
           },
           "assignedCount": {
             "type": "integer",
@@ -4526,6 +4629,19 @@
         },
         "description": "New data of an existing part. All fields are replaced; the stock quantity changes only through deliveries and service entries."
       },
+      "UpdateUserRequest": {
+        "required": [
+          "fullName"
+        ],
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the user, up to 100 characters."
+          }
+        },
+        "description": "Editable data of a user account."
+      },
       "UpdateWorkOrderRequest": {
         "required": [
           "description",
@@ -4554,6 +4670,7 @@
         "required": [
           "id",
           "email",
+          "fullName",
           "role",
           "isActive"
         ],
@@ -4567,6 +4684,10 @@
           "email": {
             "type": "string",
             "description": "Email address of the user account."
+          },
+          "fullName": {
+            "type": "string",
+            "description": "First and last name of the user shown in clients instead of the email."
           },
           "role": {
             "type": "string",
@@ -4592,6 +4713,7 @@
           "status",
           "technicianId",
           "technicianEmail",
+          "technicianName",
           "dueDate",
           "isOverdue",
           "createdAt",
@@ -4654,6 +4776,13 @@
               "string"
             ],
             "description": "Email of the assigned technician; null when no technician is assigned."
+          },
+          "technicianName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First and last name of the assigned technician; null when no technician is assigned."
           },
           "dueDate": {
             "type": "string",
@@ -4719,6 +4848,7 @@
           "status",
           "technicianId",
           "technicianEmail",
+          "technicianName",
           "dueDate",
           "isOverdue",
           "createdAt",
@@ -4781,6 +4911,13 @@
               "string"
             ],
             "description": "Email of the assigned technician; null when no technician is assigned."
+          },
+          "technicianName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First and last name of the assigned technician; null when no technician is assigned."
           },
           "dueDate": {
             "type": "string",

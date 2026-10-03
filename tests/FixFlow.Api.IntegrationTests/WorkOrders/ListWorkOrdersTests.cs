@@ -46,6 +46,7 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
         page.Items.ShouldAllBe(item => item.DeviceSerialNumber == device.SerialNumber && item.DeviceModel == device.Model);
         page.Items.ShouldAllBe(item => item.ClientId == owner.Id && item.ClientName == owner.Name);
         page.Items.Select(item => item.TechnicianEmail).ShouldBe([technician.Email, null]);
+        page.Items.Select(item => item.TechnicianName).ShouldBe([technician.FullName, null]);
     }
 
     [Fact]

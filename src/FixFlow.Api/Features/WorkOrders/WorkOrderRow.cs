@@ -16,6 +16,8 @@ public sealed class WorkOrderRow
     public required string ClientName { get; init; }
 
     public string? TechnicianEmail { get; init; }
+
+    public string? TechnicianName { get; init; }
 }
 
 public static class WorkOrderRows
@@ -34,5 +36,6 @@ public static class WorkOrderRows
             ClientId = client.Id,
             ClientName = client.Name,
             TechnicianEmail = technician == null ? null : technician.Email,
+            TechnicianName = technician == null ? null : technician.FullName,
         };
 }

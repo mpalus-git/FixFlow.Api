@@ -45,9 +45,9 @@ public sealed partial class DemoDataSeeder(
         var now = timeProvider.GetUtcNow();
         var technicians = new DemoTechnicians(
             await FindLoginTechnicianIdAsync(),
-            (await EnsureTechnicianWithoutPasswordAsync(AnnaKowalczykEmail)).Id,
-            (await EnsureTechnicianWithoutPasswordAsync(TomaszWojcikEmail)).Id,
-            await EnsureDeactivatedTechnicianAsync(PiotrZielinskiEmail, now - FormerTechnicianDeactivationAge));
+            (await EnsureTechnicianWithoutPasswordAsync(AnnaKowalczykEmail, "Anna Kowalczyk")).Id,
+            (await EnsureTechnicianWithoutPasswordAsync(TomaszWojcikEmail, "Tomasz Wójcik")).Id,
+            await EnsureDeactivatedTechnicianAsync(PiotrZielinskiEmail, "Piotr Zieliński", now - FormerTechnicianDeactivationAge));
 
         var inventory = DemoInventory.Create(now - InventoryAge);
         var history = DemoWorkOrderHistory.Create(inventory, technicians, now);
@@ -81,9 +81,9 @@ public sealed partial class DemoDataSeeder(
         return loginTechnician.Id;
     }
 
-    private async Task<Guid> EnsureDeactivatedTechnicianAsync(string email, DateTimeOffset deactivatedAt)
+    private async Task<Guid> EnsureDeactivatedTechnicianAsync(string email, string fullName, DateTimeOffset deactivatedAt)
     {
-        var technician = await EnsureTechnicianWithoutPasswordAsync(email);
+        var technician = await EnsureTechnicianWithoutPasswordAsync(email, fullName);
         if (technician.IsActive)
         {
             technician.Deactivate(deactivatedAt);
@@ -93,10 +93,11 @@ public sealed partial class DemoDataSeeder(
         return technician.Id;
     }
 
-    private async Task<ApplicationUser> EnsureTechnicianWithoutPasswordAsync(string email)
+    private async Task<ApplicationUser> EnsureTechnicianWithoutPasswordAsync(string email, string fullName)
     {
         if (await userManager.FindByEmailAsync(email) is { } existingTechnician)
         {
+            await userManager.EnsureFullNameAsync(existingTechnician, fullName);
             return existingTechnician;
         }
 
@@ -106,6 +107,7 @@ public sealed partial class DemoDataSeeder(
             Email = email,
             EmailConfirmed = true,
         };
+        technician.ChangeFullName(fullName);
 
         (await userManager.CreateAsync(technician)).ThrowIfFailed(email);
         (await userManager.AddToRoleAsync(technician, Roles.Technician)).ThrowIfFailed(email);
