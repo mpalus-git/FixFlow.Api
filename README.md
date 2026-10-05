@@ -92,6 +92,7 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `Email__Username`, `Email__Password` | dane logowania SMTP, opcjonalne | brak |
 | `Email__FromAddress`, `Email__FromName` | nadawca wiadomości | `noreply@fixflow.local`, `FixFlow` |
 | `Jobs__Enabled` | uruchamianie jobów Quartz | `true` |
+| `ClientClock__MaxSkew` | tolerancja wyprzedzenia zegara urządzenia klienta dla czasu rozpoczęcia zlecenia i końca pracy we wpisie, od `00:00:00` do `01:00:00` | `00:05:00` |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | odczyt `X-Forwarded-For` i `X-Forwarded-Proto` za reverse proxy | `false` |
 | `ForwardedHeaders__ForwardLimit` | liczba zaufanych proxy w łańcuchu `X-Forwarded-For` | `1` |
 | `OpenTelemetry__ConsoleExporterEnabled` | ślady i metryki OpenTelemetry wypisywane na konsolę | `false` |
@@ -101,6 +102,8 @@ Po włączeniu OpenTelemetry aplikacja zbiera ślady żądań HTTP (z trasą end
 ## Reguły biznesowe
 
 Zlecenie przechodzi przez statusy `New -> Assigned -> InProgress -> Completed -> Invoiced`. Jedynym dozwolonym cofnięciem jest `Assigned -> New` (odpięcie technika), każde inne przejście kończy się `409 WorkOrder.InvalidStatusTransition`. Zlecenie przypisane, ale jeszcze nierozpoczęte, dyspozytor przenosi na innego technika lub inny termin jedną operacją (`POST /api/v1/work-orders/{id}/reassign`), więc zlecenie nie wraca po drodze do `New`; zlecenia w toku nie da się przenieść (`409 WorkOrder.NotReassignable`). Przypisanie technika (`/assign`) może od razu zmienić termin.
+
+Technik może przy starcie (`POST /api/v1/work-orders/{id}/start`) podać czas rozpoczęcia zapisany offline (`startedAt`). Czas ten nie może być wcześniejszy niż przypisanie zlecenia temu technikowi ani późniejszy niż czas serwera powiększony o `ClientClock__MaxSkew`; czas mieszczący się w tolerancji jest zapisywany jako czas serwera. Naruszenie kończy się `400` z kluczem `startedAt`. Ta sama tolerancja dotyczy końca pracy (`workFinishedAt`) we wpisie serwisowym. Bez body start przyjmuje czas serwera.
 
 | Reguła | Gdzie jest wymuszona | Błąd |
 |---|---|---|
