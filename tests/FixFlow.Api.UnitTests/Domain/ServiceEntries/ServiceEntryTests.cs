@@ -11,6 +11,7 @@ public sealed class ServiceEntryTests
 {
     private static readonly DateTimeOffset Now = new(2026, 9, 1, 8, 0, 0, TimeSpan.Zero);
     private static readonly Guid TechnicianId = Guid.CreateVersion7();
+    private static readonly TimeSpan MaxClockSkew = TimeSpan.FromMinutes(5);
 
     [Fact]
     public void Should_Create_Work_Entry_And_Consume_Parts_At_Current_Price_When_Work_Order_Is_In_Progress()
@@ -113,6 +114,23 @@ public sealed class ServiceEntryTests
     public void Should_Reject_Work_Entry_When_Work_Finishes_In_The_Future()
     {
         var result = CreateWorkEntryWithTime(Now.AddMinutes(30), Now.AddMinutes(121), Now.AddMinutes(120));
+
+        result.FirstError.ShouldBe(ServiceEntryErrors.WorkFinishedInFuture);
+    }
+
+    [Fact]
+    public void Should_Create_Work_Entry_When_Work_Finishes_In_The_Future_Within_Clock_Skew()
+    {
+        var result = CreateWorkEntryWithTime(Now.AddMinutes(30), Now.AddMinutes(125), Now.AddMinutes(120), MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        result.Value.WorkFinishedAt.ShouldBe(Now.AddMinutes(125));
+    }
+
+    [Fact]
+    public void Should_Reject_Work_Entry_When_Work_Finishes_In_The_Future_Beyond_Clock_Skew()
+    {
+        var result = CreateWorkEntryWithTime(Now.AddMinutes(30), Now.AddMinutes(125).AddSeconds(1), Now.AddMinutes(120), MaxClockSkew);
 
         result.FirstError.ShouldBe(ServiceEntryErrors.WorkFinishedInFuture);
     }
@@ -305,8 +323,12 @@ public sealed class ServiceEntryTests
     private static ServiceEntry CreateWorkEntry(WorkOrder workOrder, PartUsage usage, DateTimeOffset finishedAt) =>
         ServiceEntry.CreateWork(workOrder, TechnicianId, "Replaced filters", [], finishedAt.AddMinutes(-30), finishedAt, null, [usage], finishedAt).Value;
 
-    private static ErrorOr<ServiceEntry> CreateWorkEntryWithTime(DateTimeOffset startedAt, DateTimeOffset finishedAt, DateTimeOffset now) =>
-        ServiceEntry.CreateWork(CreateInProgressWorkOrder(), TechnicianId, "Replaced filters", [], startedAt, finishedAt, null, [], now);
+    private static ErrorOr<ServiceEntry> CreateWorkEntryWithTime(
+        DateTimeOffset startedAt,
+        DateTimeOffset finishedAt,
+        DateTimeOffset now,
+        TimeSpan maxClockSkew = default) =>
+        ServiceEntry.CreateWork(CreateInProgressWorkOrder(), TechnicianId, "Replaced filters", [], startedAt, finishedAt, null, [], now, maxClockSkew: maxClockSkew);
 
     private static Device CreateDevice()
     {

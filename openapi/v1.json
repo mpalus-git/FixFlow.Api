@@ -3749,7 +3749,7 @@
               "null",
               "string"
             ],
-            "description": "Time when the work finished; required for a work entry and not allowed for a correction. Must be after the start and not in the future.",
+            "description": "Time when the work finished; required for a work entry and not allowed for a correction. Must be after the start and not later than the server time plus the allowed clock skew.",
             "format": "date-time"
           },
           "latitude": {

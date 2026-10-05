@@ -3,16 +3,18 @@ using ErrorOr;
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Persistence.Configurations;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Parts;
 using FixFlow.Api.Domain.ServiceEntries;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace FixFlow.Api.Features.ServiceEntries.AddServiceEntry;
 
-public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
+public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvider timeProvider, IOptions<ClientClockOptions> clientClockOptions)
 {
     public async Task<ErrorOr<AddedServiceEntry>> HandleAsync(
         Guid workOrderId,
@@ -58,7 +60,8 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
                 request is { Latitude: { } latitude, Longitude: { } longitude } ? new GpsLocation(latitude, longitude) : null,
                 partUsages.Value,
                 now,
-                request.Id),
+                request.Id,
+                clientClockOptions.Value.MaxSkew),
             _ => ServiceEntryErrors.WorkTimeRequired,
         };
         if (creation.IsError)
