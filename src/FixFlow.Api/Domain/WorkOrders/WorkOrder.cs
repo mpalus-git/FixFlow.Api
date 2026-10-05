@@ -28,6 +28,8 @@ public sealed class WorkOrder
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    public DateTimeOffset? AssignedAt { get; private set; }
+
     public DateTimeOffset? StartedAt { get; private set; }
 
     public DateTimeOffset? CompletedAt { get; private set; }
@@ -112,6 +114,7 @@ public sealed class WorkOrder
         }
 
         TechnicianId = technicianId;
+        AssignedAt = now;
         Status = WorkOrderStatus.Assigned;
         if (dueDate is { } changedDueDate)
         {
@@ -134,6 +137,7 @@ public sealed class WorkOrder
         }
 
         TechnicianId = technicianId;
+        AssignedAt = now;
         if (dueDate is { } changedDueDate)
         {
             ChangeDueDate(changedDueDate, now);
@@ -150,6 +154,7 @@ public sealed class WorkOrder
         }
 
         TechnicianId = null;
+        AssignedAt = null;
         Status = WorkOrderStatus.New;
 
         return Result.Updated;

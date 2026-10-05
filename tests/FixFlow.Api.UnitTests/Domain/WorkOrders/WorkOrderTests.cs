@@ -107,6 +107,7 @@ public sealed class WorkOrderTests
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
         workOrder.TechnicianId.ShouldBe(TechnicianId);
+        workOrder.AssignedAt.ShouldBe(Now);
     }
 
     [Fact]
@@ -156,6 +157,7 @@ public sealed class WorkOrderTests
         workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
         workOrder.TechnicianId.ShouldBe(otherTechnicianId);
         workOrder.DueDate.ShouldBe(DueDate.AddDays(3));
+        workOrder.AssignedAt.ShouldBe(Now.AddHours(1));
     }
 
     [Fact]
@@ -193,6 +195,7 @@ public sealed class WorkOrderTests
         result.FirstError.ShouldBe(WorkOrderErrors.DueDateNotInFuture);
         workOrder.TechnicianId.ShouldBe(TechnicianId);
         workOrder.DueDate.ShouldBe(DueDate);
+        workOrder.AssignedAt.ShouldBe(Now);
     }
 
     [Theory]
@@ -219,6 +222,7 @@ public sealed class WorkOrderTests
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.New);
         workOrder.TechnicianId.ShouldBeNull();
+        workOrder.AssignedAt.ShouldBeNull();
     }
 
     [Fact]
