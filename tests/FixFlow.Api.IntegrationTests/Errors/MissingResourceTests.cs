@@ -86,6 +86,7 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
         ["reset password"] = new(Roles.Admin, HttpMethod.Post, $"users/{MissingId}/password", new ResetPasswordRequest("NewSecret1!"), UserErrors.NotFound.Code),
         ["update user"] = new(Roles.Admin, HttpMethod.Put, $"users/{MissingId}", new UpdateUserRequest("Jan Kowalski"), UserErrors.NotFound.Code),
         ["list service entries"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/service-entries", null, WorkOrderErrors.NotFound.Code),
+        ["get service entry"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/service-entries/{MissingId}", null, WorkOrderErrors.NotFound.Code),
     };
 
     public static TheoryData<string> RequestNames { get; } = [.. Requests.Keys];

@@ -18,6 +18,7 @@ public sealed class ForeignWorkOrderAccessTests(FixFlowApiFactory factory) : Int
             "/service-entries",
             new AddServiceEntryRequest("Replaced filters", WorkStartedAt: DateTimeOffset.UtcNow.AddHours(-2), WorkFinishedAt: DateTimeOffset.UtcNow.AddHours(-1))),
         ["list service entries"] = new(HttpMethod.Get, "/service-entries", null),
+        ["get service entry"] = new(HttpMethod.Get, $"/service-entries/{Guid.CreateVersion7()}", null),
         ["get service protocol"] = new(HttpMethod.Get, "/protocol", null),
     };
 

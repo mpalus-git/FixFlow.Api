@@ -4,6 +4,8 @@ namespace FixFlow.Api.Domain.ServiceEntries;
 
 public static class ServiceEntryErrors
 {
+    public static readonly Error NotFound = Error.NotFound("ServiceEntry.NotFound", "Service entry was not found.");
+
     public static readonly Error WorkTimeRequired = Error.Validation("WorkStartedAt", "A work entry requires work start and finish times.");
 
     public static readonly Error WorkStartedBeforeWorkOrder = Error.Validation("WorkStartedAt", "Work cannot start before the work order was started.");
