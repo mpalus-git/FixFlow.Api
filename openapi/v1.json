@@ -3508,6 +3508,73 @@
         ]
       }
     },
+    "/api/v1/work-orders/{workOrderId}/service-entries/{serviceEntryId}": {
+      "get": {
+        "tags": [
+          "ServiceEntries"
+        ],
+        "summary": "Get a service entry",
+        "description": "Returns one work or correction entry of a work order. Technicians see only entries of work orders assigned to them; other work orders are reported as not found. An entry of a different work order is reported as not found.",
+        "operationId": "GetServiceEntry",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "serviceEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceEntryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/dashboard/summary": {
       "get": {
         "tags": [
