@@ -39,6 +39,7 @@ public static class DevicesModule
         group.MapListDevices();
         group.MapUpdateDevice();
         group.MapArchiveDevice();
+        group.MapListDeviceWorkOrders();
 
         return app;
     }
