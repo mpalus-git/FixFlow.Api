@@ -203,6 +203,53 @@ public sealed class ServiceEntryTests
     }
 
     [Fact]
+    public void Should_Keep_Given_Identifier_When_Work_Entry_Is_Created_With_Identifier()
+    {
+        var id = Guid.CreateVersion7();
+
+        var result = ServiceEntry.CreateWork(CreateInProgressWorkOrder(), TechnicianId, "Replaced filters", [], Now, Now.AddHours(1), null, [], Now.AddHours(1), id);
+
+        result.Value.Id.ShouldBe(id);
+    }
+
+    [Fact]
+    public void Should_Keep_Given_Identifier_When_Correction_Is_Created_With_Identifier()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var part = CreatePart(stockQuantity: 10);
+        var workEntry = CreateWorkEntry(workOrder, new PartUsage(part, 2), Now.AddHours(1));
+        var id = Guid.CreateVersion7();
+
+        var result = ServiceEntry.CreateCorrection(workOrder, TechnicianId, "Unused", [], [new PartUsage(part, 1)], [workEntry], Now.AddHours(2), id);
+
+        result.Value.Id.ShouldBe(id);
+    }
+
+    [Fact]
+    public void Should_Accept_Retry_When_Entry_Belongs_To_Same_Work_Order_And_Technician()
+    {
+        var entry = CreateWorkEntryWithTime(Now, Now.AddHours(1), Now.AddHours(1)).Value;
+
+        entry.EnsureIsRetryOf(entry.WorkOrderId, TechnicianId).IsError.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Reject_Retry_When_Entry_Belongs_To_Another_Work_Order()
+    {
+        var entry = CreateWorkEntryWithTime(Now, Now.AddHours(1), Now.AddHours(1)).Value;
+
+        entry.EnsureIsRetryOf(Guid.CreateVersion7(), TechnicianId).FirstError.ShouldBe(ServiceEntryErrors.IdConflict);
+    }
+
+    [Fact]
+    public void Should_Reject_Retry_When_Entry_Was_Added_By_Another_Technician()
+    {
+        var entry = CreateWorkEntryWithTime(Now, Now.AddHours(1), Now.AddHours(1)).Value;
+
+        entry.EnsureIsRetryOf(entry.WorkOrderId, Guid.CreateVersion7()).FirstError.ShouldBe(ServiceEntryErrors.IdConflict);
+    }
+
+    [Fact]
     public void Should_Summarize_Used_Parts_Per_Part_And_Unit_Price()
     {
         var workOrder = CreateInProgressWorkOrder();
