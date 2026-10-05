@@ -1,6 +1,7 @@
 using FixFlow.Api.Features.Devices.ArchiveDevice;
 using FixFlow.Api.Features.Devices.CreateDevice;
 using FixFlow.Api.Features.Devices.GetDevice;
+using FixFlow.Api.Features.Devices.ListDeviceWorkOrders;
 using FixFlow.Api.Features.Devices.ListDevices;
 using FixFlow.Api.Features.Devices.UpdateDevice;
 using FluentValidation;
@@ -19,6 +20,8 @@ public static class DevicesModule
         services.AddScoped<UpdateDeviceHandler>();
         services.AddSingleton<IValidator<UpdateDeviceRequest>, UpdateDeviceRequestValidator>();
         services.AddScoped<ArchiveDeviceHandler>();
+        services.AddScoped<ListDeviceWorkOrdersHandler>();
+        services.AddSingleton<IValidator<ListDeviceWorkOrdersRequest>, ListDeviceWorkOrdersRequestValidator>();
 
         return services;
     }
