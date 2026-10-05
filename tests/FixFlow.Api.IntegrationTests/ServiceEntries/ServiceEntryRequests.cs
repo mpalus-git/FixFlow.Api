@@ -9,6 +9,8 @@ public static class ServiceEntryRequests
 {
     public static Uri ServiceEntriesUri(Guid workOrderId) => new($"/api/v1/work-orders/{workOrderId}/service-entries", UriKind.Relative);
 
+    public static Uri ServiceEntryUri(Guid workOrderId, Guid serviceEntryId) => new($"/api/v1/work-orders/{workOrderId}/service-entries/{serviceEntryId}", UriKind.Relative);
+
     public static AddServiceEntryRequest WorkEntry(WorkOrderResponse workOrder, params ServiceEntryPartRequest[] parts) => new(
         "Replaced filters",
         PhotoUrls: ["https://photos.test/1.jpg"],
@@ -36,5 +38,11 @@ public static class ServiceEntryRequests
     {
         var entries = await client.GetFromJsonAsync<List<ServiceEntryResponse>>(ServiceEntriesUri(workOrderId), ApiJson.Options, TestContext.Current.CancellationToken);
         return entries.ShouldNotBeNull();
+    }
+
+    public static async Task<ServiceEntryResponse> GetServiceEntryAsync(this HttpClient client, Guid workOrderId, Guid serviceEntryId)
+    {
+        var entry = await client.GetFromJsonAsync<ServiceEntryResponse>(ServiceEntryUri(workOrderId, serviceEntryId), ApiJson.Options, TestContext.Current.CancellationToken);
+        return entry.ShouldNotBeNull();
     }
 }
