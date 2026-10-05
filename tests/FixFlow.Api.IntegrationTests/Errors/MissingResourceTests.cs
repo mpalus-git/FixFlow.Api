@@ -45,6 +45,7 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
             new UpdateDeviceRequest("AC-2002", "Multi 5 kW", "Mitsubishi", new DateOnly(2025, 3, 10)),
             DeviceErrors.NotFound.Code),
         ["archive device"] = new(Roles.Dispatcher, HttpMethod.Post, $"devices/{MissingId}/archive", null, DeviceErrors.NotFound.Code),
+        ["list device work orders"] = new(Roles.Dispatcher, HttpMethod.Get, $"devices/{MissingId}/work-orders", null, DeviceErrors.NotFound.Code),
         ["get part"] = new(Roles.Technician, HttpMethod.Get, $"parts/{MissingId}", null, PartErrors.NotFound.Code),
         ["update part"] = new(Roles.Dispatcher, HttpMethod.Put, $"parts/{MissingId}", new UpdatePartRequest("Filtr węglowy", "FLT-200", 59.50m), PartErrors.NotFound.Code),
         ["archive part"] = new(Roles.Dispatcher, HttpMethod.Post, $"parts/{MissingId}/archive", null, PartErrors.NotFound.Code),
