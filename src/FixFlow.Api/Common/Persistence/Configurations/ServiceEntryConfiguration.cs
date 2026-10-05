@@ -9,10 +9,12 @@ namespace FixFlow.Api.Common.Persistence.Configurations;
 
 public sealed class ServiceEntryConfiguration : IEntityTypeConfiguration<ServiceEntry>
 {
+    public const string PrimaryKeyName = "pk_service_entries";
+
     public void Configure(EntityTypeBuilder<ServiceEntry> builder)
     {
         builder.ToTable("service_entries");
-        builder.HasKey(entry => entry.Id);
+        builder.HasKey(entry => entry.Id).HasName(PrimaryKeyName);
         builder.Property(entry => entry.Id).ValueGeneratedNever();
         builder.Property(entry => entry.Note).HasMaxLength(4000);
         builder.PrimitiveCollection(entry => entry.PhotoUrls);

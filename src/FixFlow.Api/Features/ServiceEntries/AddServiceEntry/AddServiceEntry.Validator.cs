@@ -11,6 +11,7 @@ public sealed class AddServiceEntryRequestValidator : AbstractValidator<AddServi
     public AddServiceEntryRequestValidator()
     {
         RuleFor(request => request.Note).NotEmpty().MaximumLength(4000);
+        RuleFor(request => request.Id).NotEqual(Guid.Empty);
         RuleFor(request => request.PhotoUrls)
             .Must(photoUrls => photoUrls is null || photoUrls.Count <= MaxPhotoCount)
             .WithMessage($"At most {MaxPhotoCount} photos can be attached.");

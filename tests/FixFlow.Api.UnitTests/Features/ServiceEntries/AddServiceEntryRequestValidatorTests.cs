@@ -25,6 +25,22 @@ public sealed class AddServiceEntryRequestValidatorTests
     }
 
     [Fact]
+    public void Should_Accept_Work_Entry_When_Client_Identifier_Is_Given()
+    {
+        var result = _validator.Validate(WorkEntry() with { Id = Guid.CreateVersion7() });
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_Reject_Entry_When_Client_Identifier_Is_Empty()
+    {
+        var result = _validator.Validate(WorkEntry() with { Id = Guid.Empty });
+
+        result.Errors.ShouldContain(error => error.PropertyName == nameof(AddServiceEntryRequest.Id));
+    }
+
+    [Fact]
     public void Should_Reject_Work_Entry_When_Work_Time_Is_Missing()
     {
         var result = _validator.Validate(WorkEntry() with { WorkStartedAt = null, WorkFinishedAt = null });

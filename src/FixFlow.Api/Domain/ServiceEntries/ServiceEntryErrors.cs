@@ -17,4 +17,8 @@ public static class ServiceEntryErrors
     public static readonly Error ReturnExceedsConsumption = Error.Conflict(
         "ServiceEntry.ReturnExceedsConsumption",
         "Returned quantity exceeds the quantity of the part used on this work order.");
+
+    public static readonly Error IdConflict = Error.Conflict(
+        "ServiceEntry.IdConflict",
+        "A service entry with this identifier already exists on another work order or was added by another technician.");
 }

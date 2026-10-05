@@ -44,7 +44,8 @@ public sealed class ServiceEntry
         DateTimeOffset workFinishedAt,
         GpsLocation? startLocation,
         IReadOnlyList<PartUsage> usedParts,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        Guid? id = null)
     {
         var acceptance = workOrder.EnsureCanAddServiceEntry(technicianId);
         if (acceptance.IsError)
@@ -78,7 +79,7 @@ public sealed class ServiceEntry
 
         var entry = new ServiceEntry
         {
-            Id = Guid.CreateVersion7(),
+            Id = id ?? Guid.CreateVersion7(),
             WorkOrderId = workOrder.Id,
             TechnicianId = technicianId,
             Note = note,
@@ -111,7 +112,8 @@ public sealed class ServiceEntry
         IReadOnlyList<string> photoUrls,
         IReadOnlyList<PartUsage> returnedParts,
         IReadOnlyCollection<ServiceEntry> previousEntries,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        Guid? id = null)
     {
         var acceptance = workOrder.EnsureCanAddServiceEntry(technicianId);
         if (acceptance.IsError)
@@ -121,7 +123,7 @@ public sealed class ServiceEntry
 
         var entry = new ServiceEntry
         {
-            Id = Guid.CreateVersion7(),
+            Id = id ?? Guid.CreateVersion7(),
             WorkOrderId = workOrder.Id,
             TechnicianId = technicianId,
             Note = note,
@@ -145,6 +147,9 @@ public sealed class ServiceEntry
 
         return entry;
     }
+
+    public ErrorOr<Success> EnsureIsRetryOf(Guid workOrderId, Guid technicianId) =>
+        WorkOrderId == workOrderId && TechnicianId == technicianId ? Result.Success : ServiceEntryErrors.IdConflict;
 
     public static IReadOnlyList<UsedPart> SummarizeUsedParts(IEnumerable<ServiceEntry> entries)
     {
