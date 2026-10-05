@@ -11,7 +11,8 @@ public sealed record AddServiceEntryRequest(
     [property: Description("Time when the work finished; required for a work entry and not allowed for a correction. Must be after the start and not in the future.")] DateTimeOffset? WorkFinishedAt = null,
     [property: Description("Latitude of the place where the work started, from -90 to 90; optional, given together with longitude and not allowed for a correction.")] double? Latitude = null,
     [property: Description("Longitude of the place where the work started, from -180 to 180; optional, given together with latitude and not allowed for a correction.")] double? Longitude = null,
-    [property: Description("Parts used in a work entry or returned in a correction, at most 20, each part at most once. Required for a correction.")] IReadOnlyList<ServiceEntryPartRequest>? Parts = null);
+    [property: Description("Parts used in a work entry or returned in a correction, at most 20, each part at most once. Required for a correction.")] IReadOnlyList<ServiceEntryPartRequest>? Parts = null,
+    [property: Description("Optional identifier of the entry chosen by the client, for example by an offline queue. Sending an entry again with the same identifier returns the stored entry instead of adding a new one; when omitted, the server assigns the identifier.")] Guid? Id = null);
 
 [Description("Quantity of one part used or returned in a service entry.")]
 public sealed record ServiceEntryPartRequest(

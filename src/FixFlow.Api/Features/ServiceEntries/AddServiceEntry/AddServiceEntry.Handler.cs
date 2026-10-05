@@ -8,12 +8,13 @@ using FixFlow.Api.Domain.ServiceEntries;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace FixFlow.Api.Features.ServiceEntries.AddServiceEntry;
 
 public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<ServiceEntryResponse>> HandleAsync(
+    public async Task<ErrorOr<AddedServiceEntry>> HandleAsync(
         Guid workOrderId,
         AddServiceEntryRequest request,
         ClaimsPrincipal user,
@@ -27,6 +28,12 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
             return WorkOrderErrors.NotFound;
         }
 
+        var technicianId = user.GetUserId();
+        if (request.Id is { } requestedId && await FindRetriedEntryAsync(requestedId, workOrderId, technicianId, cancellationToken) is { } retriedEntry)
+        {
+            return retriedEntry;
+        }
+
         var partUsages = await LoadPartUsagesAsync(request.Parts ?? [], cancellationToken);
         if (partUsages.IsError)
         {
@@ -36,12 +43,11 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
         var previousEntries = request.IsCorrection
             ? await dbContext.ServiceEntries.AsNoTracking().Where(entry => entry.WorkOrderId == workOrderId).ToListAsync(cancellationToken)
             : [];
-        var technicianId = user.GetUserId();
         var photoUrls = request.PhotoUrls ?? [];
         var now = timeProvider.GetUtcNow();
         var creation = request switch
         {
-            { IsCorrection: true } => ServiceEntry.CreateCorrection(workOrder, technicianId, request.Note, photoUrls, partUsages.Value, previousEntries, now),
+            { IsCorrection: true } => ServiceEntry.CreateCorrection(workOrder, technicianId, request.Note, photoUrls, partUsages.Value, previousEntries, now, request.Id),
             { WorkStartedAt: { } workStartedAt, WorkFinishedAt: { } workFinishedAt } => ServiceEntry.CreateWork(
                 workOrder,
                 technicianId,
@@ -51,7 +57,8 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
                 workFinishedAt.ToDatabasePrecision(),
                 request is { Latitude: { } latitude, Longitude: { } longitude } ? new GpsLocation(latitude, longitude) : null,
                 partUsages.Value,
-                now),
+                now,
+                request.Id),
             _ => ServiceEntryErrors.WorkTimeRequired,
         };
         if (creation.IsError)
@@ -61,21 +68,52 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
 
         dbContext.ServiceEntries.Add(creation.Value);
         dbContext.RejectSaveIfChangedConcurrently(workOrder);
-        var saving = await dbContext.SaveChangesOrConflictAsync(
-            PartConfiguration.StockQuantityCheckName,
-            PartErrors.InsufficientStock,
-            cancellationToken);
+        var saving = await SaveChangesAsync(cancellationToken);
         if (saving.IsError)
         {
-            return saving.Errors;
+            return request.Id is { } savedId && await FindRetriedEntryAsync(savedId, workOrderId, technicianId, cancellationToken) is { } concurrentlyAddedEntry
+                ? concurrentlyAddedEntry
+                : saving.Errors;
         }
 
-        var usedParts = partUsages.Value.Select(usage => usage.Part).DistinctBy(part => part.Id).ToDictionary(part => part.Id);
-        var technicianName = await dbContext.Users
-            .Where(technician => technician.Id == technicianId)
-            .Select(technician => technician.FullName)
-            .SingleAsync(cancellationToken);
-        return ServiceEntryResponse.FromDomain(creation.Value, technicianName, usedParts);
+        return await ToAddedServiceEntryAsync(creation.Value, wasAlreadyAdded: false, cancellationToken);
+    }
+
+    private async Task<ErrorOr<Success>> SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await dbContext.SaveChangesOrConflictAsync(PartConfiguration.StockQuantityCheckName, PartErrors.InsufficientStock, cancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: ServiceEntryConfiguration.PrimaryKeyName })
+        {
+            return SaveChangesConflicts.ConcurrentModification;
+        }
+    }
+
+    private async Task<ErrorOr<AddedServiceEntry>?> FindRetriedEntryAsync(Guid entryId, Guid workOrderId, Guid technicianId, CancellationToken cancellationToken)
+    {
+        var existingEntry = await dbContext.ServiceEntries
+            .AsNoTracking()
+            .SingleOrDefaultAsync(entry => entry.Id == entryId, cancellationToken);
+        if (existingEntry is null)
+        {
+            return null;
+        }
+
+        var retry = existingEntry.EnsureIsRetryOf(workOrderId, technicianId);
+        if (retry.IsError)
+        {
+            return retry.Errors;
+        }
+
+        return await ToAddedServiceEntryAsync(existingEntry, wasAlreadyAdded: true, cancellationToken);
+    }
+
+    private async Task<AddedServiceEntry> ToAddedServiceEntryAsync(ServiceEntry entry, bool wasAlreadyAdded, CancellationToken cancellationToken)
+    {
+        var responses = await dbContext.ToServiceEntryResponsesAsync([entry], cancellationToken);
+        return new AddedServiceEntry(responses.Single(), wasAlreadyAdded);
     }
 
     private async Task<ErrorOr<List<PartUsage>>> LoadPartUsagesAsync(IReadOnlyList<ServiceEntryPartRequest> requestedParts, CancellationToken cancellationToken)
@@ -92,3 +130,5 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
         return requestedParts.Select(part => new PartUsage(parts[part.PartId], part.Quantity)).ToList();
     }
 }
+
+public sealed record AddedServiceEntry(ServiceEntryResponse Entry, bool WasAlreadyAdded);
