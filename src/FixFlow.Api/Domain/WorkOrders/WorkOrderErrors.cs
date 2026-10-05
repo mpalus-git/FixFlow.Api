@@ -12,6 +12,10 @@ public static class WorkOrderErrors
 
     public static readonly Error DueDateNotInFuture = Error.Validation("DueDate", "Due date must be in the future.");
 
+    public static readonly Error StartedBeforeAssignment = Error.Validation("StartedAt", "Work order cannot be started before it was assigned.");
+
+    public static readonly Error StartedInFuture = Error.Validation("StartedAt", "Start time cannot be in the future.");
+
     public static readonly Error NotAssignedToTechnician = Error.Forbidden("WorkOrder.NotAssignedToTechnician", "Work order is not assigned to this technician.");
 
     public static readonly Error TechnicianAlreadyHasWorkInProgress = Error.Conflict(

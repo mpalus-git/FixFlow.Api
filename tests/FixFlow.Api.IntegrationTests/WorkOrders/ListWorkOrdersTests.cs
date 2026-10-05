@@ -271,7 +271,7 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
         var now = DateTimeOffset.UtcNow;
         if (status >= WorkOrderStatus.Assigned)
         {
-            workOrder.Assign(technicianId, null, DateTimeOffset.UtcNow).IsError.ShouldBeFalse();
+            workOrder.Assign(technicianId, null, now).IsError.ShouldBeFalse();
         }
 
         if (status >= WorkOrderStatus.InProgress)

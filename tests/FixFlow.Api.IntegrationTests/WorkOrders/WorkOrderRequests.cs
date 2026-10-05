@@ -6,6 +6,7 @@ using FixFlow.Api.Features.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
+using FixFlow.Api.Features.WorkOrders.StartWork;
 using FixFlow.Api.IntegrationTests.Clients;
 using FixFlow.Api.IntegrationTests.Devices;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,13 @@ public static class WorkOrderRequests
 
     public static Task<HttpResponseMessage> PostTransitionAsync(this HttpClient client, Guid workOrderId, string transition) =>
         client.PostAsync(new Uri($"/api/v1/work-orders/{workOrderId}/{transition}", UriKind.Relative), null, TestContext.Current.CancellationToken);
+
+    public static Task<HttpResponseMessage> PostStartAsync(this HttpClient client, Guid workOrderId, StartWorkRequest request) =>
+        client.PostAsJsonAsync(
+            new Uri($"/api/v1/work-orders/{workOrderId}/start", UriKind.Relative),
+            request,
+            ApiJson.Options,
+            TestContext.Current.CancellationToken);
 
     public static async Task<WorkOrderResponse> ReadWorkOrderAsync(this HttpResponseMessage response)
     {

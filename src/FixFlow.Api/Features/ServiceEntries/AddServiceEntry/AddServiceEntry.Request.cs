@@ -8,7 +8,7 @@ public sealed record AddServiceEntryRequest(
     [property: Description("True for a correction entry that returns parts to stock; false for a work entry.")] bool IsCorrection = false,
     [property: Description("Absolute http or https addresses of photos, at most 10.")] IReadOnlyList<string>? PhotoUrls = null,
     [property: Description("Time when the work started; required for a work entry and not allowed for a correction. Cannot be earlier than the start of the work order.")] DateTimeOffset? WorkStartedAt = null,
-    [property: Description("Time when the work finished; required for a work entry and not allowed for a correction. Must be after the start and not in the future.")] DateTimeOffset? WorkFinishedAt = null,
+    [property: Description("Time when the work finished; required for a work entry and not allowed for a correction. Must be after the start and not later than the server time plus the allowed clock skew.")] DateTimeOffset? WorkFinishedAt = null,
     [property: Description("Latitude of the place where the work started, from -90 to 90; optional, given together with longitude and not allowed for a correction.")] double? Latitude = null,
     [property: Description("Longitude of the place where the work started, from -180 to 180; optional, given together with latitude and not allowed for a correction.")] double? Longitude = null,
     [property: Description("Parts used in a work entry or returned in a correction, at most 20, each part at most once. Required for a correction.")] IReadOnlyList<ServiceEntryPartRequest>? Parts = null,

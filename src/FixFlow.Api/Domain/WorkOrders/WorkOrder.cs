@@ -28,6 +28,8 @@ public sealed class WorkOrder
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    public DateTimeOffset? AssignedAt { get; private set; }
+
     public DateTimeOffset? StartedAt { get; private set; }
 
     public DateTimeOffset? CompletedAt { get; private set; }
@@ -112,6 +114,7 @@ public sealed class WorkOrder
         }
 
         TechnicianId = technicianId;
+        AssignedAt = now;
         Status = WorkOrderStatus.Assigned;
         if (dueDate is { } changedDueDate)
         {
@@ -134,6 +137,7 @@ public sealed class WorkOrder
         }
 
         TechnicianId = technicianId;
+        AssignedAt = now;
         if (dueDate is { } changedDueDate)
         {
             ChangeDueDate(changedDueDate, now);
@@ -150,12 +154,18 @@ public sealed class WorkOrder
         }
 
         TechnicianId = null;
+        AssignedAt = null;
         Status = WorkOrderStatus.New;
 
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Start(Guid technicianId, bool technicianHasWorkInProgress, DateTimeOffset now)
+    public ErrorOr<Updated> Start(
+        Guid technicianId,
+        bool technicianHasWorkInProgress,
+        DateTimeOffset now,
+        DateTimeOffset? requestedStartedAt = null,
+        TimeSpan maxClockSkew = default)
     {
         if (Status != WorkOrderStatus.Assigned)
         {
@@ -167,13 +177,24 @@ public sealed class WorkOrder
             return WorkOrderErrors.NotAssignedToTechnician;
         }
 
+        var startedAt = requestedStartedAt ?? now;
+        if (startedAt < AssignedAt)
+        {
+            return WorkOrderErrors.StartedBeforeAssignment;
+        }
+
+        if (startedAt > now + maxClockSkew)
+        {
+            return WorkOrderErrors.StartedInFuture;
+        }
+
         if (technicianHasWorkInProgress)
         {
             return WorkOrderErrors.TechnicianAlreadyHasWorkInProgress;
         }
 
         Status = WorkOrderStatus.InProgress;
-        StartedAt = now;
+        StartedAt = startedAt < now ? startedAt : now;
 
         return Result.Updated;
     }

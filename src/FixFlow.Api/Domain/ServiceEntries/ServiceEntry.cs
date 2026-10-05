@@ -45,7 +45,8 @@ public sealed class ServiceEntry
         GpsLocation? startLocation,
         IReadOnlyList<PartUsage> usedParts,
         DateTimeOffset now,
-        Guid? id = null)
+        Guid? id = null,
+        TimeSpan maxClockSkew = default)
     {
         var acceptance = workOrder.EnsureCanAddServiceEntry(technicianId);
         if (acceptance.IsError)
@@ -63,7 +64,7 @@ public sealed class ServiceEntry
             return ServiceEntryErrors.WorkNotFinishedAfterStart;
         }
 
-        if (workFinishedAt > now)
+        if (workFinishedAt > now + maxClockSkew)
         {
             return ServiceEntryErrors.WorkFinishedInFuture;
         }

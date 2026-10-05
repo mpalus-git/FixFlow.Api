@@ -10,6 +10,7 @@ using FixFlow.Api.Common.OpenApi;
 using FixFlow.Api.Common.Pdf;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Telemetry;
+using FixFlow.Api.Common.Time;
 using FixFlow.Api.Features.Auth;
 using FixFlow.Api.Features.Clients;
 using FixFlow.Api.Features.Dashboard;
@@ -31,6 +32,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplicationCaching(builder.Configuration);
 builder.Services.AddSingleton<TimeProvider>(new DatabasePrecisionTimeProvider(TimeProvider.System));
+builder.Services.AddClientClock();
 builder.Services.AddApplicationIdentity();
 builder.Services.AddJwtAuthentication();
 builder.Services.AddAuthRateLimiting();

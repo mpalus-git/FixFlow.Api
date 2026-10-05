@@ -9,6 +9,7 @@ public sealed class WorkOrderTests
     private static readonly DateTimeOffset Now = new(2026, 9, 1, 8, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset DueDate = Now.AddDays(2);
     private static readonly Guid TechnicianId = Guid.CreateVersion7();
+    private static readonly TimeSpan MaxClockSkew = TimeSpan.FromMinutes(5);
 
     [Fact]
     public void Should_Create_New_Unassigned_Work_Order_When_Device_Is_Active_And_Due_Date_Is_In_Future()
@@ -107,6 +108,7 @@ public sealed class WorkOrderTests
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
         workOrder.TechnicianId.ShouldBe(TechnicianId);
+        workOrder.AssignedAt.ShouldBe(Now);
     }
 
     [Fact]
@@ -156,6 +158,7 @@ public sealed class WorkOrderTests
         workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
         workOrder.TechnicianId.ShouldBe(otherTechnicianId);
         workOrder.DueDate.ShouldBe(DueDate.AddDays(3));
+        workOrder.AssignedAt.ShouldBe(Now.AddHours(1));
     }
 
     [Fact]
@@ -193,6 +196,7 @@ public sealed class WorkOrderTests
         result.FirstError.ShouldBe(WorkOrderErrors.DueDateNotInFuture);
         workOrder.TechnicianId.ShouldBe(TechnicianId);
         workOrder.DueDate.ShouldBe(DueDate);
+        workOrder.AssignedAt.ShouldBe(Now);
     }
 
     [Theory]
@@ -219,6 +223,7 @@ public sealed class WorkOrderTests
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.New);
         workOrder.TechnicianId.ShouldBeNull();
+        workOrder.AssignedAt.ShouldBeNull();
     }
 
     [Fact]
@@ -251,6 +256,77 @@ public sealed class WorkOrderTests
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
         workOrder.StartedAt.ShouldBe(Now.AddHours(1));
+    }
+
+    [Fact]
+    public void Should_Start_Work_At_Requested_Time_When_It_Is_Between_Assignment_And_Now()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now.AddHours(1), Now.AddMinutes(30), MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
+        workOrder.StartedAt.ShouldBe(Now.AddMinutes(30));
+    }
+
+    [Fact]
+    public void Should_Start_Work_When_Requested_Start_Equals_Assignment_Time()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now.AddHours(1), Now, MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.StartedAt.ShouldBe(Now);
+    }
+
+    [Fact]
+    public void Should_Reject_Starting_Work_When_Requested_Start_Is_Before_Assignment()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now.AddHours(1), Now.AddSeconds(-1), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.StartedBeforeAssignment);
+        workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
+        workOrder.StartedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_Reject_Starting_Work_When_Requested_Start_Is_Before_Reassignment()
+    {
+        var workOrder = CreateWorkOrder();
+        workOrder.Assign(Guid.CreateVersion7(), null, Now);
+        workOrder.Reassign(TechnicianId, null, Now.AddHours(1));
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now.AddHours(2), Now.AddMinutes(30), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.StartedBeforeAssignment);
+    }
+
+    [Fact]
+    public void Should_Store_Current_Time_When_Requested_Start_Is_In_Future_Within_Clock_Skew()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+        var now = Now.AddHours(1);
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, now, now + MaxClockSkew, MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.StartedAt.ShouldBe(now);
+    }
+
+    [Fact]
+    public void Should_Reject_Starting_Work_When_Requested_Start_Is_In_Future_Beyond_Clock_Skew()
+    {
+        var workOrder = CreateAssignedWorkOrder();
+        var now = Now.AddHours(1);
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, now, now + MaxClockSkew + TimeSpan.FromSeconds(1), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.StartedInFuture);
+        workOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
     }
 
     [Fact]
