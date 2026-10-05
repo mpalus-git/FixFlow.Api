@@ -26,17 +26,6 @@ public sealed class ListServiceEntriesHandler(FixFlowDbContext dbContext)
             .ThenBy(entry => entry.Id)
             .ToListAsync(cancellationToken);
 
-        var partIds = entries.SelectMany(entry => entry.Parts).Select(part => part.PartId).Distinct().ToList();
-        var parts = await dbContext.Parts
-            .AsNoTracking()
-            .Where(part => partIds.Contains(part.Id))
-            .ToDictionaryAsync(part => part.Id, cancellationToken);
-
-        var technicianIds = entries.Select(entry => entry.TechnicianId).Distinct().ToList();
-        var technicianNames = await dbContext.Users
-            .Where(technician => technicianIds.Contains(technician.Id))
-            .ToDictionaryAsync(technician => technician.Id, technician => technician.FullName, cancellationToken);
-
-        return entries.Select(entry => ServiceEntryResponse.FromDomain(entry, technicianNames[entry.TechnicianId], parts)).ToList();
+        return await dbContext.ToServiceEntryResponsesAsync(entries, cancellationToken);
     }
 }
