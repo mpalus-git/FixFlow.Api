@@ -92,6 +92,17 @@ public sealed class AddAndListServiceEntriesTests(FixFlowApiFactory factory) : S
     }
 
     [Fact]
+    public async Task Should_Add_Work_Entry_When_Work_Finishes_In_Future_Within_Clock_Skew()
+    {
+        using var scenario = await CreateWorkOrderInProgressAsync();
+        var request = ServiceEntryRequests.WorkEntry(scenario.WorkOrder) with { WorkFinishedAt = DateTimeOffset.UtcNow.AddMinutes(2) };
+
+        using var response = await scenario.TechnicianClient.PostServiceEntryAsync(scenario.WorkOrder.Id, request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
     public async Task Should_Return_Validation_Problem_When_Work_Entry_Has_No_Work_Time()
     {
         using var scenario = await CreateWorkOrderInProgressAsync();

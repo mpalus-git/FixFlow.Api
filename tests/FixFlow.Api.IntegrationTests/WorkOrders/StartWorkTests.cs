@@ -4,6 +4,8 @@ using FixFlow.Api.Common.Persistence.Configurations;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
+using FixFlow.Api.Features.WorkOrders.StartWork;
+using FixFlow.Api.IntegrationTests.ServiceEntries;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +25,50 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
         var startedWorkOrder = await response.ReadWorkOrderAsync();
         startedWorkOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
         startedWorkOrder.StartedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Should_Accept_Service_Entry_From_Requested_Start_Time_When_Work_Is_Started_With_Past_Time()
+    {
+        var (workOrders, technician) = await CreateAssignedWorkOrdersAsync(1);
+        var now = DateTimeOffset.UtcNow;
+        await MoveAssignmentBackAsync(workOrders[0].Id, now.AddHours(-3));
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+        var startedAt = now.AddHours(-2).ToDatabasePrecision();
+
+        using var startResponse = await technicianClient.PostStartAsync(workOrders[0].Id, new StartWorkRequest(startedAt));
+        var startedWorkOrder = await startResponse.ReadWorkOrderAsync();
+        using var entryResponse = await technicianClient.PostServiceEntryAsync(
+            workOrders[0].Id,
+            ServiceEntryRequests.WorkEntry(startedWorkOrder) with { WorkStartedAt = startedAt, WorkFinishedAt = startedAt.AddHours(1) });
+
+        startResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        startedWorkOrder.StartedAt.ShouldBe(startedAt);
+        entryResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Should_Return_Validation_Problem_When_Requested_Start_Is_In_Future_Beyond_Clock_Skew()
+    {
+        var (workOrders, technician) = await CreateAssignedWorkOrdersAsync(1);
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+
+        using var response = await technicianClient.PostStartAsync(workOrders[0].Id, new StartWorkRequest(DateTimeOffset.UtcNow.AddMinutes(10)));
+
+        await response.ShouldBeValidationProblemAsync("startedAt");
+        (await technicianClient.GetWorkOrderAsync(workOrders[0].Id)).Status.ShouldBe(WorkOrderStatus.Assigned);
+    }
+
+    [Fact]
+    public async Task Should_Return_Validation_Problem_When_Requested_Start_Is_Before_Assignment()
+    {
+        var (workOrders, technician) = await CreateAssignedWorkOrdersAsync(1);
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+
+        using var response = await technicianClient.PostStartAsync(workOrders[0].Id, new StartWorkRequest(DateTimeOffset.UtcNow.AddHours(-1)));
+
+        await response.ShouldBeValidationProblemAsync("startedAt");
+        (await technicianClient.GetWorkOrderAsync(workOrders[0].Id)).Status.ShouldBe(WorkOrderStatus.Assigned);
     }
 
     [Fact]
@@ -110,6 +156,15 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
 
         startResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
+    }
+
+    private async Task MoveAssignmentBackAsync(Guid workOrderId, DateTimeOffset assignedAt)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+        await dbContext.WorkOrders
+            .Where(workOrder => workOrder.Id == workOrderId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(workOrder => workOrder.AssignedAt, assignedAt), TestContext.Current.CancellationToken);
     }
 
     private async Task<(IReadOnlyList<WorkOrderResponse> WorkOrders, TestUser Technician)> CreateAssignedWorkOrdersAsync(int count)
