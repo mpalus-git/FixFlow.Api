@@ -3727,6 +3727,50 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "get": {
+        "tags": [
+          "Photos"
+        ],
+        "summary": "Get a photo",
+        "description": "Returns the stored JPEG photo. Available without authentication, so the photo address from photoUrls of a service entry can be used directly as an image source; anyone who knows the address can read the photo. A stored photo never changes, so the response can be cached for a year and carries the photo identifier as ETag; a request with a matching If-None-Match returns 304 without content.",
+        "operationId": "GetPhoto",
+        "parameters": [
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stream"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/dashboard/summary": {

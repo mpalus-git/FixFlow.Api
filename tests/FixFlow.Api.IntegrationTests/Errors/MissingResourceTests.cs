@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Parts;
+using FixFlow.Api.Domain.Photos;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.Clients;
@@ -87,6 +88,7 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
         ["update user"] = new(Roles.Admin, HttpMethod.Put, $"users/{MissingId}", new UpdateUserRequest("Jan Kowalski"), UserErrors.NotFound.Code),
         ["list service entries"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/service-entries", null, WorkOrderErrors.NotFound.Code),
         ["get service entry"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/service-entries/{MissingId}", null, WorkOrderErrors.NotFound.Code),
+        ["get photo"] = new(Roles.Technician, HttpMethod.Get, $"photos/{MissingId}", null, PhotoErrors.NotFound.Code),
     };
 
     public static TheoryData<string> RequestNames { get; } = [.. Requests.Keys];

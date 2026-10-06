@@ -1,3 +1,4 @@
+using FixFlow.Api.Features.Photos.GetPhoto;
 using FixFlow.Api.Features.Photos.UploadPhoto;
 
 namespace FixFlow.Api.Features.Photos;
@@ -7,6 +8,7 @@ public static class PhotosModule
     public static IServiceCollection AddPhotosFeatures(this IServiceCollection services)
     {
         services.AddScoped<UploadPhotoHandler>();
+        services.AddScoped<GetPhotoHandler>();
 
         return services;
     }
@@ -19,6 +21,7 @@ public static class PhotosModule
             .WithTags("Photos");
 
         group.MapUploadPhoto();
+        group.MapGetPhoto();
 
         return app;
     }

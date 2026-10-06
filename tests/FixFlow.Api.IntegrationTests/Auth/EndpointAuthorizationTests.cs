@@ -11,6 +11,7 @@ public sealed class EndpointAuthorizationTests(FixFlowApiFactory factory)
     [
         "POST /api/v{version:apiVersion}/auth/login",
         "POST /api/v{version:apiVersion}/auth/refresh",
+        "GET /api/v{version:apiVersion}/photos/{photoId:guid}",
     ];
 
     private static readonly string[] AnonymousInfrastructureRoutePrefixes = ["/health", "/api/v1/system/ready", "/openapi/", "/scalar"];
