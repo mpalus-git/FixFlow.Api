@@ -2,6 +2,7 @@ using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Parts;
+using FixFlow.Api.Domain.Photos;
 using FixFlow.Api.Domain.ServiceEntries;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
@@ -27,6 +28,8 @@ public sealed class FixFlowDbContext(DbContextOptions<FixFlowDbContext> options)
     public DbSet<ServiceEntry> ServiceEntries => Set<ServiceEntry>();
 
     public DbSet<WorkOrderNumberCounter> WorkOrderNumberCounters => Set<WorkOrderNumberCounter>();
+
+    public DbSet<Photo> Photos => Set<Photo>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
