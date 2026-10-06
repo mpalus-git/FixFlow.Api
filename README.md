@@ -105,6 +105,8 @@ Zlecenie przechodzi przez statusy `New -> Assigned -> InProgress -> Completed ->
 
 Technik może przy starcie (`POST /api/v1/work-orders/{id}/start`) podać czas rozpoczęcia zapisany offline (`startedAt`). Czas ten nie może być wcześniejszy niż przypisanie zlecenia temu technikowi ani późniejszy niż czas serwera powiększony o `ClientClock__MaxSkew`; czas mieszczący się w tolerancji jest zapisywany jako czas serwera. Naruszenie kończy się `400` z kluczem `startedAt`. Ta sama tolerancja dotyczy końca pracy (`workFinishedAt`) we wpisie serwisowym. Bez body start przyjmuje czas serwera.
 
+Zdjęcia technik wysyła przez `PUT /api/v1/photos/{photoId}` jako surową treść `image/jpeg` (najwyżej 1 MiB) pod identyfikatorem nadanym przez aplikację, więc adres zdjęcia jest znany przed wysłaniem i wpis utworzony offline może go od razu zawierać w `photoUrls`. Ponowne wysłanie tego samego identyfikatora przez tego samego technika zwraca `200` z zapisanym zdjęciem, identyfikator innego technika kończy się `409 Photo.IdConflict`. `GET /api/v1/photos/{photoId}` zwraca zdjęcie bez logowania, z nagłówkami cache na rok, bo zapisane zdjęcie się nie zmienia.
+
 | Reguła | Gdzie jest wymuszona | Błąd |
 |---|---|---|
 | 1. Technik ma najwyżej jedno zlecenie w statusie `InProgress` | metoda encji `WorkOrder.Start` oraz częściowy unikalny indeks `work_orders(technician_id) WHERE status = 'InProgress'` na wypadek równoległych żądań | `409 WorkOrder.TechnicianAlreadyHasWorkInProgress` |
@@ -163,7 +165,7 @@ flowchart LR
 - Render sprawdza `GET /health`, który nie dotyka bazy, więc health check nie wybudza uśpionej bazy Neon. `GET /health/ready` sprawdza połączenie z bazą. Panel webowy sprawdza gotowość przez `GET /api/v1/system/ready` (to samo sprawdzenie bazy), bo blokery reklam z listą EasyPrivacy blokują żądania do `onrender.com/health*`.
 - Za Renderem żądanie przechodzi przez Cloudflare i proxy Render, dlatego `X-Forwarded-For` ma trzy pozycje, a `ForwardedHeaders__ForwardLimit` wynosi `3`. Adres widziany przez aplikację (i przez limiter logowania) jest zapisywany w logu każdego żądania jako `ClientIp`.
 - Brak sekretu `RENDER_DEPLOY_HOOK_URL` w repozytorium (np. w forku) nie psuje CI: krok wdrożenia jest pomijany z ostrzeżeniem.
-- Workflow [reset-demo-data.yml](.github/workflows/reset-demo-data.yml) codziennie o 2:00 UTC (i ręcznie przez `workflow_dispatch`) wybudza usługę, loguje się jako `admin@fixflow.local` hasłem z sekretu `DEMO_ADMIN_PASSWORD` i wywołuje `POST /api/v1/demo-data/reset`. Reset usuwa klientów, urządzenia, części i zlecenia, tworzy od nowa dane demonstracyjne i przywraca konta demo Dispatcher i Technician (hasła z konfiguracji, aktywne, bez blokady). Endpoint jest dostępny tylko dla Admina i tylko przy `Seed__DemoData__Enabled=true`; bez sekretu workflow kończy się ostrzeżeniem.
+- Workflow [reset-demo-data.yml](.github/workflows/reset-demo-data.yml) codziennie o 2:00 UTC (i ręcznie przez `workflow_dispatch`) wybudza usługę, loguje się jako `admin@fixflow.local` hasłem z sekretu `DEMO_ADMIN_PASSWORD` i wywołuje `POST /api/v1/demo-data/reset`. Reset usuwa klientów, urządzenia, części, zlecenia i wysłane zdjęcia, tworzy od nowa dane demonstracyjne i przywraca konta demo Dispatcher i Technician (hasła z konfiguracji, aktywne, bez blokady). Endpoint jest dostępny tylko dla Admina i tylko przy `Seed__DemoData__Enabled=true`; bez sekretu workflow kończy się ostrzeżeniem.
 
 ## Ograniczenia
 
@@ -174,12 +176,13 @@ flowchart LR
 - **Blokada konta po nieudanych logowaniach.** Po 5 błędnych hasłach konto jest blokowane na 5 minut, więc ktoś znający e-mail może celowo zablokować cudze konto. To standardowy kompromis ASP.NET Core Identity; limit prób na adres IP ogranicza skalę takiego działania.
 - **Publiczne konta demo.** Każdy może zalogować się jako Dispatcher lub Technician i zmieniać dane demonstracyjne. Zmiany znikają przy nocnym resecie, ale do tego czasu widzą je wszyscy odwiedzający. GitHub wyłącza zaplanowane workflow w repozytorium bez aktywności przez 60 dni, wtedy reset trzeba włączyć ponownie w zakładce Actions.
 - **Refresh token w treści odpowiedzi.** Login i odświeżenie zwracają refresh token w JSON, więc panel webowy przechowuje go w pamięci dostępnej dla JavaScriptu i błąd XSS w panelu pozwoliłby go przejąć. To konsekwencja jednego kontraktu dla panelu webowego i aplikacji MAUI, która trzyma tokeny w bezpiecznym magazynie urządzenia i nie korzysta z ciasteczek. Ciasteczko `HttpOnly` dla panelu wymagałoby osobnego trybu sesji, a ponieważ panel (`vercel.app`) i API (`onrender.com`) to różne witryny, także proxy po stronie panelu, bo przeglądarki blokują ciasteczka między witrynami.
-- **Zdjęcia jako adresy URL.** Wpis serwisowy przechowuje listę adresów zdjęć, API nie przyjmuje plików.
+- **Zdjęcia dostępne dla każdego, kto zna adres.** Panel wyświetla zdjęcia przez `<img>`, który nie wysyła tokena, dlatego odczyt zdjęcia nie wymaga logowania. Adresu nie da się zgadnąć, ale przekazany dalej działa bez ograniczeń.
+- **Zdjęcia w bazie danych.** Treść zdjęć jest przechowywana w PostgreSQL (`bytea`). Zdjęcia, do których nie odwołuje się żaden wpis, nie są usuwane, a liczba zdjęć technika nie jest ograniczona; w demo tabelę czyści codzienny reset danych. Wpis nadal przyjmuje też dowolne zewnętrzne adresy zdjęć.
 - **Jedna waluta.** Ceny i sumy w protokole są w PLN.
 
 ## Co zrobiłbym inaczej
 
-- **Upload zdjęć do blob storage.** Zamiast przyjmować gotowe adresy URL, API wydawałoby krótkotrwałe linki do bezpośredniego uploadu (np. S3 lub Azure Blob Storage) i zapisywało tylko klucze plików.
+- **Zdjęcia w blob storage z podpisanymi adresami.** Treść zdjęć trafiałaby do S3 lub Azure Blob Storage zamiast do bazy, a odczyt odbywałby się przez krótkotrwałe podpisane adresy wydawane zalogowanym użytkownikom, z regułą widoczności taką jak dla zleceń.
 - **Joby poza procesem API.** Na hostingu, który usypia usługę, joby Quartz powinny działać w osobnym workerze albo być wyzwalane przez zewnętrzny scheduler wywołujący zabezpieczony endpoint.
 - **Outbox dla e-maili.** Job zapisywałby wiadomość w tabeli w tej samej transakcji co dane, a osobny proces wysyłałby ją z ponawianiem. Dziś chwilowa niedostępność serwera SMTP oznacza utratę podsumowania z danego dnia.
 
