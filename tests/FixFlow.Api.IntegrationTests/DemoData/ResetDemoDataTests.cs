@@ -8,6 +8,7 @@ using FixFlow.Api.Common.Persistence.Seeding;
 using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Clients;
+using FixFlow.Api.Domain.Photos;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.Clients;
@@ -15,6 +16,7 @@ using FixFlow.Api.Features.DemoData;
 using FixFlow.Api.Features.DemoData.ResetDemoData;
 using FixFlow.Api.IntegrationTests.Auth;
 using FixFlow.Api.IntegrationTests.Clients;
+using FixFlow.Api.IntegrationTests.Photos;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -37,6 +39,7 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
             var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
             seededClientIds = await dbContext.Clients.Select(client => client.Id).ToListAsync(cancellationToken);
             dbContext.Clients.Add(Client.Create("Visitor client", new Address("Street", "1", "00-001", "City"), "Contact", "123456789", null, DateTimeOffset.UtcNow));
+            dbContext.Photos.Add(Photo.Create(Guid.CreateVersion7(), accountCreatedByAdmin.Id, PhotoRequests.Jpeg(), DateTimeOffset.UtcNow).Value);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
@@ -50,6 +53,7 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
         clientIds.ShouldNotContain(clientId => seededClientIds.Contains(clientId));
         (await verificationDbContext.WorkOrders.CountAsync(cancellationToken)).ShouldBe(23);
         (await verificationDbContext.Parts.CountAsync(cancellationToken)).ShouldBe(11);
+        (await verificationDbContext.Photos.AnyAsync(cancellationToken)).ShouldBeFalse();
         (await verificationDbContext.Users.AnyAsync(user => user.Id == accountCreatedByAdmin.Id, cancellationToken)).ShouldBeTrue();
     }
 

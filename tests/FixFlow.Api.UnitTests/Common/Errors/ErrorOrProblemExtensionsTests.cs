@@ -1,6 +1,7 @@
 using ErrorOr;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Errors;
+using FixFlow.Api.Domain.Photos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -53,6 +54,14 @@ public sealed class ErrorOrProblemExtensionsTests
 
         failed.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status412PreconditionFailed);
         required.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status428PreconditionRequired);
+    }
+
+    [Fact]
+    public void Should_Map_Photo_Content_Too_Large_Error_To_413_When_Error_Is_Photo_Size_Error()
+    {
+        var result = new[] { PhotoErrors.ContentTooLarge }.ToProblem();
+
+        result.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status413PayloadTooLarge);
     }
 
     [Fact]
