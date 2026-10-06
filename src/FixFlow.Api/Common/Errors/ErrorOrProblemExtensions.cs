@@ -35,8 +35,7 @@ public static class ErrorOrProblemExtensions
         ErrorType.Conflict => StatusCodes.Status409Conflict,
         _ when (int)errorType is PreconditionErrors.FailedType
             or PreconditionErrors.RequiredType
-            or PhotoErrors.ContentTooLargeType
-            or PhotoErrors.UnsupportedMediaTypeType => (int)errorType,
+            or PhotoErrors.ContentTooLargeType => (int)errorType,
         _ => StatusCodes.Status500InternalServerError,
     };
 }

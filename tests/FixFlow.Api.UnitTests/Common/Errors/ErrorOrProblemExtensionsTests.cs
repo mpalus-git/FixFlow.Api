@@ -57,13 +57,11 @@ public sealed class ErrorOrProblemExtensionsTests
     }
 
     [Fact]
-    public void Should_Map_Photo_Content_Errors_To_413_And_415_When_Errors_Are_Photo_Content_Errors()
+    public void Should_Map_Photo_Content_Too_Large_Error_To_413_When_Error_Is_Photo_Size_Error()
     {
-        var tooLarge = new[] { PhotoErrors.ContentTooLarge }.ToProblem();
-        var unsupportedMediaType = new[] { PhotoErrors.UnsupportedMediaType }.ToProblem();
+        var result = new[] { PhotoErrors.ContentTooLarge }.ToProblem();
 
-        tooLarge.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status413PayloadTooLarge);
-        unsupportedMediaType.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status415UnsupportedMediaType);
+        result.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status413PayloadTooLarge);
     }
 
     [Fact]
