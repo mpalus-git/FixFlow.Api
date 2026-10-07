@@ -1,4 +1,3 @@
-using FixFlow.Api.Common.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace FixFlow.Api.Common.Health;
@@ -14,7 +13,7 @@ public static class HealthCheckExtensions
     public static IServiceCollection AddApplicationHealthChecks(this IServiceCollection services)
     {
         services.AddHealthChecks()
-            .AddDbContextCheck<FixFlowDbContext>(tags: [ReadinessTag]);
+            .AddCheck<DatabaseHealthCheck>("Database", tags: [ReadinessTag]);
 
         return services;
     }
