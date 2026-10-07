@@ -3,6 +3,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.Dashboard.GetDashboardSummary;
@@ -44,11 +45,7 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
 
     private async Task<List<WorkOrderStatusCountResponse>> CountWorkOrdersByStatusAsync(CancellationToken cancellationToken)
     {
-        var counts = await dbContext.WorkOrders
-            .AsNoTracking()
-            .GroupBy(workOrder => workOrder.Status)
-            .Select(group => new { Status = group.Key, Count = group.Count() })
-            .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
+        var counts = await dbContext.WorkOrders.CountByStatusAsync(cancellationToken);
 
         return [.. LifecycleStatuses.Select(status => new WorkOrderStatusCountResponse(status, counts.GetValueOrDefault(status)))];
     }

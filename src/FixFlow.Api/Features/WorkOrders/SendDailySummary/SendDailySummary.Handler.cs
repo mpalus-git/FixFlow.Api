@@ -50,11 +50,7 @@ public sealed partial class SendDailySummaryHandler(
 
     private async Task<List<WorkOrderStatusCount>> CountWorkOrdersByStatusAsync(CancellationToken cancellationToken)
     {
-        var counts = await dbContext.WorkOrders
-            .AsNoTracking()
-            .GroupBy(workOrder => workOrder.Status)
-            .Select(group => new { Status = group.Key, Count = group.Count() })
-            .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
+        var counts = await dbContext.WorkOrders.CountByStatusAsync(cancellationToken);
 
         return [.. ReportedStatuses.Select(status => new WorkOrderStatusCount(status, counts.GetValueOrDefault(status)))];
     }
