@@ -5,6 +5,8 @@ namespace FixFlow.Api.Features.Photos;
 
 public static class PhotosModule
 {
+    public const string JpegMediaType = "image/jpeg";
+
     public static IServiceCollection AddPhotosFeatures(this IServiceCollection services)
     {
         services.AddScoped<UploadPhotoHandler>();

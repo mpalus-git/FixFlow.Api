@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
         builder.ToTable("refresh_tokens");
         builder.HasKey(token => token.Id);
         builder.Property(token => token.Id).ValueGeneratedNever();
-        builder.Property<uint>("Version").IsRowVersion();
+        builder.Property<uint>(EntityTag.VersionProperty).IsRowVersion();
         builder.Property(token => token.TokenHash).HasMaxLength(64);
         builder.HasIndex(token => token.TokenHash).IsUnique();
         builder.HasIndex(token => token.FamilyId);

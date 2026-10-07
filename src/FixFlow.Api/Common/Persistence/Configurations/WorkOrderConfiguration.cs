@@ -1,3 +1,4 @@
+using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
@@ -15,7 +16,7 @@ public sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
         builder.ToTable("work_orders");
         builder.HasKey(workOrder => workOrder.Id);
         builder.Property(workOrder => workOrder.Id).ValueGeneratedNever();
-        builder.Property<uint>("Version").IsRowVersion();
+        builder.Property<uint>(EntityTag.VersionProperty).IsRowVersion();
         builder.Property(workOrder => workOrder.Number).HasMaxLength(WorkOrderNumber.MaxLength);
         builder.HasIndex(workOrder => workOrder.Number).IsUnique();
         builder.Property(workOrder => workOrder.Description).HasMaxLength(2000);
