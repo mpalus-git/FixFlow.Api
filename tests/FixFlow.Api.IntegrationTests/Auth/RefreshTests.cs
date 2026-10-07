@@ -5,6 +5,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Auth;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -82,6 +83,35 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task Should_Reject_Refresh_When_Account_Is_Deactivated()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        using var client = Factory.CreateClient();
+        var loginTokens = await client.LoginAsync(user);
+        await DeactivateUserDirectlyAsync(user.Id);
+
+        using var response = await client.PostRefreshAsync(loginTokens.RefreshToken);
+
+        await response.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Invalid.Code);
+        (await FindTokenAsync(loginTokens.RefreshToken)).IsRevoked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_Keep_Session_Revoked_When_Deactivated_Account_Is_Activated_Again()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        using var client = Factory.CreateClient();
+        var loginTokens = await client.LoginAsync(user);
+        await DeactivateUserDirectlyAsync(user.Id);
+        using var rejectedResponse = await client.PostRefreshAsync(loginTokens.RefreshToken);
+        await ActivateUserDirectlyAsync(user.Id);
+
+        using var response = await client.PostRefreshAsync(loginTokens.RefreshToken);
+
+        await response.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Revoked.Code);
+    }
+
+    [Fact]
     public async Task Should_Return_Validation_Problem_When_Refresh_Token_Is_Empty()
     {
         using var client = Factory.CreateClient();
@@ -110,6 +140,15 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
         await firstContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await Should.ThrowAsync<DbUpdateConcurrencyException>(() => secondContext.SaveChangesAsync(TestContext.Current.CancellationToken));
+    }
+
+    private async Task ActivateUserDirectlyAsync(Guid userId)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = (await userManager.FindByIdAsync(userId.ToString())).ShouldNotBeNull();
+        user.Activate();
+        (await userManager.UpdateAsync(user)).Succeeded.ShouldBeTrue();
     }
 
     private async Task<RefreshToken> FindTokenAsync(string secret)

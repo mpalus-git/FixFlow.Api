@@ -15,7 +15,7 @@ public static class RefreshEndpoint
             })
             .WithName("RefreshTokens")
             .WithSummary("Exchange a refresh token for a new token pair")
-            .WithDescription("Rotates the refresh token: the submitted token is revoked and a new access token and refresh token are returned. Submitting a refresh token that was already used revokes every token of that session, which forces the user to log in again. Requests are rate limited per client IP address.")
+            .WithDescription("Rotates the refresh token: the submitted token is revoked and a new access token and refresh token are returned. Submitting a refresh token that was already used revokes every token of that session, which forces the user to log in again. A refresh token of a deactivated account is rejected and its session is revoked. Requests are rate limited per client IP address.")
             .AllowAnonymous()
             .RequireRateLimiting(AuthRateLimiting.PolicyName)
             .WithRequestValidation<RefreshRequest>()

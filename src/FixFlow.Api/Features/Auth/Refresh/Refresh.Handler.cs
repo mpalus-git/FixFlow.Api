@@ -32,6 +32,12 @@ public sealed class RefreshHandler(
             return RefreshTokenErrors.Invalid;
         }
 
+        if (!user.IsActive)
+        {
+            await dbContext.RevokeRefreshTokenFamilyAsync(currentToken.FamilyId, now, cancellationToken);
+            return RefreshTokenErrors.Invalid;
+        }
+
         var replacementSecret = RefreshTokenSecret.Generate();
         var rotation = currentToken.Rotate(RefreshTokenSecret.Hash(replacementSecret), now, jwtOptions.Value.RefreshTokenLifetime);
         if (rotation.IsError)
