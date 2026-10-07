@@ -1,4 +1,5 @@
 using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,12 @@ public sealed class WorkOrderRow
 
     public required string ClientName { get; init; }
 
+    public required Address ClientAddress { get; init; }
+
+    public required string ClientContactPerson { get; init; }
+
+    public required string ClientPhone { get; init; }
+
     public string? TechnicianEmail { get; init; }
 
     public string? TechnicianName { get; init; }
@@ -27,6 +34,9 @@ public sealed class WorkOrderRow
         DeviceModel = DeviceModel,
         ClientId = ClientId,
         ClientName = ClientName,
+        ClientAddress = ClientAddress,
+        ClientContactPerson = ClientContactPerson,
+        ClientPhone = ClientPhone,
         TechnicianEmail = technician?.Email,
         TechnicianName = technician?.FullName,
     };
@@ -57,6 +67,9 @@ public static class WorkOrderRows
             DeviceModel = device.Model,
             ClientId = client.Id,
             ClientName = client.Name,
+            ClientAddress = client.Address,
+            ClientContactPerson = client.ContactPerson,
+            ClientPhone = client.Phone,
             TechnicianEmail = technician == null ? null : technician.Email,
             TechnicianName = technician == null ? null : technician.FullName,
         };

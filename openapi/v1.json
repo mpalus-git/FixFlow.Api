@@ -1836,7 +1836,7 @@
           "WorkOrders"
         ],
         "summary": "List work orders",
-        "description": "Returns one page of work orders sorted by the requested field and direction, by default by due date ascending, with ties ordered by identifier so that pages neither skip nor repeat work orders. Each work order comes with the serial number and model of the device, the client name and the technician email. The list can be filtered by one or more statuses, technician, device, client, overdue flag and due date range, and searched by a fragment of the work order number, description, serial number or client name. Technicians only see work orders assigned to them.",
+        "description": "Returns one page of work orders sorted by the requested field and direction, by default by due date ascending, with ties ordered by identifier so that pages neither skip nor repeat work orders. Each work order comes with the serial number and model of the device, the client name, address and contact details, and the technician name and email. The list can be filtered by one or more statuses, technician, device, client, overdue flag and due date range, and searched by a fragment of the work order number, description, serial number or client name. Technicians only see work orders assigned to them.",
         "operationId": "ListWorkOrders",
         "parameters": [
           {
@@ -5349,6 +5349,9 @@
           "deviceModel",
           "clientId",
           "clientName",
+          "clientAddress",
+          "clientContactPerson",
+          "clientPhone",
           "description",
           "priority",
           "status",
@@ -5394,6 +5397,18 @@
           "clientName": {
             "type": "string",
             "description": "Name of the client owning the device."
+          },
+          "clientAddress": {
+            "description": "Postal address of the client, where the device is serviced.",
+            "$ref": "#/components/schemas/ClientAddress"
+          },
+          "clientContactPerson": {
+            "type": "string",
+            "description": "Contact person at the client."
+          },
+          "clientPhone": {
+            "type": "string",
+            "description": "Contact phone number of the client."
           },
           "description": {
             "type": "string",
@@ -5489,6 +5504,9 @@
           "deviceModel",
           "clientId",
           "clientName",
+          "clientAddress",
+          "clientContactPerson",
+          "clientPhone",
           "description",
           "priority",
           "status",
@@ -5534,6 +5552,18 @@
           "clientName": {
             "type": "string",
             "description": "Name of the client owning the device."
+          },
+          "clientAddress": {
+            "description": "Postal address of the client, where the device is serviced.",
+            "$ref": "#/components/schemas/ClientAddress"
+          },
+          "clientContactPerson": {
+            "type": "string",
+            "description": "Contact person at the client."
+          },
+          "clientPhone": {
+            "type": "string",
+            "description": "Contact phone number of the client."
           },
           "description": {
             "type": "string",

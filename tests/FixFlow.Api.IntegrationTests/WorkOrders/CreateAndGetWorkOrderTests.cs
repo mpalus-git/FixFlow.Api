@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.IntegrationTests.Clients;
+using FixFlow.Api.IntegrationTests.Devices;
 
 namespace FixFlow.Api.IntegrationTests.WorkOrders;
 
@@ -92,6 +94,21 @@ public sealed class CreateAndGetWorkOrderTests(FixFlowApiFactory factory) : Inte
         var fetchedWorkOrder = await client.GetWorkOrderAsync(createdWorkOrder.Id);
 
         fetchedWorkOrder.ShouldBe(createdWorkOrder);
+    }
+
+    [Fact]
+    public async Task Should_Return_Client_Contact_Details_When_Work_Order_Is_Fetched()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var owner = await client.CreateClientAsync(ClientRequests.NewClient("Hotel Pod Lipami"));
+        var device = await client.CreateDeviceAsync(DeviceRequests.NewDevice(owner.Id, "SN-CONTACT-1"));
+        var createdWorkOrder = await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(device.Id));
+
+        var fetchedWorkOrder = await client.GetWorkOrderAsync(createdWorkOrder.Id);
+
+        fetchedWorkOrder.ClientAddress.ShouldBe(owner.Address);
+        fetchedWorkOrder.ClientContactPerson.ShouldBe(owner.ContactPerson);
+        fetchedWorkOrder.ClientPhone.ShouldBe(owner.Phone);
     }
 
     [Fact]

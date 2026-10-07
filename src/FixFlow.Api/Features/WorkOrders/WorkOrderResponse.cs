@@ -2,6 +2,7 @@ using System.ComponentModel;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.Clients;
 
 namespace FixFlow.Api.Features.WorkOrders;
 
@@ -14,6 +15,9 @@ public sealed record WorkOrderResponse(
     [property: Description("Model of the serviced device.")] string DeviceModel,
     [property: Description("Identifier of the client owning the device.")] Guid ClientId,
     [property: Description("Name of the client owning the device.")] string ClientName,
+    [property: Description("Postal address of the client, where the device is serviced.")] ClientAddress ClientAddress,
+    [property: Description("Contact person at the client.")] string ClientContactPerson,
+    [property: Description("Contact phone number of the client.")] string ClientPhone,
     [property: Description("Description of the fault.")] string Description,
     [property: Description("Priority of the work order.")] WorkOrderPriority Priority,
     [property: Description("Current status. Allowed transitions: New -> Assigned -> InProgress -> Completed -> Invoiced, and Assigned -> New when the technician is unassigned.")] WorkOrderStatus Status,
@@ -35,6 +39,9 @@ public sealed record WorkOrderResponse(
         row.DeviceModel,
         row.ClientId,
         row.ClientName,
+        ClientAddress.FromDomain(row.ClientAddress),
+        row.ClientContactPerson,
+        row.ClientPhone,
         row.WorkOrder.Description,
         row.WorkOrder.Priority,
         row.WorkOrder.Status,
