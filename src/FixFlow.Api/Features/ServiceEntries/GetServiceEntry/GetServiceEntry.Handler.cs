@@ -28,7 +28,7 @@ public sealed class GetServiceEntryHandler(FixFlowDbContext dbContext)
             return ServiceEntryErrors.NotFound;
         }
 
-        var responses = await dbContext.ToServiceEntryResponsesAsync([entry], cancellationToken);
+        var responses = await dbContext.ToServiceEntryResponsesAsync([entry], [], cancellationToken);
         return responses.Single();
     }
 }

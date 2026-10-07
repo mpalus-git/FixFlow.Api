@@ -1,3 +1,4 @@
+using ErrorOr;
 using FixFlow.Api.Common.Caching;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
@@ -8,7 +9,7 @@ namespace FixFlow.Api.Features.Clients.CreateClient;
 
 public sealed class CreateClientHandler(FixFlowDbContext dbContext, TimeProvider timeProvider, HybridCache cache)
 {
-    public async Task<Versioned<ClientResponse>> HandleAsync(CreateClientRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<ClientResponse>>> HandleAsync(CreateClientRequest request, CancellationToken cancellationToken)
     {
         var client = Client.Create(
             request.Name,

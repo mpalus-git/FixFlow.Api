@@ -10,8 +10,8 @@ public static class CreateClientEndpoint
     {
         group.MapPost("/", async (CreateClientRequest request, CreateClientHandler handler, CancellationToken cancellationToken) =>
             {
-                var client = await handler.HandleAsync(request, cancellationToken);
-                return TypedResults.Created($"/api/v1/clients/{client.Value.Id}", client.Value).WithETag(client.Version);
+                var result = await handler.HandleAsync(request, cancellationToken);
+                return result.ToCreatedWithETagOrProblem(client => $"/api/v1/clients/{client.Id}");
             })
             .WithName("CreateClient")
             .WithSummary("Create a client")

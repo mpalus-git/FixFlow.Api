@@ -10,8 +10,6 @@ namespace FixFlow.Api.Features.Photos.UploadPhoto;
 
 public sealed class UploadPhotoHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public const string JpegMediaType = "image/jpeg";
-
     private const int ReadChunkSize = 64 * 1024;
 
     public async Task<ErrorOr<UploadedPhoto>> HandleAsync(Guid photoId, HttpRequest request, ClaimsPrincipal user, CancellationToken cancellationToken)

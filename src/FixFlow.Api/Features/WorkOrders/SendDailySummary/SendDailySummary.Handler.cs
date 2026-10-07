@@ -38,12 +38,9 @@ public sealed partial class SendDailySummaryHandler(
 
     private async Task<List<string>> GetRecipientsAsync(CancellationToken cancellationToken)
     {
-        var emails = await (
-            from user in dbContext.Users.AsNoTracking()
-            join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-            join role in dbContext.Roles on userRole.RoleId equals role.Id
-            where (role.Name == Roles.Dispatcher || role.Name == Roles.Admin) && user.Email != null
-            select user.Email)
+        var emails = await dbContext.UsersWithRoles()
+            .Where(candidate => (candidate.RoleName == Roles.Dispatcher || candidate.RoleName == Roles.Admin) && candidate.User.Email != null)
+            .Select(candidate => candidate.User.Email)
             .Distinct()
             .OrderBy(email => email)
             .ToListAsync(cancellationToken);
@@ -53,11 +50,7 @@ public sealed partial class SendDailySummaryHandler(
 
     private async Task<List<WorkOrderStatusCount>> CountWorkOrdersByStatusAsync(CancellationToken cancellationToken)
     {
-        var counts = await dbContext.WorkOrders
-            .AsNoTracking()
-            .GroupBy(workOrder => workOrder.Status)
-            .Select(group => new { Status = group.Key, Count = group.Count() })
-            .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
+        var counts = await dbContext.WorkOrders.CountByStatusAsync(cancellationToken);
 
         return [.. ReportedStatuses.Select(status => new WorkOrderStatusCount(status, counts.GetValueOrDefault(status)))];
     }

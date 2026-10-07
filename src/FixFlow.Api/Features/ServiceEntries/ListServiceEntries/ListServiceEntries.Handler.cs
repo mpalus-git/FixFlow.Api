@@ -26,6 +26,6 @@ public sealed class ListServiceEntriesHandler(FixFlowDbContext dbContext)
             .ThenBy(entry => entry.Id)
             .ToListAsync(cancellationToken);
 
-        return await dbContext.ToServiceEntryResponsesAsync(entries, cancellationToken);
+        return await dbContext.ToServiceEntryResponsesAsync(entries, [], cancellationToken);
     }
 }

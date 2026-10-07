@@ -15,10 +15,13 @@ public sealed record UserResponse(
 public static class UserResponses
 {
     public static Task<UserResponse?> FindUserResponseAsync(this FixFlowDbContext dbContext, Guid userId, CancellationToken cancellationToken) =>
-        (from user in dbContext.Users.AsNoTracking()
-         join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-         join role in dbContext.Roles on userRole.RoleId equals role.Id
-         where user.Id == userId
-         select new UserResponse(user.Id, user.Email!, user.FullName, role.Name!, user.DeactivatedAt == null))
+        dbContext.UsersWithRoles()
+            .Where(candidate => candidate.User.Id == userId)
+            .Select(candidate => new UserResponse(
+                candidate.User.Id,
+                candidate.User.Email!,
+                candidate.User.FullName,
+                candidate.RoleName,
+                candidate.User.DeactivatedAt == null))
             .SingleOrDefaultAsync(cancellationToken);
 }

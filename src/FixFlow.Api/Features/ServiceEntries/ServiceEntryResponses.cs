@@ -1,4 +1,5 @@
 using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Domain.Parts;
 using FixFlow.Api.Domain.ServiceEntries;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +10,27 @@ public static class ServiceEntryResponses
     public static async Task<List<ServiceEntryResponse>> ToServiceEntryResponsesAsync(
         this FixFlowDbContext dbContext,
         IReadOnlyCollection<ServiceEntry> entries,
+        IReadOnlyCollection<Part> loadedParts,
         CancellationToken cancellationToken)
     {
-        var partIds = entries.SelectMany(entry => entry.Parts).Select(part => part.PartId).Distinct().ToList();
-        var parts = await dbContext.Parts
-            .AsNoTracking()
-            .Where(part => partIds.Contains(part.Id))
-            .ToDictionaryAsync(part => part.Id, cancellationToken);
+        var parts = loadedParts.ToDictionary(part => part.Id);
+        var missingPartIds = entries
+            .SelectMany(entry => entry.Parts)
+            .Select(part => part.PartId)
+            .Distinct()
+            .Where(partId => !parts.ContainsKey(partId))
+            .ToList();
+        if (missingPartIds.Count > 0)
+        {
+            var missingParts = await dbContext.Parts
+                .AsNoTracking()
+                .Where(part => missingPartIds.Contains(part.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var part in missingParts)
+            {
+                parts.Add(part.Id, part);
+            }
+        }
 
         var technicianIds = entries.Select(entry => entry.TechnicianId).Distinct().ToList();
         var technicianNames = await dbContext.Users

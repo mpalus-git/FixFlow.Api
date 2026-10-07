@@ -1,6 +1,5 @@
 using FixFlow.Api.Common.Pagination;
 using FixFlow.Api.Common.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.Users.ListUsers;
 
@@ -8,11 +7,15 @@ public sealed class ListUsersHandler(FixFlowDbContext dbContext)
 {
     public Task<PagedResponse<UserResponse>> HandleAsync(ListUsersRequest request, CancellationToken cancellationToken)
     {
-        var query =
-            from user in dbContext.Users.AsNoTracking()
-            join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-            join role in dbContext.Roles on userRole.RoleId equals role.Id
-            select new { user.Id, Email = user.Email!, user.FullName, Role = role.Name!, IsActive = user.DeactivatedAt == null };
+        var query = dbContext.UsersWithRoles()
+            .Select(candidate => new
+            {
+                candidate.User.Id,
+                Email = candidate.User.Email!,
+                candidate.User.FullName,
+                Role = candidate.RoleName,
+                IsActive = candidate.User.DeactivatedAt == null,
+            });
 
         if (request.Role is not null)
         {

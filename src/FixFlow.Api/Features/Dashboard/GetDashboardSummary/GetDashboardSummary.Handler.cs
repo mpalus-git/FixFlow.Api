@@ -3,6 +3,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.Dashboard.GetDashboardSummary;
@@ -44,11 +45,7 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
 
     private async Task<List<WorkOrderStatusCountResponse>> CountWorkOrdersByStatusAsync(CancellationToken cancellationToken)
     {
-        var counts = await dbContext.WorkOrders
-            .AsNoTracking()
-            .GroupBy(workOrder => workOrder.Status)
-            .Select(group => new { Status = group.Key, Count = group.Count() })
-            .ToDictionaryAsync(item => item.Status, item => item.Count, cancellationToken);
+        var counts = await dbContext.WorkOrders.CountByStatusAsync(cancellationToken);
 
         return [.. LifecycleStatuses.Select(status => new WorkOrderStatusCountResponse(status, counts.GetValueOrDefault(status)))];
     }
@@ -58,13 +55,11 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
         DateTimeOffset nextWeekStart,
         CancellationToken cancellationToken)
     {
-        var technicians = await (
-            from user in dbContext.Users.AsNoTracking()
-            join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-            join role in dbContext.Roles on userRole.RoleId equals role.Id
-            where role.Name == Roles.Technician && user.DeactivatedAt == null && user.Email != null
-            orderby user.FullName, user.Email
-            select new { user.Id, Email = user.Email!, user.FullName })
+        var technicians = await dbContext.UsersWithRoles()
+            .Where(candidate => candidate.RoleName == Roles.Technician && candidate.User.DeactivatedAt == null && candidate.User.Email != null)
+            .OrderBy(candidate => candidate.User.FullName)
+            .ThenBy(candidate => candidate.User.Email)
+            .Select(candidate => new { candidate.User.Id, Email = candidate.User.Email!, candidate.User.FullName })
             .ToListAsync(cancellationToken);
 
         var workloads = await dbContext.WorkOrders
