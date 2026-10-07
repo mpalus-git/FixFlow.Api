@@ -6,6 +6,7 @@ using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.Dashboard.GetDashboardSummary;
 using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
+using FixFlow.Api.IntegrationTests.Parts;
 using FixFlow.Api.IntegrationTests.WorkOrders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -39,6 +40,7 @@ public sealed class GetDashboardSummaryTests(FixFlowApiFactory factory) : Integr
         summary.StatusCounts.Select(item => item.Status).ShouldBe(LifecycleStatuses);
         summary.StatusCounts.ShouldAllBe(item => item.Count == 0);
         summary.OverdueCount.ShouldBe(0);
+        summary.OutOfStockPartCount.ShouldBe(0);
         summary.Technicians.ShouldBeEmpty();
         summary.GeneratedAt.ShouldBeGreaterThanOrEqualTo(requestedAt.AddSeconds(-1));
         summary.WeekStart.ShouldBe(BusinessTime.StartOfWeek(summary.GeneratedAt));
@@ -92,6 +94,20 @@ public sealed class GetDashboardSummaryTests(FixFlowApiFactory factory) : Integr
         var overdueList = await client.ListWorkOrdersAsync("?isOverdue=true");
         summary.OverdueCount.ShouldBe(1);
         summary.OverdueCount.ShouldBe(overdueList.TotalCount);
+    }
+
+    [Fact]
+    public async Task Should_Count_Only_Active_Parts_Out_Of_Stock_When_Summary_Is_Requested()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        await client.CreatePartAsync(PartRequests.NewPart("OUT-1") with { StockQuantity = 0 });
+        await client.CreatePartAsync(PartRequests.NewPart("IN-1") with { StockQuantity = 5 });
+        var archivedPart = await client.CreatePartAsync(PartRequests.NewPart("OUT-ARCHIVED") with { StockQuantity = 0 });
+        await client.ArchivePartAsync(archivedPart.Id);
+
+        var summary = await GetSummaryAsync(client);
+
+        summary.OutOfStockPartCount.ShouldBe(1);
     }
 
     [Fact]

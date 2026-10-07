@@ -26,6 +26,20 @@ public sealed class ListPartsTests(FixFlowApiFactory factory) : IntegrationTestB
         page.TotalCount.ShouldBe(5);
     }
 
+    [Theory]
+    [InlineData(true, "FLT-IN")]
+    [InlineData(false, "FLT-OUT")]
+    public async Task Should_List_Parts_By_Stock_Availability_When_Stock_Filter_Is_Provided(bool inStock, string expectedCatalogNumber)
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        await client.CreatePartAsync(PartRequests.NewPart("FLT-IN") with { StockQuantity = 3 });
+        await client.CreatePartAsync(PartRequests.NewPart("FLT-OUT") with { StockQuantity = 0 });
+
+        var page = await GetPageAsync(client, $"?inStock={inStock.ToString().ToLowerInvariant()}");
+
+        page.Items.Select(item => item.CatalogNumber).ShouldBe([expectedCatalogNumber]);
+    }
+
     [Fact]
     public async Task Should_Return_Total_Count_When_Last_Page_Is_Partial()
     {

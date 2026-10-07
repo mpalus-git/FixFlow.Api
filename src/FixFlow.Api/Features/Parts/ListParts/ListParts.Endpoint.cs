@@ -11,7 +11,7 @@ public static class ListPartsEndpoint
                 TypedResults.Ok(await handler.HandleAsync(request, cancellationToken)))
             .WithName("ListParts")
             .WithSummary("List active parts")
-            .WithDescription("Returns one page of active parts with their current stock quantities, ordered by name and catalog number. Archived parts are not listed. The optional search matches a fragment of the name or catalog number regardless of letter case.")
+            .WithDescription("Returns one page of active parts with their current stock quantities, ordered by name and catalog number. Archived parts are not listed. The optional search matches a fragment of the name or catalog number regardless of letter case, and the optional stock filter limits the list to parts in stock or out of stock.")
             .WithRequestValidation<ListPartsRequest>()
             .Produces<PagedResponse<PartResponse>>()
             .ProducesProblem(StatusCodes.Status401Unauthorized);
