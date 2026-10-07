@@ -79,7 +79,8 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
                 : saving.Errors;
         }
 
-        return await ToAddedServiceEntryAsync(creation.Value, wasAlreadyAdded: false, cancellationToken);
+        var usedParts = partUsages.Value.ConvertAll(usage => usage.Part);
+        return await ToAddedServiceEntryAsync(creation.Value, wasAlreadyAdded: false, usedParts, cancellationToken);
     }
 
     private async Task<ErrorOr<Success>> SaveChangesAsync(CancellationToken cancellationToken)
@@ -110,12 +111,16 @@ public sealed class AddServiceEntryHandler(FixFlowDbContext dbContext, TimeProvi
             return retry.Errors;
         }
 
-        return await ToAddedServiceEntryAsync(existingEntry, wasAlreadyAdded: true, cancellationToken);
+        return await ToAddedServiceEntryAsync(existingEntry, wasAlreadyAdded: true, [], cancellationToken);
     }
 
-    private async Task<AddedServiceEntry> ToAddedServiceEntryAsync(ServiceEntry entry, bool wasAlreadyAdded, CancellationToken cancellationToken)
+    private async Task<AddedServiceEntry> ToAddedServiceEntryAsync(
+        ServiceEntry entry,
+        bool wasAlreadyAdded,
+        IReadOnlyCollection<Part> loadedParts,
+        CancellationToken cancellationToken)
     {
-        var responses = await dbContext.ToServiceEntryResponsesAsync([entry], cancellationToken);
+        var responses = await dbContext.ToServiceEntryResponsesAsync([entry], loadedParts, cancellationToken);
         return new AddedServiceEntry(responses.Single(), wasAlreadyAdded);
     }
 
