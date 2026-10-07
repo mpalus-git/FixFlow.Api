@@ -351,7 +351,7 @@
           "Users"
         ],
         "summary": "Get the current user account",
-        "description": "Returns the identifier, email and role of the account that owns the access token. Available to every signed-in user.",
+        "description": "Returns the identifier, email, full name, role and active status of the account that owns the access token. Available to every signed-in user.",
         "operationId": "GetCurrentUser",
         "responses": {
           "200": {
@@ -3777,7 +3777,7 @@
           "Dashboard"
         ],
         "summary": "Get dashboard summary",
-        "description": "Returns aggregated work order counts read from a single consistent database snapshot: the number of work orders in each status in lifecycle order (including zeros), the number of work orders flagged as overdue (the same criterion as the isOverdue=true filter of the work order list), and the workload of every active technician sorted by email, including technicians without work orders. The current week runs from Monday to Sunday in the Europe/Warsaw time zone; its bounds are returned as calendar dates usable as dueFrom and dueTo of the work order list. Available to dispatchers and administrators.",
+        "description": "Returns aggregated work order counts read from a single consistent database snapshot: the number of work orders in each status in lifecycle order (including zeros), the number of work orders flagged as overdue (the same criterion as the isOverdue=true filter of the work order list), and the workload of every active technician sorted by full name and email, including technicians without work orders. The current week runs from Monday to Sunday in the Europe/Warsaw time zone; its bounds are returned as calendar dates usable as dueFrom and dueTo of the work order list. Available to dispatchers and administrators.",
         "operationId": "GetDashboardSummary",
         "responses": {
           "200": {

@@ -14,7 +14,7 @@ public static class GetCurrentUserEndpoint
             })
             .WithName("GetCurrentUser")
             .WithSummary("Get the current user account")
-            .WithDescription("Returns the identifier, email and role of the account that owns the access token. Available to every signed-in user.")
+            .WithDescription("Returns the identifier, email, full name, role and active status of the account that owns the access token. Available to every signed-in user.")
             .RequireAuthorization()
             .Produces<UserResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
