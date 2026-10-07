@@ -73,6 +73,18 @@ public sealed class PhotoTests
         photo.EnsureIsRetryOf(Guid.NewGuid()).FirstError.ShouldBe(PhotoErrors.IdConflict);
     }
 
+    [Fact]
+    public void Should_Accept_Upload_When_Technician_Is_Below_Daily_Limit()
+    {
+        Photo.EnsureWithinDailyLimit(Photo.MaxDailyUploadsPerTechnician - 1).IsError.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_Reject_Upload_When_Technician_Reached_Daily_Limit()
+    {
+        Photo.EnsureWithinDailyLimit(Photo.MaxDailyUploadsPerTechnician).FirstError.ShouldBe(PhotoErrors.DailyLimitExceeded);
+    }
+
     private static byte[] JpegOfSize(int size)
     {
         var content = new byte[size];

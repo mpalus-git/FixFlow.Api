@@ -126,6 +126,68 @@ public sealed class UploadPhotoTests(FixFlowApiFactory factory) : IntegrationTes
         await response.ShouldBeValidationProblemAsync("content");
     }
 
+    [Fact]
+    public async Task Should_Return_Conflict_Problem_When_Daily_Photo_Limit_Is_Reached()
+    {
+        var technician = await CreateUserAsync(Roles.Technician);
+        using var client = await CreateAuthenticatedClientAsync(technician);
+        await StorePhotosDirectlyAsync(technician.Id, Photo.MaxDailyUploadsPerTechnician, DateTimeOffset.UtcNow.AddHours(-23));
+
+        using var response = await client.PutPhotoAsync(Guid.CreateVersion7(), PhotoRequests.Jpeg());
+
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, PhotoErrors.DailyLimitExceeded.Code);
+        (await LoadStoredContentsAsync()).Count.ShouldBe(Photo.MaxDailyUploadsPerTechnician);
+    }
+
+    [Fact]
+    public async Task Should_Store_Photo_When_Earlier_Photos_Are_Older_Than_Daily_Limit_Window()
+    {
+        var technician = await CreateUserAsync(Roles.Technician);
+        using var client = await CreateAuthenticatedClientAsync(technician);
+        await StorePhotosDirectlyAsync(technician.Id, Photo.MaxDailyUploadsPerTechnician, DateTimeOffset.UtcNow.AddHours(-25));
+
+        using var response = await client.PutPhotoAsync(Guid.CreateVersion7(), PhotoRequests.Jpeg());
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Should_Store_Photo_When_Another_Technician_Reached_Daily_Limit()
+    {
+        var otherTechnician = await CreateUserAsync(Roles.Technician);
+        await StorePhotosDirectlyAsync(otherTechnician.Id, Photo.MaxDailyUploadsPerTechnician, DateTimeOffset.UtcNow.AddHours(-1));
+        using var client = await CreateAuthenticatedClientAsync(Roles.Technician);
+
+        using var response = await client.PutPhotoAsync(Guid.CreateVersion7(), PhotoRequests.Jpeg());
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Should_Return_Stored_Photo_When_Retried_After_Daily_Limit_Is_Reached()
+    {
+        var technician = await CreateUserAsync(Roles.Technician);
+        using var client = await CreateAuthenticatedClientAsync(technician);
+        var photoId = Guid.CreateVersion7();
+        using var firstResponse = await client.PutPhotoAsync(photoId, PhotoRequests.Jpeg());
+        await StorePhotosDirectlyAsync(technician.Id, Photo.MaxDailyUploadsPerTechnician, DateTimeOffset.UtcNow.AddHours(-1));
+
+        using var response = await client.PutPhotoAsync(photoId, PhotoRequests.Jpeg());
+
+        firstResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await ReadPhotoAsync(response)).Id.ShouldBe(photoId);
+    }
+
+    private async Task StorePhotosDirectlyAsync(Guid technicianId, int count, DateTimeOffset uploadedAt)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+        dbContext.Photos.AddRange(Enumerable.Range(0, count)
+            .Select(_ => Photo.Create(Guid.CreateVersion7(), technicianId, PhotoRequests.Jpeg(16), uploadedAt).Value));
+        await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
     private static async Task<PhotoResponse> ReadPhotoAsync(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<PhotoResponse>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
 

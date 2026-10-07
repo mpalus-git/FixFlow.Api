@@ -19,7 +19,7 @@ public static class UploadPhotoEndpoint
             })
             .WithName("UploadPhoto")
             .WithSummary("Upload a photo")
-            .WithDescription("Stores a JPEG photo under an identifier chosen by the client, so the photo address /api/v1/photos/{photoId} is known before the upload and can be put in photoUrls of a service entry created offline. The body is the raw image/jpeg content of at most 1048576 bytes. Available to technicians only. When the identifier was already used by the same technician, the stored photo is kept and returned with status 200, so a queued upload can be safely sent again; the content is not compared. An identifier used by another technician is rejected with a conflict.")
+            .WithDescription("Stores a JPEG photo under an identifier chosen by the client, so the photo address /api/v1/photos/{photoId} is known before the upload and can be put in photoUrls of a service entry created offline. The body is the raw image/jpeg content of at most 1048576 bytes. Available to technicians only. When the identifier was already used by the same technician, the stored photo is kept and returned with status 200, so a queued upload can be safely sent again; the content is not compared. An identifier used by another technician is rejected with a conflict. A technician can upload at most 100 new photos within any 24 hours; further uploads are rejected with a conflict, while resending an already stored photo is still accepted.")
             .RequireAuthorization(AuthorizationPolicies.TechnicianOnly)
             .Accepts<Stream>(UploadPhotoHandler.JpegMediaType)
             .Produces<PhotoResponse>()

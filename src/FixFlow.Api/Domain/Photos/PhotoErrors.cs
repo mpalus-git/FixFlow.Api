@@ -17,6 +17,10 @@ public static class PhotoErrors
         "Photo.ContentTooLarge",
         $"Photo cannot be larger than {Photo.MaxSizeBytes} bytes.");
 
+    public static readonly Error DailyLimitExceeded = Error.Conflict(
+        "Photo.DailyLimitExceeded",
+        $"A technician can upload at most {Photo.MaxDailyUploadsPerTechnician} photos within 24 hours.");
+
     public static readonly Error IdConflict = Error.Conflict(
         "Photo.IdConflict",
         "A photo with this identifier was uploaded by another technician.");
