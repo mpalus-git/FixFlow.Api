@@ -64,6 +64,18 @@ public sealed class ErrorOrProblemExtensionsTests
         result.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status413PayloadTooLarge);
     }
 
+    [Theory]
+    [InlineData(StatusCodes.Status422UnprocessableEntity, StatusCodes.Status422UnprocessableEntity)]
+    [InlineData(StatusCodes.Status503ServiceUnavailable, StatusCodes.Status503ServiceUnavailable)]
+    [InlineData(42, StatusCodes.Status500InternalServerError)]
+    [InlineData(600, StatusCodes.Status500InternalServerError)]
+    public void Should_Use_Custom_Error_Type_As_Status_Code_When_It_Is_Http_Error_Status(int customType, int expectedStatusCode)
+    {
+        var result = new[] { Error.Custom(customType, "Sample.Code", "Sample description.") }.ToProblem();
+
+        result.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(expectedStatusCode);
+    }
+
     [Fact]
     public void Should_Use_First_Error_When_Errors_Have_Mixed_Types()
     {

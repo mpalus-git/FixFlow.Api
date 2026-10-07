@@ -87,6 +87,7 @@ app.MapDemoDataEndpoints();
 if (!BuildTimeOpenApiGeneration.IsRunning)
 {
     await app.InitializeDatabaseAsync();
+    await app.SeedDemoDataAsync();
 }
 
 await app.RunAsync();

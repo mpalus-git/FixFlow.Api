@@ -23,7 +23,7 @@ public sealed class DeviceDetailsValidator : AbstractValidator<IDeviceDetails>
         RuleFor(details => details.Manufacturer).NotEmpty().MaximumLength(100);
         RuleFor(details => details.InstallationDate)
             .NotEmpty()
-            .LessThanOrEqualTo(_ => DateOnly.FromDateTime(BusinessTime.From(timeProvider.GetUtcNow()).DateTime))
+            .LessThanOrEqualTo(_ => BusinessTime.Today(timeProvider.GetUtcNow()))
             .WithMessage("Installation date cannot be in the future.");
     }
 }

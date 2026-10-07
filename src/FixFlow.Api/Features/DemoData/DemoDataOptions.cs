@@ -1,4 +1,4 @@
-namespace FixFlow.Api.Common.Persistence.Seeding;
+namespace FixFlow.Api.Features.DemoData;
 
 public sealed class DemoDataOptions
 {
