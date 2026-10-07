@@ -58,13 +58,11 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
         DateTimeOffset nextWeekStart,
         CancellationToken cancellationToken)
     {
-        var technicians = await (
-            from user in dbContext.Users.AsNoTracking()
-            join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-            join role in dbContext.Roles on userRole.RoleId equals role.Id
-            where role.Name == Roles.Technician && user.DeactivatedAt == null && user.Email != null
-            orderby user.FullName, user.Email
-            select new { user.Id, Email = user.Email!, user.FullName })
+        var technicians = await dbContext.UsersWithRoles()
+            .Where(candidate => candidate.RoleName == Roles.Technician && candidate.User.DeactivatedAt == null && candidate.User.Email != null)
+            .OrderBy(candidate => candidate.User.FullName)
+            .ThenBy(candidate => candidate.User.Email)
+            .Select(candidate => new { candidate.User.Id, Email = candidate.User.Email!, candidate.User.FullName })
             .ToListAsync(cancellationToken);
 
         var workloads = await dbContext.WorkOrders
