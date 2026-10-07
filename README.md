@@ -64,7 +64,7 @@ Po starcie dostępne są:
 | http://localhost:8080/api/v1/system/ready | readiness (z bazą) dla panelu webowego |
 | http://localhost:8025 | Mailpit, podgląd wysłanych e-maili |
 
-Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`. Przy pustej bazie powstają też dane demonstracyjne: 6 klientów, 13 urządzeń, 11 części, 18 zleceń i dwóch dodatkowych techników bez hasła, na których nie da się zalogować, ale można im przypisywać zlecenia.
+Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`. Przy pustej bazie powstają też dane demonstracyjne: 6 klientów, 13 urządzeń, 11 części (jedna z zerowym stanem magazynowym), 23 zlecenia we wszystkich statusach, w tym opóźnione i z wpisami ze zdjęciami, oraz trzech dodatkowych techników bez hasła, na których nie da się zalogować: dwóch aktywnych, którym można przypisywać zlecenia, i jednego dezaktywowanego z historią zafakturowanych zleceń.
 
 Testy wymagają .NET SDK 10 i działającego Dockera (testy integracyjne uruchamiają PostgreSQL i Redis przez Testcontainers):
 
@@ -84,7 +84,7 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `Jwt__AccessTokenLifetime` / `Jwt__RefreshTokenLifetime` | czas życia tokenów | `00:15:00` / `7.00:00:00` |
 | `Jwt__RefreshTokenReuseGracePeriod` | czas po rotacji, w którym ten sam refresh token można wymienić ponownie bez unieważnienia sesji (0 wyłącza, najwyżej 5 minut) | `00:00:30` |
 | `Cors__AllowedOrigins__0` | dozwolone originy klientów przeglądarkowych (kolejne pod `__1`, `__2`) | brak |
-| `RateLimiting__Auth__PermitLimit` / `RateLimiting__Auth__Window` | limit logowania i odświeżania tokena na adres IP | `10` / `00:01:00` |
+| `RateLimiting__Auth__PermitLimit` / `RateLimiting__Auth__Window` | limit logowania, odświeżania tokena, wylogowania i zmiany własnego hasła na adres IP | `10` / `00:01:00` |
 | `Seed__DemoUsers__Enabled` | zakładanie kont demo przy starcie | `false` |
 | `Seed__DemoUsers__AdminPassword`, `...DispatcherPassword`, `...TechnicianPassword` | hasła kont demo, wymagane przy włączonym seedzie | brak |
 | `Seed__DemoData__Enabled` | tworzenie danych demonstracyjnych przy starcie, tylko gdy baza nie zawiera żadnego klienta, i dostępność resetu danych demo; wymaga `Seed__DemoUsers__Enabled` | `false` |
