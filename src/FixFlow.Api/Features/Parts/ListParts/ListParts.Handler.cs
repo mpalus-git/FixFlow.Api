@@ -12,6 +12,13 @@ public sealed class ListPartsHandler(FixFlowDbContext dbContext)
             .AsNoTracking()
             .Where(part => part.ArchivedAt == null);
 
+        if (request.InStock is { } inStock)
+        {
+            query = inStock
+                ? query.Where(part => part.StockQuantity > 0)
+                : query.Where(part => part.StockQuantity == 0);
+        }
+
         var search = request.Search?.Trim();
         if (!string.IsNullOrEmpty(search))
         {
