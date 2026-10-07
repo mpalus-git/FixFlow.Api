@@ -4,7 +4,13 @@
 
 ## Opis systemu
 
-FixFlow to backend systemu obsługi zleceń serwisowych w terenie dla firmy naprawiającej klimatyzację i urządzenia biurowe. Dyspozytor prowadzi kartotekę klientów, urządzeń i części, tworzy zlecenia i przypisuje je technikom. Technik realizuje zlecenie w terenie: rozpoczyna pracę, dodaje wpisy serwisowe z czasem pracy, zdjęciami i zużytymi częściami, a na końcu zamyka zlecenie i pobiera protokół serwisowy w PDF. Repozytorium zawiera wyłącznie API; klienci (panel webowy React i aplikacja mobilna MAUI) korzystają z kontraktu opisanego w [openapi/v1.json](openapi/v1.json).
+FixFlow to backend systemu obsługi zleceń serwisowych w terenie dla firmy naprawiającej klimatyzację i urządzenia biurowe. Dyspozytor prowadzi kartotekę klientów, urządzeń i części, tworzy zlecenia i przypisuje je technikom. Technik realizuje zlecenie w terenie: rozpoczyna pracę, dodaje wpisy serwisowe z czasem pracy, zdjęciami i zużytymi częściami, a na końcu zamyka zlecenie i pobiera protokół serwisowy w PDF.
+
+System składa się z trzech części, a klienci korzystają z kontraktu opisanego w [openapi/v1.json](openapi/v1.json):
+
+- FixFlow.Api (to repozytorium) - backend ASP.NET Core z PostgreSQL, źródło prawdy dla reguł biznesowych i kontraktu API.
+- [FixFlow.Web](https://github.com/mpalus-git/FixFlow.Web) - panel webowy dyspozytora i administratora (React 19, TypeScript, TanStack Query).
+- [FixFlow.Mobile](https://github.com/mpalus-git/FixFlow.Mobile) - aplikacja mobilna technika (.NET MAUI 10) działająca offline z kolejką operacji wysyłanych po odzyskaniu połączenia.
 
 Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-api-us2p.onrender.com/scalar), panel dyspozytora korzystający z tego API: [fix-flow-web.vercel.app](https://fix-flow-web.vercel.app). Usługa działa na darmowym planie Render, więc pierwsze wejście po okresie bezczynności może trwać do minuty. Konta demonstracyjne:
 
