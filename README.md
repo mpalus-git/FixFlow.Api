@@ -4,7 +4,13 @@
 
 ## Opis systemu
 
-FixFlow to backend systemu obsługi zleceń serwisowych w terenie dla firmy naprawiającej klimatyzację i urządzenia biurowe. Dyspozytor prowadzi kartotekę klientów, urządzeń i części, tworzy zlecenia i przypisuje je technikom. Technik realizuje zlecenie w terenie: rozpoczyna pracę, dodaje wpisy serwisowe z czasem pracy, zdjęciami i zużytymi częściami, a na końcu zamyka zlecenie i pobiera protokół serwisowy w PDF. Repozytorium zawiera wyłącznie API; klienci (panel webowy React i aplikacja mobilna MAUI) korzystają z kontraktu opisanego w [openapi/v1.json](openapi/v1.json).
+FixFlow to backend systemu obsługi zleceń serwisowych w terenie dla firmy naprawiającej klimatyzację i urządzenia biurowe. Dyspozytor prowadzi kartotekę klientów, urządzeń i części, tworzy zlecenia i przypisuje je technikom. Technik realizuje zlecenie w terenie: rozpoczyna pracę, dodaje wpisy serwisowe z czasem pracy, zdjęciami i zużytymi częściami, a na końcu zamyka zlecenie i pobiera protokół serwisowy w PDF.
+
+System składa się z trzech części, a klienci korzystają z kontraktu opisanego w [openapi/v1.json](openapi/v1.json):
+
+- FixFlow.Api (to repozytorium) - backend ASP.NET Core z PostgreSQL, źródło prawdy dla reguł biznesowych i kontraktu API.
+- [FixFlow.Web](https://github.com/mpalus-git/FixFlow.Web) - panel webowy dyspozytora i administratora (React 19, TypeScript, TanStack Query).
+- [FixFlow.Mobile](https://github.com/mpalus-git/FixFlow.Mobile) - aplikacja mobilna technika (.NET MAUI 10) działająca offline z kolejką operacji wysyłanych po odzyskaniu połączenia.
 
 Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-api-us2p.onrender.com/scalar), panel dyspozytora korzystający z tego API: [fix-flow-web.vercel.app](https://fix-flow-web.vercel.app). Usługa działa na darmowym planie Render, więc pierwsze wejście po okresie bezczynności może trwać do minuty. Konta demonstracyjne:
 
@@ -14,6 +20,16 @@ Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-a
 | Technician | `technician@fixflow.local` | `fembag-wupker-Retfi7` |
 
 Token otrzymany z `POST /api/v1/auth/login` wkleja się w Scalar jako `Bearer`. Instancja zawiera dane demonstracyjne: fikcyjnych klientów z urządzeniami, katalog części i zlecenia we wszystkich statusach, w tym opóźnione, z wpisami serwisowymi i zużyciem części.
+
+## Zakres API
+
+- **Kartoteka.** Klienci, urządzenia i części z edycją i archiwizacją zamiast usuwania (historia zostaje), przyjęcie dostawy części na magazyn oraz historia zleceń urządzenia (`GET /api/v1/devices/{id}/work-orders`).
+- **Zlecenia.** Numer w formacie `ZL/RRRR/NNNN` nadawany przy utworzeniu z rocznego licznika w bazie, przejścia statusów opisane w regułach biznesowych, historia zdarzeń i protokół serwisowy w PDF dla zleceń zakończonych i zafakturowanych (`GET /api/v1/work-orders/{id}/protocol`).
+- **Wpisy serwisowe.** Wpisy są tylko dopisywane: notatka, czas pracy, pozycja GPS przy rozpoczęciu, zdjęcia i zużyte części. Pomyłkę koryguje wpis korygujący, który zwraca części na magazyn.
+- **Listy.** Listy użytkowników, klientów, urządzeń, części i zleceń mają paginację (`page`, `pageSize` do 100). Lista zleceń filtruje po kilku statusach naraz, techniku, urządzeniu, kliencie, opóźnieniu, zakresie terminów i tekście oraz sortuje (`sortBy`, `sortDirection`); lista części filtruje po dostępności na magazynie (`inStock`).
+- **Podsumowanie dla panelu.** `GET /api/v1/dashboard/summary` zwraca jednym żądaniem liczbę zleceń w każdym statusie, liczbę opóźnionych zleceń i części bez stanu oraz obciążenie każdego aktywnego technika: zlecenia przypisane, w toku, opóźnione i z terminem w bieżącym tygodniu.
+- **Konta.** Publicznej rejestracji nie ma: konta z rolą zakłada Admin, który może też zmienić imię i nazwisko użytkownika, zresetować hasło oraz dezaktywować konto (odrzucane, gdy technik ma zlecenia przypisane lub w toku) i aktywować je ponownie. Każdy użytkownik odczytuje własne dane (`GET /api/v1/users/me`) i zmienia hasło; zmiana hasła kończy pozostałe sesje i zwraca nową parę tokenów.
+- **Uwierzytelnianie.** Access token JWT i refresh token przechowywany w bazie jako hash, wymieniany na nowy przy każdym odświeżeniu. Ponowne użycie zużytego tokena po oknie tolerancji unieważnia całą sesję, a wylogowanie nie wymaga ważnego access tokena.
 
 ## Architektura
 
@@ -64,7 +80,7 @@ Po starcie dostępne są:
 | http://localhost:8080/api/v1/system/ready | readiness (z bazą) dla panelu webowego |
 | http://localhost:8025 | Mailpit, podgląd wysłanych e-maili |
 
-Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`. Przy pustej bazie powstają też dane demonstracyjne: 6 klientów, 13 urządzeń, 11 części, 18 zleceń i dwóch dodatkowych techników bez hasła, na których nie da się zalogować, ale można im przypisywać zlecenia.
+Migracje bazy wykonują się przy starcie aplikacji. Konta demo (`admin@fixflow.local`, `dispatcher@fixflow.local`, `technician@fixflow.local`) zakładane są z hasłami z `.env`. Przy pustej bazie powstają też dane demonstracyjne: 6 klientów, 13 urządzeń, 11 części (jedna z zerowym stanem magazynowym), 23 zlecenia we wszystkich statusach, w tym opóźnione i z wpisami ze zdjęciami, oraz trzech dodatkowych techników bez hasła, na których nie da się zalogować: dwóch aktywnych, którym można przypisywać zlecenia, i jednego dezaktywowanego z historią zafakturowanych zleceń.
 
 Testy wymagają .NET SDK 10 i działającego Dockera (testy integracyjne uruchamiają PostgreSQL i Redis przez Testcontainers):
 
@@ -84,7 +100,7 @@ Ustawienia można podać w `appsettings.json` lub jako zmienne środowiskowe (se
 | `Jwt__AccessTokenLifetime` / `Jwt__RefreshTokenLifetime` | czas życia tokenów | `00:15:00` / `7.00:00:00` |
 | `Jwt__RefreshTokenReuseGracePeriod` | czas po rotacji, w którym ten sam refresh token można wymienić ponownie bez unieważnienia sesji (0 wyłącza, najwyżej 5 minut) | `00:00:30` |
 | `Cors__AllowedOrigins__0` | dozwolone originy klientów przeglądarkowych (kolejne pod `__1`, `__2`) | brak |
-| `RateLimiting__Auth__PermitLimit` / `RateLimiting__Auth__Window` | limit logowania i odświeżania tokena na adres IP | `10` / `00:01:00` |
+| `RateLimiting__Auth__PermitLimit` / `RateLimiting__Auth__Window` | limit logowania, odświeżania tokena, wylogowania i zmiany własnego hasła na adres IP | `10` / `00:01:00` |
 | `Seed__DemoUsers__Enabled` | zakładanie kont demo przy starcie | `false` |
 | `Seed__DemoUsers__AdminPassword`, `...DispatcherPassword`, `...TechnicianPassword` | hasła kont demo, wymagane przy włączonym seedzie | brak |
 | `Seed__DemoData__Enabled` | tworzenie danych demonstracyjnych przy starcie, tylko gdy baza nie zawiera żadnego klienta, i dostępność resetu danych demo; wymaga `Seed__DemoUsers__Enabled` | `false` |
@@ -144,6 +160,8 @@ Błędy walidacji (400) mają słownik `errors`, którego klucze są ścieżkami
 **Cache musi działać bez Redis.** Listy klientów i urządzeń są cache'owane przez `HybridCache`: L1 w pamięci procesu, L2 w Redis. Redis przyspiesza odczyty, ale nie jest źródłem prawdy, więc jego awaria nie może zatrzymać API. Pusty connection string oznacza brak L2. Skonfigurowany, ale niedostępny Redis ma krótkie timeouty i opakowanie, które traktuje błąd jak brak wpisu, zamiast zwracać 500. Unieważnianie odbywa się przez tagi po każdym zapisie. Test integracyjny sprawdza działanie API przy wyłączonym Redis.
 
 **Reguły narażone na współbieżność zabezpieczone także w bazie.** Sprawdzenie w kodzie nie wystarcza przy dwóch równoległych żądaniach, dlatego reguły 1, 3 i 6 mają odpowiednik w postaci indeksu, ograniczenia `CHECK` lub tokenu współbieżności, a naruszenie jest tłumaczone na `409`.
+
+**Optymistyczna współbieżność przez ETag.** Odpowiedź z pojedynczym klientem, urządzeniem, częścią lub zleceniem ma nagłówek `ETag` z wersją wiersza (`xmin` z PostgreSQL). `PUT` tych zasobów wymaga nagłówka `If-Match`: jego brak kończy się `428`, a nieaktualna wersja `412`, więc dwóch dyspozytorów nie nadpisze sobie nawzajem zmian bez wiedzy o nich.
 
 **Kontrakt API pilnowany w CI.** Dokument `openapi/v1.json` jest generowany przy buildzie i commitowany. CI odrzuca zmianę, jeśli wygenerowany dokument różni się od tego w repozytorium, więc każda zmiana kontraktu jest widoczna w review. API jest wersjonowane w ścieżce (`/api/v1`).
 
