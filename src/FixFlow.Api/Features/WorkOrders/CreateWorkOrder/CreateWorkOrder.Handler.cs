@@ -9,11 +9,12 @@ namespace FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 
 public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken) =>
-        dbContext.Database.CreateExecutionStrategy().ExecuteAsync(request, CreateWorkOrderInTransactionAsync, cancellationToken);
+    public Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(CreateWorkOrderRequest request, Guid actorId, CancellationToken cancellationToken) =>
+        dbContext.Database.CreateExecutionStrategy().ExecuteAsync(new WorkOrderCreation(request, actorId), CreateWorkOrderInTransactionAsync, cancellationToken);
 
-    private async Task<ErrorOr<Versioned<WorkOrderResponse>>> CreateWorkOrderInTransactionAsync(CreateWorkOrderRequest request, CancellationToken cancellationToken)
+    private async Task<ErrorOr<Versioned<WorkOrderResponse>>> CreateWorkOrderInTransactionAsync(WorkOrderCreation workOrderCreation, CancellationToken cancellationToken)
     {
+        var request = workOrderCreation.Request;
         dbContext.ChangeTracker.Clear();
         var device = await dbContext.Devices
             .AsNoTracking()
@@ -23,7 +24,7 @@ public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
             return DeviceErrors.NotFound;
         }
 
-        var creation = WorkOrder.Create(device, request.Description, request.Priority, request.DueDate.ToDatabasePrecision(), timeProvider.GetUtcNow());
+        var creation = WorkOrder.Create(device, request.Description, request.Priority, request.DueDate.ToDatabasePrecision(), timeProvider.GetUtcNow(), workOrderCreation.ActorId);
         if (creation.IsError)
         {
             return creation.Errors;
@@ -37,4 +38,6 @@ public sealed class CreateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
 
         return await dbContext.VersionedWorkOrderResponseAsync(creation.Value, cancellationToken);
     }
+
+    private sealed record WorkOrderCreation(CreateWorkOrderRequest Request, Guid ActorId);
 }

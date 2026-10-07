@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
 using FixFlow.Api.Common.Concurrency;
@@ -8,9 +9,9 @@ public static class UpdateWorkOrderEndpoint
 {
     public static RouteGroupBuilder MapUpdateWorkOrder(this RouteGroupBuilder group)
     {
-        group.MapPut("/{workOrderId:guid}", async (Guid workOrderId, UpdateWorkOrderRequest request, UpdateWorkOrderHandler handler, HttpContext httpContext, CancellationToken cancellationToken) =>
+        group.MapPut("/{workOrderId:guid}", async (Guid workOrderId, UpdateWorkOrderRequest request, ClaimsPrincipal user, UpdateWorkOrderHandler handler, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                var result = await handler.HandleAsync(workOrderId, request, httpContext.IfMatch(), cancellationToken);
+                var result = await handler.HandleAsync(workOrderId, request, httpContext.IfMatch(), user.GetUserId(), cancellationToken);
                 return result.ToOkWithETagOrProblem();
             })
             .WithName("UpdateWorkOrder")

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Behaviors;
 using FixFlow.Api.Common.Concurrency;
@@ -8,9 +9,9 @@ public static class AssignTechnicianEndpoint
 {
     public static RouteGroupBuilder MapAssignTechnician(this RouteGroupBuilder group)
     {
-        group.MapPost("/{workOrderId:guid}/assign", async (Guid workOrderId, AssignTechnicianRequest request, AssignTechnicianHandler handler, CancellationToken cancellationToken) =>
+        group.MapPost("/{workOrderId:guid}/assign", async (Guid workOrderId, AssignTechnicianRequest request, ClaimsPrincipal user, AssignTechnicianHandler handler, CancellationToken cancellationToken) =>
             {
-                var result = await handler.HandleAsync(workOrderId, request, cancellationToken);
+                var result = await handler.HandleAsync(workOrderId, request, user.GetUserId(), cancellationToken);
                 return result.ToOkWithETagOrProblem();
             })
             .WithName("AssignTechnician")

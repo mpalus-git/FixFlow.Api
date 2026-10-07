@@ -11,6 +11,7 @@ public sealed class UpdateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
         Guid workOrderId,
         UpdateWorkOrderRequest request,
         string ifMatch,
+        Guid actorId,
         CancellationToken cancellationToken)
     {
         var row = await dbContext.WorkOrders.FindRowAsync(workOrderId, dbContext, cancellationToken);
@@ -31,7 +32,8 @@ public sealed class UpdateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
             request.Description,
             request.Priority,
             request.DueDate.ToDatabasePrecision(),
-            timeProvider.GetUtcNow());
+            timeProvider.GetUtcNow(),
+            actorId);
         if (update.IsError)
         {
             return update.Errors;

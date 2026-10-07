@@ -2931,6 +2931,67 @@
         ]
       }
     },
+    "/api/v1/work-orders/{workOrderId}/events": {
+      "get": {
+        "tags": [
+          "WorkOrders"
+        ],
+        "summary": "List the history of a work order",
+        "description": "Returns the changes of a work order, oldest first: creation, edits, assignment, reassignment and unassignment of the technician, start, completion and invoicing, each with the time, the user who made the change and the technician and deadline after the change. Repeated start or completion requests do not add events. Technicians can only get the history of work orders assigned to them; other work orders are reported as not found.",
+        "operationId": "ListWorkOrderEvents",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkOrderEventResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/parts": {
       "post": {
         "tags": [
@@ -5467,6 +5528,85 @@
           }
         },
         "description": "User account."
+      },
+      "WorkOrderEventResponse": {
+        "required": [
+          "id",
+          "type",
+          "occurredAt",
+          "actorId",
+          "actorName",
+          "technicianId",
+          "technicianName",
+          "dueDate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the event.",
+            "format": "uuid"
+          },
+          "type": {
+            "description": "Kind of the change.",
+            "$ref": "#/components/schemas/WorkOrderEventType"
+          },
+          "occurredAt": {
+            "type": "string",
+            "description": "UTC time of the change; for start and completion the time given by the technician.",
+            "format": "date-time"
+          },
+          "actorId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of the user who made the change; null for changes made by the system, for example demo data.",
+            "format": "uuid"
+          },
+          "actorName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First and last name of the user who made the change; null for changes made by the system."
+          },
+          "technicianId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of the technician assigned after the change; null when no technician is assigned.",
+            "format": "uuid"
+          },
+          "technicianName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First and last name of the technician assigned after the change; null when no technician is assigned."
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "UTC deadline of the work order after the change.",
+            "format": "date-time"
+          }
+        },
+        "description": "Change recorded in the history of a work order."
+      },
+      "WorkOrderEventType": {
+        "enum": [
+          "Created",
+          "Updated",
+          "Assigned",
+          "Reassigned",
+          "Unassigned",
+          "Started",
+          "Completed",
+          "Invoiced"
+        ],
+        "type": "string",
+        "description": "Kind of change recorded in the history of a work order."
       },
       "WorkOrderListItemResponse": {
         "required": [

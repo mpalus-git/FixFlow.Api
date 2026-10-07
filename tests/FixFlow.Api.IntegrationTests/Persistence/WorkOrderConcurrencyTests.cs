@@ -23,7 +23,7 @@ public sealed class WorkOrderConcurrencyTests(FixFlowApiFactory factory) : Integ
         var workOrderSeenByDispatcher = await dispatcherDbContext.WorkOrders.SingleAsync(item => item.Id == workOrder.Id, TestContext.Current.CancellationToken);
         var workOrderSeenByTechnician = await technicianDbContext.WorkOrders.SingleAsync(item => item.Id == workOrder.Id, TestContext.Current.CancellationToken);
 
-        workOrderSeenByDispatcher.Unassign();
+        workOrderSeenByDispatcher.Unassign(DateTimeOffset.UtcNow);
         var unassignment = await dispatcherDbContext.SaveChangesOrConflictAsync(TestContext.Current.CancellationToken);
         workOrderSeenByTechnician.Start(technician.Id, technicianHasWorkInProgress: false, DateTimeOffset.UtcNow);
         var start = await technicianDbContext.SaveChangesOrConflictAsync(TestContext.Current.CancellationToken);

@@ -18,6 +18,7 @@ public sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
         builder.HasKey(workOrder => workOrder.Id);
         builder.Property(workOrder => workOrder.Id).ValueGeneratedNever();
         builder.Property<uint>(EntityTag.VersionProperty).IsRowVersion();
+        builder.Ignore(workOrder => workOrder.PendingEvents);
         builder.Property(workOrder => workOrder.Number).HasMaxLength(WorkOrderNumber.MaxLength);
         builder.HasIndex(workOrder => workOrder.Number).IsUnique();
         builder.Property(workOrder => workOrder.Description).HasMaxLength(2000);

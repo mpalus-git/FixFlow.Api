@@ -54,10 +54,11 @@ public sealed class WorkOrderNumberTests(FixFlowApiFactory factory) : Integratio
 
     private async Task<string> CreateWorkOrderAtAsync(Guid deviceId, DateTimeOffset now)
     {
+        var dispatcher = await CreateUserAsync(Roles.Dispatcher);
         await using var scope = Factory.Services.CreateAsyncScope();
         var handler = new CreateWorkOrderHandler(scope.ServiceProvider.GetRequiredService<FixFlowDbContext>(), new FakeTimeProvider(now));
         var request = WorkOrderRequests.NewWorkOrder(deviceId) with { DueDate = now.AddDays(3) };
-        var result = await handler.HandleAsync(request, TestContext.Current.CancellationToken);
+        var result = await handler.HandleAsync(request, dispatcher.Id, TestContext.Current.CancellationToken);
         return result.Value.Value.Number;
     }
 }

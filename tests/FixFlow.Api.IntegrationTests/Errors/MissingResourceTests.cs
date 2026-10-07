@@ -53,6 +53,7 @@ public sealed class MissingResourceTests(FixFlowApiFactory factory) : Integratio
         ["restock part"] = new(Roles.Dispatcher, HttpMethod.Post, $"parts/{MissingId}/restock", new RestockPartRequest(1), PartErrors.NotFound.Code),
         ["create work order of missing device"] = new(Roles.Dispatcher, HttpMethod.Post, "work-orders", WorkOrderRequests.NewWorkOrder(Guid.CreateVersion7()), DeviceErrors.NotFound.Code),
         ["get work order"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}", null, WorkOrderErrors.NotFound.Code),
+        ["list work order events"] = new(Roles.Dispatcher, HttpMethod.Get, $"work-orders/{MissingId}/events", null, WorkOrderErrors.NotFound.Code),
         ["update work order"] = new(
             Roles.Dispatcher,
             HttpMethod.Put,
