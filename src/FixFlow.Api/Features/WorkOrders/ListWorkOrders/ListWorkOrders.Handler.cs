@@ -29,9 +29,9 @@ public sealed class ListWorkOrdersHandler(FixFlowDbContext dbContext)
             .AsNoTracking()
             .VisibleTo(user);
 
-        if (request.Status is { } status)
+        if (request.Status is { Length: > 0 } statuses)
         {
-            query = query.Where(workOrder => workOrder.Status == status);
+            query = query.Where(workOrder => statuses.Contains(workOrder.Status));
         }
 
         if (request.TechnicianId is { } technicianId)

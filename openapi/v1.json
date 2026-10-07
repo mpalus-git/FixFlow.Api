@@ -1836,7 +1836,7 @@
           "WorkOrders"
         ],
         "summary": "List work orders",
-        "description": "Returns one page of work orders sorted by the requested field and direction, by default by due date ascending, with ties ordered by identifier so that pages neither skip nor repeat work orders. Each work order comes with the serial number and model of the device, the client name and the technician email. The list can be filtered by status, technician, device, client, overdue flag and due date range, and searched by a fragment of the work order number, description, serial number or client name. Technicians only see work orders assigned to them.",
+        "description": "Returns one page of work orders sorted by the requested field and direction, by default by due date ascending, with ties ordered by identifier so that pages neither skip nor repeat work orders. Each work order comes with the serial number and model of the device, the client name and the technician email. The list can be filtered by one or more statuses, technician, device, client, overdue flag and due date range, and searched by a fragment of the work order number, description, serial number or client name. Technicians only see work orders assigned to them.",
         "operationId": "ListWorkOrders",
         "parameters": [
           {
@@ -1862,9 +1862,12 @@
           {
             "name": "status",
             "in": "query",
-            "description": "Status of the listed work orders.",
+            "description": "Statuses of the listed work orders. Repeat the parameter to list work orders in any of several statuses, for example status=Assigned&status=InProgress.",
             "schema": {
-              "$ref": "#/components/schemas/WorkOrderStatus"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/WorkOrderStatus"
+              }
             }
           },
           {

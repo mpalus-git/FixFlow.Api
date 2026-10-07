@@ -8,7 +8,7 @@ public sealed class ListWorkOrdersRequestValidator : AbstractValidator<ListWorkO
     public ListWorkOrdersRequestValidator()
     {
         Include(new PagedRequestValidator());
-        RuleFor(request => request.Status).IsInEnum();
+        RuleForEach(request => request.Status).IsInEnum();
         RuleFor(request => request.DueTo)
             .GreaterThanOrEqualTo(request => request.DueFrom)
             .When(request => request.DueFrom is not null && request.DueTo is not null)

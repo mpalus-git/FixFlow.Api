@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Common.Time;
 using FixFlow.Api.Domain.Users;
@@ -114,6 +115,27 @@ public sealed class ListWorkOrdersTests(FixFlowApiFactory factory) : Integration
         byTechnician.Items.Select(item => item.Id).ShouldBe([assignedWorkOrder.Id]);
         byDevice.Items.Select(item => item.Id).ShouldBe([newWorkOrder.Id]);
         byDevice.Items.ShouldNotContain(item => item.Id == otherDeviceWorkOrder.Id);
+    }
+
+    [Fact]
+    public async Task Should_List_Work_Orders_In_Any_Of_Requested_Statuses_When_Status_Is_Repeated()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        var deviceId = await client.CreateServicedDeviceAsync();
+        await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId));
+        var assignedWorkOrder = await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId));
+        var startedWorkOrder = await client.CreateWorkOrderAsync(WorkOrderRequests.NewWorkOrder(deviceId));
+        var technician = await CreateUserAsync(Roles.Technician);
+        await Factory.AssignTechnicianDirectlyAsync(assignedWorkOrder.Id, technician.Id);
+        await Factory.AssignTechnicianDirectlyAsync(startedWorkOrder.Id, technician.Id);
+        using var technicianClient = await CreateAuthenticatedClientAsync(technician);
+        using var startResponse = await technicianClient.PostTransitionAsync(startedWorkOrder.Id, "start");
+
+        var page = await client.ListWorkOrdersAsync($"?status={WorkOrderStatus.Assigned}&status={WorkOrderStatus.InProgress}");
+
+        startResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        page.Items.Select(item => item.Id).ShouldBe([assignedWorkOrder.Id, startedWorkOrder.Id], ignoreOrder: true);
+        page.TotalCount.ShouldBe(2);
     }
 
     [Fact]
