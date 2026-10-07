@@ -12,6 +12,7 @@ public sealed record ServiceProtocol(
     string? TechnicianName,
     IReadOnlyList<ServiceEntry> ServiceEntries,
     IReadOnlyList<ProtocolPartLine> PartLines,
+    byte[]? ClientSignature,
     DateTimeOffset IssuedAt)
 {
     public decimal PartsTotal => PartLines.Sum(line => line.Value);
