@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
+using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 using FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
 using FixFlow.Api.IntegrationTests.ServiceEntries;
 
@@ -31,6 +33,29 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await response.ReadWorkOrderAsync()).Status.ShouldBe(WorkOrderStatus.Completed);
+    }
+
+    [Fact]
+    public async Task Should_Complete_Work_Order_At_Requested_Time_When_Completion_Was_Recorded_Offline()
+    {
+        using var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
+        var completedAt = DateTimeOffset.UtcNow.ToDatabasePrecision();
+
+        using var response = await scenario.TechnicianClient.PostCompleteAsync(scenario.WorkOrder.Id, new CompleteWorkOrderRequest(completedAt));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await response.ReadWorkOrderAsync()).CompletedAt.ShouldBe(completedAt);
+    }
+
+    [Fact]
+    public async Task Should_Return_Validation_Problem_When_Requested_Completion_Is_Before_End_Of_Last_Work()
+    {
+        using var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
+
+        using var response = await scenario.TechnicianClient.PostCompleteAsync(scenario.WorkOrder.Id, new CompleteWorkOrderRequest(scenario.WorkOrder.StartedAt));
+
+        await response.ShouldBeValidationProblemAsync("completedAt");
+        (await scenario.TechnicianClient.GetWorkOrderAsync(scenario.WorkOrder.Id)).Status.ShouldBe(WorkOrderStatus.InProgress);
     }
 
     [Fact]

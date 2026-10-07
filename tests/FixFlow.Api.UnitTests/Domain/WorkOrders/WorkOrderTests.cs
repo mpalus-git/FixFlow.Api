@@ -406,6 +406,62 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Complete_Work_Order_At_Requested_Time_When_It_Is_Between_Last_Work_And_Now()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var now = Now.AddHours(3);
+
+        var result = workOrder.Complete(hasServiceEntries: true, now, Now.AddHours(2), MaxClockSkew, lastWorkFinishedAt: Now.AddHours(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.CompletedAt.ShouldBe(Now.AddHours(2));
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_Requested_Time_Is_Before_Start()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3), Now.AddMinutes(-1), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.CompletedBeforeStart);
+        workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_Requested_Time_Is_Before_End_Of_Last_Work()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3), Now.AddHours(1), MaxClockSkew, lastWorkFinishedAt: Now.AddHours(2));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.CompletedBeforeWorkFinished);
+    }
+
+    [Fact]
+    public void Should_Store_Current_Time_When_Requested_Completion_Is_In_Future_Within_Clock_Skew()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var now = Now.AddHours(3);
+
+        var result = workOrder.Complete(hasServiceEntries: true, now, now.Add(MaxClockSkew), MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.CompletedAt.ShouldBe(now);
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_Requested_Time_Is_In_Future_Beyond_Clock_Skew()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var now = Now.AddHours(3);
+
+        var result = workOrder.Complete(hasServiceEntries: true, now, now.Add(MaxClockSkew).AddSeconds(1), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.CompletedInFuture);
+    }
+
+    [Fact]
     public void Should_Reject_Completing_WorkOrder_When_No_ServiceEntry()
     {
         var workOrder = CreateInProgressWorkOrder();

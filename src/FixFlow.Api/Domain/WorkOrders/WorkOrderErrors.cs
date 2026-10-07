@@ -16,6 +16,12 @@ public static class WorkOrderErrors
 
     public static readonly Error StartedInFuture = Error.Validation("StartedAt", "Start time cannot be in the future.");
 
+    public static readonly Error CompletedBeforeStart = Error.Validation("CompletedAt", "Work order cannot be completed before it was started.");
+
+    public static readonly Error CompletedBeforeWorkFinished = Error.Validation("CompletedAt", "Work order cannot be completed before the end of its last work entry.");
+
+    public static readonly Error CompletedInFuture = Error.Validation("CompletedAt", "Completion time cannot be in the future.");
+
     public static readonly Error NotAssignedToTechnician = Error.Forbidden("WorkOrder.NotAssignedToTechnician", "Work order is not assigned to this technician.");
 
     public static readonly Error TechnicianAlreadyHasWorkInProgress = Error.Conflict(

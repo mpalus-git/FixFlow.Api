@@ -2615,7 +2615,7 @@
           "WorkOrders"
         ],
         "summary": "Complete a work order",
-        "description": "Moves a work order from InProgress to Completed. The work order must have at least one service entry. After completion no service entries can be added and the work order cannot be edited. Available to the assigned technician and, as a fallback, to dispatchers and administrators; work orders of other technicians are reported as not found.",
+        "description": "Moves a work order from InProgress to Completed. The work order must have at least one service entry. The body is optional: without it the work order is completed at the server time, with completedAt at the time given by the client, for example recorded offline. After completion no service entries can be added and the work order cannot be edited. Available to the assigned technician and, as a fallback, to dispatchers and administrators; work orders of other technicians are reported as not found.",
         "operationId": "CompleteWorkOrder",
         "parameters": [
           {
@@ -2628,6 +2628,22 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CompleteWorkOrderRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -2643,6 +2659,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WorkOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
                 }
               }
             }
@@ -4103,6 +4129,20 @@
           }
         },
         "description": "Client of the service company."
+      },
+      "CompleteWorkOrderRequest": {
+        "type": "object",
+        "properties": {
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Time when the work order was completed, for example recorded offline by the mobile client. Cannot be earlier than the start of the work order or the end of its last work entry and cannot be later than the server time plus the allowed clock skew; a time within the skew is stored as the server time. When omitted, the server time is used.",
+            "format": "date-time"
+          }
+        },
+        "description": "Optional details of completing a work order."
       },
       "CreateClientRequest": {
         "required": [

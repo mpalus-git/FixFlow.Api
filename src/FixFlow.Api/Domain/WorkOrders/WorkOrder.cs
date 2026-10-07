@@ -199,7 +199,12 @@ public sealed class WorkOrder
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Complete(bool hasServiceEntries, DateTimeOffset now)
+    public ErrorOr<Updated> Complete(
+        bool hasServiceEntries,
+        DateTimeOffset now,
+        DateTimeOffset? requestedCompletedAt = null,
+        TimeSpan maxClockSkew = default,
+        DateTimeOffset? lastWorkFinishedAt = null)
     {
         if (Status != WorkOrderStatus.InProgress)
         {
@@ -211,8 +216,27 @@ public sealed class WorkOrder
             return WorkOrderErrors.NoServiceEntries;
         }
 
+        var completedAt = requestedCompletedAt ?? now;
+        if (requestedCompletedAt is { } requested)
+        {
+            if (requested < StartedAt)
+            {
+                return WorkOrderErrors.CompletedBeforeStart;
+            }
+
+            if (requested < lastWorkFinishedAt)
+            {
+                return WorkOrderErrors.CompletedBeforeWorkFinished;
+            }
+
+            if (requested > now + maxClockSkew)
+            {
+                return WorkOrderErrors.CompletedInFuture;
+            }
+        }
+
         Status = WorkOrderStatus.Completed;
-        CompletedAt = now;
+        CompletedAt = completedAt < now ? completedAt : now;
         IsOverdue = false;
 
         return Result.Updated;
