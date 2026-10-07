@@ -10,6 +10,7 @@ public sealed record DashboardSummaryResponse(
     [property: Description("Sunday of the current week in the Europe/Warsaw time zone.")] DateOnly WeekEnd,
     [property: Description("Number of work orders in each status, in lifecycle order, including statuses without work orders.")] IReadOnlyList<WorkOrderStatusCountResponse> StatusCounts,
     [property: Description("Number of work orders flagged as overdue.")] int OverdueCount,
+    [property: Description("Number of active parts with no units in stock, the same criterion as the inStock=false filter of the part list.")] int OutOfStockPartCount,
     [property: Description("Workload of every active technician, sorted by full name and email.")] IReadOnlyList<TechnicianWorkloadResponse> Technicians);
 
 [Description("Number of work orders in one status.")]

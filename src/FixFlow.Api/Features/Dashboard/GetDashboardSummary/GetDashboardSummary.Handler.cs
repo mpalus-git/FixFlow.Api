@@ -33,6 +33,7 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
 
         var statusCounts = await CountWorkOrdersByStatusAsync(cancellationToken);
         var overdueCount = await dbContext.WorkOrders.CountAsync(workOrder => workOrder.IsOverdue, cancellationToken);
+        var outOfStockPartCount = await dbContext.Parts.CountAsync(part => part.ArchivedAt == null && part.StockQuantity == 0, cancellationToken);
         var technicians = await GetTechnicianWorkloadsAsync(
             BusinessTime.StartOfDay(weekStart),
             BusinessTime.StartOfDay(nextWeekStart),
@@ -40,7 +41,7 @@ public sealed class GetDashboardSummaryHandler(FixFlowDbContext dbContext, TimeP
 
         await transaction.CommitAsync(cancellationToken);
 
-        return new DashboardSummaryResponse(now, weekStart, nextWeekStart.AddDays(-1), statusCounts, overdueCount, technicians);
+        return new DashboardSummaryResponse(now, weekStart, nextWeekStart.AddDays(-1), statusCounts, overdueCount, outOfStockPartCount, technicians);
     }
 
     private async Task<List<WorkOrderStatusCountResponse>> CountWorkOrdersByStatusAsync(CancellationToken cancellationToken)
