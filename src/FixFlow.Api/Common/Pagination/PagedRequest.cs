@@ -22,14 +22,20 @@ public static class PagedRequest
         Func<TSource, TResult> map,
         CancellationToken cancellationToken)
     {
-        var totalCount = await orderedQuery.CountAsync(cancellationToken);
         var items = await orderedQuery
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
+        var totalCount = InferTotalCount(request.Page, request.PageSize, items.Count)
+            ?? await orderedQuery.CountAsync(cancellationToken);
 
         return new PagedResponse<TResult>(items.Select(map).ToList(), request.Page, request.PageSize, totalCount);
     }
+
+    public static int? InferTotalCount(int page, int pageSize, int itemCount) =>
+        itemCount < pageSize && (itemCount > 0 || page == 1)
+            ? ((page - 1) * pageSize) + itemCount
+            : null;
 }
 
 public sealed class PagedRequestValidator : AbstractValidator<IPagedRequest>

@@ -26,6 +26,30 @@ public sealed class ListPartsTests(FixFlowApiFactory factory) : IntegrationTestB
         page.TotalCount.ShouldBe(5);
     }
 
+    [Fact]
+    public async Task Should_Return_Total_Count_When_Last_Page_Is_Partial()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        await CreateFivePartsAsync(client);
+
+        var page = await GetPageAsync(client, "?page=3&pageSize=2");
+
+        page.Items.Count.ShouldBe(1);
+        page.TotalCount.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task Should_Return_Total_Count_When_Page_Is_Beyond_Last()
+    {
+        using var client = await CreateAuthenticatedClientAsync(Roles.Dispatcher);
+        await CreateFivePartsAsync(client);
+
+        var page = await GetPageAsync(client, "?page=4&pageSize=2");
+
+        page.Items.ShouldBeEmpty();
+        page.TotalCount.ShouldBe(5);
+    }
+
     [Theory]
     [InlineData("flt-2")]
     [InlineData("WĘGL")]
@@ -84,6 +108,14 @@ public sealed class ListPartsTests(FixFlowApiFactory factory) : IntegrationTestB
         using var response = await client.GetAsync(new Uri("/api/v1/parts?page=30000000&pageSize=100", UriKind.Relative), TestContext.Current.CancellationToken);
 
         await response.ShouldBeValidationProblemAsync("page");
+    }
+
+    private static async Task CreateFivePartsAsync(HttpClient client)
+    {
+        for (var number = 1; number <= 5; number++)
+        {
+            await client.CreatePartAsync(PartRequests.NewPart($"P-{number}", $"Część {number}"));
+        }
     }
 
     private static async Task<PagedResponse<PartResponse>> GetPageAsync(HttpClient client, string query)
