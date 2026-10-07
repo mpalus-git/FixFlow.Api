@@ -136,7 +136,7 @@
           "Auth"
         ],
         "summary": "Log out and revoke the current session",
-        "description": "Revokes the submitted refresh token together with every token of its session. The access token stays valid until it expires. The response is 204 also when the refresh token is unknown or belongs to another user.",
+        "description": "Revokes the submitted refresh token together with every token of its session. An access token is not required, so a client whose access token has already expired can still end its session. Access tokens issued before stay valid until they expire. The response is 204 also when the refresh token is unknown. Requests are rate limited per client IP address.",
         "operationId": "Logout",
         "requestBody": {
           "content": {
@@ -162,8 +162,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
+          "429": {
+            "description": "Too Many Requests",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -172,12 +172,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "Bearer": [ ]
-          }
-        ]
+        }
       }
     },
     "/api/v1/users": {

@@ -27,18 +27,31 @@ public sealed class LogoutTests(FixFlowApiFactory factory) : IntegrationTestBase
     }
 
     [Fact]
-    public async Task Should_Return_Unauthorized_Problem_When_Logout_Is_Called_Without_Access_Token()
+    public async Task Should_Revoke_Session_When_Logout_Is_Called_Without_Access_Token()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        using var client = Factory.CreateClient();
+        var tokens = await client.LoginAsync(user);
+
+        using var logoutResponse = await client.PostAsJsonAsync(LogoutUri, new LogoutRequest(tokens.RefreshToken), TestContext.Current.CancellationToken);
+        using var refreshResponse = await client.PostRefreshAsync(tokens.RefreshToken);
+
+        logoutResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await refreshResponse.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Revoked.Code);
+    }
+
+    [Fact]
+    public async Task Should_Return_No_Content_When_Refresh_Token_Is_Unknown()
     {
         using var client = Factory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(LogoutUri, new LogoutRequest("some-refresh-token"), TestContext.Current.CancellationToken);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     [Fact]
-    public async Task Should_Keep_Other_User_Session_When_Logout_Uses_Foreign_Refresh_Token()
+    public async Task Should_Revoke_Owner_Session_When_Logout_Uses_Refresh_Token_Of_Another_User()
     {
         var firstUser = await CreateUserAsync(Roles.Technician);
         var secondUser = await CreateUserAsync(Roles.Dispatcher);
@@ -51,6 +64,6 @@ public sealed class LogoutTests(FixFlowApiFactory factory) : IntegrationTestBase
         using var refreshResponse = await client.PostRefreshAsync(secondUserTokens.RefreshToken);
 
         logoutResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        refreshResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await refreshResponse.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Revoked.Code);
     }
 }

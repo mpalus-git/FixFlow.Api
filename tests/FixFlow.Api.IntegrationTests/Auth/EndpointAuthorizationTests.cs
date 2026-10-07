@@ -11,6 +11,7 @@ public sealed class EndpointAuthorizationTests(FixFlowApiFactory factory)
     [
         "POST /api/v{version:apiVersion}/auth/login",
         "POST /api/v{version:apiVersion}/auth/refresh",
+        "POST /api/v{version:apiVersion}/auth/logout",
         "GET /api/v{version:apiVersion}/photos/{photoId:guid}",
     ];
 
