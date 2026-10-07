@@ -5,7 +5,7 @@ using FixFlow.Api.Domain.WorkOrders;
 
 namespace FixFlow.Api.Features.WorkOrders.UnassignTechnician;
 
-public sealed class UnassignTechnicianHandler(FixFlowDbContext dbContext)
+public sealed class UnassignTechnicianHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
     public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, CancellationToken cancellationToken)
     {
@@ -17,7 +17,7 @@ public sealed class UnassignTechnicianHandler(FixFlowDbContext dbContext)
 
         var workOrder = row.WorkOrder;
 
-        var unassignment = workOrder.Unassign();
+        var unassignment = workOrder.Unassign(timeProvider.GetUtcNow());
         if (unassignment.IsError)
         {
             return unassignment.Errors;

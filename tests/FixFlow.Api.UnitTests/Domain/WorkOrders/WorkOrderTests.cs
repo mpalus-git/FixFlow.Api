@@ -218,7 +218,7 @@ public sealed class WorkOrderTests
     {
         var workOrder = CreateAssignedWorkOrder();
 
-        var result = workOrder.Unassign();
+        var result = workOrder.Unassign(Now.AddHours(1));
 
         result.IsError.ShouldBeFalse();
         workOrder.Status.ShouldBe(WorkOrderStatus.New);
@@ -229,7 +229,7 @@ public sealed class WorkOrderTests
     [Fact]
     public void Should_Reject_Unassigning_When_Work_Order_Is_New()
     {
-        var result = CreateWorkOrder().Unassign();
+        var result = CreateWorkOrder().Unassign(Now.AddHours(1));
 
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
     }
@@ -239,7 +239,7 @@ public sealed class WorkOrderTests
     {
         var workOrder = CreateInProgressWorkOrder();
 
-        var result = workOrder.Unassign();
+        var result = workOrder.Unassign(Now.AddHours(1));
 
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
         workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);

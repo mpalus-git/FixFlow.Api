@@ -6,6 +6,8 @@ namespace FixFlow.Api.Domain.WorkOrders;
 
 public sealed class WorkOrder
 {
+    private readonly List<WorkOrderEvent> _pendingEvents = [];
+
     private WorkOrder()
     {
     }
@@ -40,6 +42,8 @@ public sealed class WorkOrder
 
     public bool IsOverdue { get; private set; }
 
+    public IReadOnlyList<WorkOrderEvent> PendingEvents => _pendingEvents;
+
     public static Expression<Func<WorkOrder, bool>> IsPastDueAt(DateTimeOffset now) =>
         workOrder => workOrder.DueDate < now
             && workOrder.Status != WorkOrderStatus.Completed
@@ -50,7 +54,8 @@ public sealed class WorkOrder
         string description,
         WorkOrderPriority priority,
         DateTimeOffset dueDate,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        Guid? actorId = null)
     {
         if (device.IsArchived)
         {
@@ -62,7 +67,7 @@ public sealed class WorkOrder
             return WorkOrderErrors.DueDateNotInFuture;
         }
 
-        return new WorkOrder
+        var workOrder = new WorkOrder
         {
             Id = Guid.CreateVersion7(),
             DeviceId = device.Id,
@@ -72,6 +77,16 @@ public sealed class WorkOrder
             Status = WorkOrderStatus.New,
             CreatedAt = now,
         };
+        workOrder.Record(WorkOrderEventType.Created, now, actorId);
+
+        return workOrder;
+    }
+
+    public IReadOnlyList<WorkOrderEvent> TakePendingEvents()
+    {
+        var events = _pendingEvents.ToList();
+        _pendingEvents.Clear();
+        return events;
     }
 
     public void AssignNumber(string number)
@@ -84,7 +99,7 @@ public sealed class WorkOrder
         Number = number;
     }
 
-    public ErrorOr<Updated> Update(string description, WorkOrderPriority priority, DateTimeOffset dueDate, DateTimeOffset now)
+    public ErrorOr<Updated> Update(string description, WorkOrderPriority priority, DateTimeOffset dueDate, DateTimeOffset now, Guid? actorId = null)
     {
         if (Status is WorkOrderStatus.Completed or WorkOrderStatus.Invoiced)
         {
@@ -99,11 +114,12 @@ public sealed class WorkOrder
         Description = description;
         Priority = priority;
         ChangeDueDate(dueDate, now);
+        Record(WorkOrderEventType.Updated, now, actorId);
 
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Assign(Guid technicianId, DateTimeOffset? dueDate, DateTimeOffset now)
+    public ErrorOr<Updated> Assign(Guid technicianId, DateTimeOffset? dueDate, DateTimeOffset now, Guid? actorId = null)
     {
         if (Status != WorkOrderStatus.New)
         {
@@ -123,10 +139,12 @@ public sealed class WorkOrder
             ChangeDueDate(changedDueDate, now);
         }
 
+        Record(WorkOrderEventType.Assigned, now, actorId);
+
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Reassign(Guid technicianId, DateTimeOffset? dueDate, DateTimeOffset now)
+    public ErrorOr<Updated> Reassign(Guid technicianId, DateTimeOffset? dueDate, DateTimeOffset now, Guid? actorId = null)
     {
         if (Status != WorkOrderStatus.Assigned)
         {
@@ -145,10 +163,12 @@ public sealed class WorkOrder
             ChangeDueDate(changedDueDate, now);
         }
 
+        Record(WorkOrderEventType.Reassigned, now, actorId);
+
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Unassign()
+    public ErrorOr<Updated> Unassign(DateTimeOffset now, Guid? actorId = null)
     {
         if (Status != WorkOrderStatus.Assigned)
         {
@@ -158,6 +178,7 @@ public sealed class WorkOrder
         TechnicianId = null;
         AssignedAt = null;
         Status = WorkOrderStatus.New;
+        Record(WorkOrderEventType.Unassigned, now, actorId);
 
         return Result.Updated;
     }
@@ -199,6 +220,7 @@ public sealed class WorkOrder
 
         Status = WorkOrderStatus.InProgress;
         StartedAt = startedAt < now ? startedAt : now;
+        Record(WorkOrderEventType.Started, StartedAt.Value, technicianId);
 
         return Result.Updated;
     }
@@ -209,7 +231,8 @@ public sealed class WorkOrder
         DateTimeOffset? requestedCompletedAt = null,
         TimeSpan maxClockSkew = default,
         DateTimeOffset? lastWorkFinishedAt = null,
-        ClientSignature? clientSignature = null)
+        ClientSignature? clientSignature = null,
+        Guid? actorId = null)
     {
         if (Status is WorkOrderStatus.Completed or WorkOrderStatus.Invoiced)
         {
@@ -253,12 +276,13 @@ public sealed class WorkOrder
         Status = WorkOrderStatus.Completed;
         CompletedAt = completedAt < now ? completedAt : now;
         ClientSignaturePhotoId = clientSignature?.PhotoId;
+        Record(WorkOrderEventType.Completed, CompletedAt.Value, actorId);
         IsOverdue = false;
 
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> Invoice(DateTimeOffset now)
+    public ErrorOr<Updated> Invoice(DateTimeOffset now, Guid? actorId = null)
     {
         if (Status != WorkOrderStatus.Completed)
         {
@@ -267,6 +291,7 @@ public sealed class WorkOrder
 
         Status = WorkOrderStatus.Invoiced;
         InvoicedAt = now;
+        Record(WorkOrderEventType.Invoiced, now, actorId);
 
         return Result.Updated;
     }
@@ -288,6 +313,9 @@ public sealed class WorkOrder
 
         return Result.Success;
     }
+
+    private void Record(WorkOrderEventType type, DateTimeOffset occurredAt, Guid? actorId) =>
+        _pendingEvents.Add(WorkOrderEvent.Of(this, type, occurredAt, actorId));
 
     private bool IsStartedBy(Guid technicianId) =>
         TechnicianId == technicianId
