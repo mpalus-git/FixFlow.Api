@@ -11,7 +11,7 @@ public static class AuthenticationExtensions
     {
         services.AddOptions<JwtOptions>()
             .BindConfiguration(JwtOptions.SectionName)
-            .Validate(options => options.IsValid(), "Jwt configuration is invalid. SigningKey must have at least 32 bytes.")
+            .Validate(options => options.IsValid(), "Jwt configuration is invalid. SigningKey must have at least 32 bytes and RefreshTokenReuseGracePeriod must be between zero and five minutes.")
             .ValidateOnStartOutsideBuildTimeGeneration();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
