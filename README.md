@@ -15,6 +15,16 @@ Działająca instancja: [fixflow-api-us2p.onrender.com/scalar](https://fixflow-a
 
 Token otrzymany z `POST /api/v1/auth/login` wkleja się w Scalar jako `Bearer`. Instancja zawiera dane demonstracyjne: fikcyjnych klientów z urządzeniami, katalog części i zlecenia we wszystkich statusach, w tym opóźnione, z wpisami serwisowymi i zużyciem części.
 
+## Zakres API
+
+- **Kartoteka.** Klienci, urządzenia i części z edycją i archiwizacją zamiast usuwania (historia zostaje), przyjęcie dostawy części na magazyn oraz historia zleceń urządzenia (`GET /api/v1/devices/{id}/work-orders`).
+- **Zlecenia.** Numer w formacie `ZL/RRRR/NNNN` nadawany przy utworzeniu z rocznego licznika w bazie, przejścia statusów opisane w regułach biznesowych, historia zdarzeń i protokół serwisowy w PDF dla zleceń zakończonych i zafakturowanych (`GET /api/v1/work-orders/{id}/protocol`).
+- **Wpisy serwisowe.** Wpisy są tylko dopisywane: notatka, czas pracy, pozycja GPS przy rozpoczęciu, zdjęcia i zużyte części. Pomyłkę koryguje wpis korygujący, który zwraca części na magazyn.
+- **Listy.** Listy użytkowników, klientów, urządzeń, części i zleceń mają paginację (`page`, `pageSize` do 100). Lista zleceń filtruje po kilku statusach naraz, techniku, urządzeniu, kliencie, opóźnieniu, zakresie terminów i tekście oraz sortuje (`sortBy`, `sortDirection`); lista części filtruje po dostępności na magazynie (`inStock`).
+- **Podsumowanie dla panelu.** `GET /api/v1/dashboard/summary` zwraca jednym żądaniem liczbę zleceń w każdym statusie, liczbę opóźnionych zleceń i części bez stanu oraz obciążenie każdego aktywnego technika: zlecenia przypisane, w toku, opóźnione i z terminem w bieżącym tygodniu.
+- **Konta.** Publicznej rejestracji nie ma: konta z rolą zakłada Admin, który może też zmienić imię i nazwisko użytkownika, zresetować hasło oraz dezaktywować konto (odrzucane, gdy technik ma zlecenia przypisane lub w toku) i aktywować je ponownie. Każdy użytkownik odczytuje własne dane (`GET /api/v1/users/me`) i zmienia hasło; zmiana hasła kończy pozostałe sesje i zwraca nową parę tokenów.
+- **Uwierzytelnianie.** Access token JWT i refresh token przechowywany w bazie jako hash, wymieniany na nowy przy każdym odświeżeniu. Ponowne użycie zużytego tokena po oknie tolerancji unieważnia całą sesję, a wylogowanie nie wymaga ważnego access tokena.
+
 ## Architektura
 
 ```mermaid
@@ -144,6 +154,8 @@ Błędy walidacji (400) mają słownik `errors`, którego klucze są ścieżkami
 **Cache musi działać bez Redis.** Listy klientów i urządzeń są cache'owane przez `HybridCache`: L1 w pamięci procesu, L2 w Redis. Redis przyspiesza odczyty, ale nie jest źródłem prawdy, więc jego awaria nie może zatrzymać API. Pusty connection string oznacza brak L2. Skonfigurowany, ale niedostępny Redis ma krótkie timeouty i opakowanie, które traktuje błąd jak brak wpisu, zamiast zwracać 500. Unieważnianie odbywa się przez tagi po każdym zapisie. Test integracyjny sprawdza działanie API przy wyłączonym Redis.
 
 **Reguły narażone na współbieżność zabezpieczone także w bazie.** Sprawdzenie w kodzie nie wystarcza przy dwóch równoległych żądaniach, dlatego reguły 1, 3 i 6 mają odpowiednik w postaci indeksu, ograniczenia `CHECK` lub tokenu współbieżności, a naruszenie jest tłumaczone na `409`.
+
+**Optymistyczna współbieżność przez ETag.** Odpowiedź z pojedynczym klientem, urządzeniem, częścią lub zleceniem ma nagłówek `ETag` z wersją wiersza (`xmin` z PostgreSQL). `PUT` tych zasobów wymaga nagłówka `If-Match`: jego brak kończy się `428`, a nieaktualna wersja `412`, więc dwóch dyspozytorów nie nadpisze sobie nawzajem zmian bez wiedzy o nich.
 
 **Kontrakt API pilnowany w CI.** Dokument `openapi/v1.json` jest generowany przy buildzie i commitowany. CI odrzuca zmianę, jeśli wygenerowany dokument różni się od tego w repozytorium, więc każda zmiana kontraktu jest widoczna w review. API jest wersjonowane w ścieżce (`/api/v1`).
 
