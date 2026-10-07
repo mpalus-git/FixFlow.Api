@@ -2,7 +2,7 @@ using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.Parts;
 
-namespace FixFlow.Api.Common.Persistence.Seeding;
+namespace FixFlow.Api.Features.DemoData;
 
 public sealed class DemoInventory
 {

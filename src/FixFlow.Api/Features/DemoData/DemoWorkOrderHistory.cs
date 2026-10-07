@@ -1,9 +1,10 @@
 using ErrorOr;
+using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Devices;
 using FixFlow.Api.Domain.ServiceEntries;
 using FixFlow.Api.Domain.WorkOrders;
 
-namespace FixFlow.Api.Common.Persistence.Seeding;
+namespace FixFlow.Api.Features.DemoData;
 
 public sealed class DemoWorkOrderHistory
 {

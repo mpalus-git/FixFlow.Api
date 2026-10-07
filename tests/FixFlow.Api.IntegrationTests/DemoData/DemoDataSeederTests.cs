@@ -4,13 +4,14 @@ using FixFlow.Api.Common.Persistence.Seeding;
 using FixFlow.Api.Domain.Clients;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
+using FixFlow.Api.Features.DemoData;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace FixFlow.Api.IntegrationTests.Persistence;
+namespace FixFlow.Api.IntegrationTests.DemoData;
 
 public sealed class DemoDataSeederTests(FixFlowApiFactory factory) : IntegrationTestBase(factory)
 {

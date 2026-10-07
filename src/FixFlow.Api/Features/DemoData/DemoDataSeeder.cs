@@ -1,4 +1,6 @@
 using FixFlow.Api.Common.Caching;
+using FixFlow.Api.Common.Persistence;
+using FixFlow.Api.Common.Persistence.Seeding;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.MarkOverdueWorkOrders;
@@ -6,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 
-namespace FixFlow.Api.Common.Persistence.Seeding;
+namespace FixFlow.Api.Features.DemoData;
 
 public sealed partial class DemoDataSeeder(
     FixFlowDbContext dbContext,
