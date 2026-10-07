@@ -1,12 +1,12 @@
 using ErrorOr;
-using FixFlow.Api.Common.Concurrency;
-using FixFlow.Api.Domain.Photos;
 
 namespace FixFlow.Api.Common.Errors;
 
 public static class ErrorOrProblemExtensions
 {
     public const string ErrorCodeExtension = "errorCode";
+
+    private const int MaxHttpStatusCode = 599;
 
     public static IResult ToProblem(this IReadOnlyList<Error> errors)
     {
@@ -33,9 +33,7 @@ public static class ErrorOrProblemExtensions
         ErrorType.Forbidden => StatusCodes.Status403Forbidden,
         ErrorType.NotFound => StatusCodes.Status404NotFound,
         ErrorType.Conflict => StatusCodes.Status409Conflict,
-        _ when (int)errorType is PreconditionErrors.FailedType
-            or PreconditionErrors.RequiredType
-            or PhotoErrors.ContentTooLargeType => (int)errorType,
+        _ when (int)errorType is >= StatusCodes.Status400BadRequest and <= MaxHttpStatusCode => (int)errorType,
         _ => StatusCodes.Status500InternalServerError,
     };
 }
