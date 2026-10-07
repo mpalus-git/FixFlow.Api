@@ -39,8 +39,12 @@ public sealed class ResetDemoDataTests(FixFlowApiFactory factory) : IntegrationT
             var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
             seededClientIds = await dbContext.Clients.Select(client => client.Id).ToListAsync(cancellationToken);
             dbContext.Clients.Add(Client.Create("Visitor client", new Address("Street", "1", "00-001", "City"), "Contact", "123456789", null, DateTimeOffset.UtcNow));
-            dbContext.Photos.Add(Photo.Create(Guid.CreateVersion7(), accountCreatedByAdmin.Id, PhotoRequests.Jpeg(), DateTimeOffset.UtcNow).Value);
+            var signaturePhoto = Photo.Create(Guid.CreateVersion7(), accountCreatedByAdmin.Id, PhotoRequests.Jpeg(), DateTimeOffset.UtcNow).Value;
+            dbContext.Photos.Add(signaturePhoto);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.WorkOrders
+                .Where(workOrder => workOrder.Status == WorkOrderStatus.Completed)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(workOrder => workOrder.ClientSignaturePhotoId, signaturePhoto.Id), cancellationToken);
         }
 
         var result = await ResetDemoDataAsync(demoFactory);

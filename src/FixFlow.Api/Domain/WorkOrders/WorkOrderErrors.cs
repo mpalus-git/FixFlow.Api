@@ -22,6 +22,10 @@ public static class WorkOrderErrors
 
     public static readonly Error CompletedInFuture = Error.Validation("CompletedAt", "Completion time cannot be in the future.");
 
+    public static readonly Error InvalidClientSignature = Error.Validation(
+        "ClientSignaturePhotoId",
+        "Client signature must be a readable JPEG photo uploaded by the technician assigned to the work order.");
+
     public static readonly Error NotAssignedToTechnician = Error.Forbidden("WorkOrder.NotAssignedToTechnician", "Work order is not assigned to this technician.");
 
     public static readonly Error TechnicianAlreadyHasWorkInProgress = Error.Conflict(

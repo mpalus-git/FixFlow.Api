@@ -1,5 +1,6 @@
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Domain.Devices;
+using FixFlow.Api.Domain.Photos;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,10 @@ public sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrder>
             .HasForeignKey(workOrder => workOrder.TechnicianId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(workOrder => workOrder.TechnicianId);
+        builder.HasOne<Photo>()
+            .WithMany()
+            .HasForeignKey(workOrder => workOrder.ClientSignaturePhotoId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(workOrder => new { workOrder.DueDate, workOrder.Id });
         builder.HasIndex(workOrder => workOrder.TechnicianId, TechnicianInProgressIndexName)
             .HasDatabaseName(TechnicianInProgressIndexName)

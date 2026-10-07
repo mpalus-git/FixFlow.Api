@@ -36,6 +36,8 @@ public sealed class WorkOrder
 
     public DateTimeOffset? InvoicedAt { get; private set; }
 
+    public Guid? ClientSignaturePhotoId { get; private set; }
+
     public bool IsOverdue { get; private set; }
 
     public static Expression<Func<WorkOrder, bool>> IsPastDueAt(DateTimeOffset now) =>
@@ -206,7 +208,8 @@ public sealed class WorkOrder
         DateTimeOffset now,
         DateTimeOffset? requestedCompletedAt = null,
         TimeSpan maxClockSkew = default,
-        DateTimeOffset? lastWorkFinishedAt = null)
+        DateTimeOffset? lastWorkFinishedAt = null,
+        ClientSignature? clientSignature = null)
     {
         if (Status is WorkOrderStatus.Completed or WorkOrderStatus.Invoiced)
         {
@@ -242,8 +245,14 @@ public sealed class WorkOrder
             }
         }
 
+        if (clientSignature is not null && (clientSignature.UploadedByTechnicianId != TechnicianId || !clientSignature.IsReadableImage))
+        {
+            return WorkOrderErrors.InvalidClientSignature;
+        }
+
         Status = WorkOrderStatus.Completed;
         CompletedAt = completedAt < now ? completedAt : now;
+        ClientSignaturePhotoId = clientSignature?.PhotoId;
         IsOverdue = false;
 
         return Result.Updated;
