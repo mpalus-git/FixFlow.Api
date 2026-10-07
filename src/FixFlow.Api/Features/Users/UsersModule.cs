@@ -3,6 +3,7 @@ using FixFlow.Api.Features.Users.ChangePassword;
 using FixFlow.Api.Features.Users.CreateUser;
 using FixFlow.Api.Features.Users.DeactivateUser;
 using FixFlow.Api.Features.Users.GetCurrentUser;
+using FixFlow.Api.Features.Users.GetUser;
 using FixFlow.Api.Features.Users.ListUsers;
 using FixFlow.Api.Features.Users.ResetPassword;
 using FixFlow.Api.Features.Users.UpdateUser;
@@ -23,6 +24,7 @@ public static class UsersModule
         services.AddScoped<ActivateUserHandler>();
         services.AddScoped<ResetPasswordHandler>();
         services.AddScoped<UpdateUserHandler>();
+        services.AddScoped<GetUserHandler>();
         services.AddSingleton<IValidator<UpdateUserRequest>, UpdateUserRequestValidator>();
         services.AddSingleton<IValidator<ResetPasswordRequest>, ResetPasswordRequestValidator>();
         services.AddSingleton<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
@@ -46,6 +48,7 @@ public static class UsersModule
         group.MapActivateUser();
         group.MapResetPassword();
         group.MapUpdateUser();
+        group.MapGetUser();
 
         return app;
     }
