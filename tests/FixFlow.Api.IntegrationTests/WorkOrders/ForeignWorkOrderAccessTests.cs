@@ -20,6 +20,7 @@ public sealed class ForeignWorkOrderAccessTests(FixFlowApiFactory factory) : Int
         ["list service entries"] = new(HttpMethod.Get, "/service-entries", null),
         ["get service entry"] = new(HttpMethod.Get, $"/service-entries/{Guid.CreateVersion7()}", null),
         ["get service protocol"] = new(HttpMethod.Get, "/protocol", null),
+        ["list work order events"] = new(HttpMethod.Get, "/events", null),
     };
 
     public static TheoryData<string> RequestNames { get; } = [.. Requests.Keys];
