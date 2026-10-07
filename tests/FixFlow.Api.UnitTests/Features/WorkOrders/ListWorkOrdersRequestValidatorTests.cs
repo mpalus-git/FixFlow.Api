@@ -8,12 +8,18 @@ public sealed class ListWorkOrdersRequestValidatorTests
 {
     private readonly ListWorkOrdersRequestValidator _validator = new();
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData(WorkOrderStatus.InProgress)]
-    public void Should_Accept_Request_When_Status_Filter_Is_Omitted_Or_Defined(WorkOrderStatus? status)
+    [Fact]
+    public void Should_Accept_Request_When_Status_Filter_Is_Omitted()
     {
-        var result = _validator.Validate(new ListWorkOrdersRequest(Status: status));
+        var result = _validator.Validate(new ListWorkOrdersRequest(Status: null));
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_Accept_Request_When_All_Status_Filters_Are_Defined()
+    {
+        var result = _validator.Validate(new ListWorkOrdersRequest(Status: [WorkOrderStatus.Assigned, WorkOrderStatus.InProgress]));
 
         result.IsValid.ShouldBeTrue();
     }
@@ -21,9 +27,9 @@ public sealed class ListWorkOrdersRequestValidatorTests
     [Fact]
     public void Should_Reject_Request_When_Status_Filter_Is_Not_Defined()
     {
-        var result = _validator.Validate(new ListWorkOrdersRequest(Status: (WorkOrderStatus)99));
+        var result = _validator.Validate(new ListWorkOrdersRequest(Status: [WorkOrderStatus.New, (WorkOrderStatus)99]));
 
-        result.Errors.ShouldContain(error => error.PropertyName == nameof(ListWorkOrdersRequest.Status));
+        result.Errors.ShouldContain(error => error.PropertyName == $"{nameof(ListWorkOrdersRequest.Status)}[1]");
     }
 
     [Theory]
