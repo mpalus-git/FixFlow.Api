@@ -7,7 +7,7 @@ namespace FixFlow.Api.Features.WorkOrders.InvoiceWorkOrder;
 
 public sealed class InvoiceWorkOrderHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, Guid actorId, CancellationToken cancellationToken)
     {
         var row = await dbContext.WorkOrders.FindRowAsync(workOrderId, dbContext, cancellationToken);
         if (row is null)
@@ -17,7 +17,7 @@ public sealed class InvoiceWorkOrderHandler(FixFlowDbContext dbContext, TimeProv
 
         var workOrder = row.WorkOrder;
 
-        var invoicing = workOrder.Invoice(timeProvider.GetUtcNow());
+        var invoicing = workOrder.Invoice(timeProvider.GetUtcNow(), actorId);
         if (invoicing.IsError)
         {
             return invoicing.Errors;

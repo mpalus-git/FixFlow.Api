@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ErrorOr;
+using FixFlow.Api.Common.Auth;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Pdf;
 using FixFlow.Api.Common.Persistence;
@@ -38,7 +39,8 @@ public sealed class CompleteWorkOrderHandler(FixFlowDbContext dbContext, TimePro
             request?.CompletedAt?.ToDatabasePrecision(),
             clientClockOptions.Value.MaxSkew,
             serviceEntries?.LastWorkFinishedAt,
-            request?.ClientSignaturePhotoId is { } signaturePhotoId ? await LoadClientSignatureAsync(signaturePhotoId, cancellationToken) : null);
+            request?.ClientSignaturePhotoId is { } signaturePhotoId ? await LoadClientSignatureAsync(signaturePhotoId, cancellationToken) : null,
+            user.GetUserId());
         if (completion.IsError)
         {
             return completion.Errors;

@@ -31,6 +31,18 @@ public sealed class FixFlowDbContext(DbContextOptions<FixFlowDbContext> options)
 
     public DbSet<Photo> Photos => Set<Photo>();
 
+    public DbSet<WorkOrderEvent> WorkOrderEvents => Set<WorkOrderEvent>();
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        var pendingEvents = ChangeTracker.Entries<WorkOrder>()
+            .SelectMany(entry => entry.Entity.TakePendingEvents())
+            .ToList();
+        WorkOrderEvents.AddRange(pendingEvents);
+
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

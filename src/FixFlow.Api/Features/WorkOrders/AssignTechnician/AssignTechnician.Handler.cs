@@ -7,7 +7,7 @@ namespace FixFlow.Api.Features.WorkOrders.AssignTechnician;
 
 public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext, TimeProvider timeProvider)
 {
-    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, AssignTechnicianRequest request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, AssignTechnicianRequest request, Guid actorId, CancellationToken cancellationToken)
     {
         var row = await dbContext.WorkOrders.FindRowAsync(workOrderId, dbContext, cancellationToken);
         if (row is null)
@@ -23,7 +23,7 @@ public sealed class AssignTechnicianHandler(FixFlowDbContext dbContext, TimeProv
             return WorkOrderErrors.TechnicianNotFound;
         }
 
-        var assignment = workOrder.Assign(request.TechnicianId, request.DueDate?.ToDatabasePrecision(), timeProvider.GetUtcNow());
+        var assignment = workOrder.Assign(request.TechnicianId, request.DueDate?.ToDatabasePrecision(), timeProvider.GetUtcNow(), actorId);
         if (assignment.IsError)
         {
             return assignment.Errors;
