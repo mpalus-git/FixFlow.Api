@@ -2,7 +2,6 @@ using ErrorOr;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
-using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
 
@@ -14,11 +13,13 @@ public sealed class UpdateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
         string ifMatch,
         CancellationToken cancellationToken)
     {
-        var workOrder = await dbContext.WorkOrders.SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
-        if (workOrder is null)
+        var row = await dbContext.WorkOrders.FindRowAsync(workOrderId, dbContext, cancellationToken);
+        if (row is null)
         {
             return WorkOrderErrors.NotFound;
         }
+
+        var workOrder = row.WorkOrder;
 
         var precondition = dbContext.EnsureVersionMatches(workOrder, ifMatch);
         if (precondition.IsError)
@@ -42,6 +43,6 @@ public sealed class UpdateWorkOrderHandler(FixFlowDbContext dbContext, TimeProvi
             return saving.Errors;
         }
 
-        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
+        return dbContext.VersionedResponse(row);
     }
 }
