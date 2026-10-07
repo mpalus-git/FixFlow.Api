@@ -6,14 +6,8 @@ public sealed record SummaryPeriod(DateOnly Day, DateTimeOffset Start, DateTimeO
 {
     public static SummaryPeriod PreviousDay(DateTimeOffset now)
     {
-        var today = DateOnly.FromDateTime(BusinessTime.From(now).DateTime);
+        var today = BusinessTime.Today(now);
         var previousDay = today.AddDays(-1);
-        return new SummaryPeriod(previousDay, StartOf(previousDay), StartOf(today));
-    }
-
-    private static DateTimeOffset StartOf(DateOnly day)
-    {
-        var localMidnight = day.ToDateTime(TimeOnly.MinValue);
-        return new DateTimeOffset(localMidnight, BusinessTime.Zone.GetUtcOffset(localMidnight)).ToUniversalTime();
+        return new SummaryPeriod(previousDay, BusinessTime.StartOfDay(previousDay), BusinessTime.StartOfDay(today));
     }
 }

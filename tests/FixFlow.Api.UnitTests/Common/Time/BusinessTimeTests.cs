@@ -21,6 +21,18 @@ public sealed class BusinessTimeTests
     }
 
     [Theory]
+    [InlineData("2026-01-14T22:59:00Z", "2026-01-14")]
+    [InlineData("2026-01-14T23:00:00Z", "2026-01-15")]
+    [InlineData("2026-07-01T21:59:00Z", "2026-07-01")]
+    [InlineData("2026-07-01T22:00:00Z", "2026-07-02")]
+    public void Should_Return_Warsaw_Calendar_Day_When_Today_Is_Requested(string moment, string expectedDay)
+    {
+        var today = BusinessTime.Today(DateTimeOffset.Parse(moment, CultureInfo.InvariantCulture));
+
+        today.ShouldBe(DateOnly.Parse(expectedDay, CultureInfo.InvariantCulture));
+    }
+
+    [Theory]
     [InlineData("2026-01-14T10:00:00Z", "2026-01-12")]
     [InlineData("2026-01-12T00:00:00Z", "2026-01-12")]
     [InlineData("2026-01-18T22:30:00Z", "2026-01-12")]

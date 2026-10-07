@@ -6,6 +6,8 @@ public static class BusinessTime
 
     public static DateTimeOffset From(DateTimeOffset moment) => TimeZoneInfo.ConvertTime(moment, Zone);
 
+    public static DateOnly Today(DateTimeOffset now) => DateOnly.FromDateTime(From(now).DateTime);
+
     public static DateTimeOffset StartOfDay(DateOnly date)
     {
         var localMidnight = date.ToDateTime(TimeOnly.MinValue);
@@ -14,7 +16,7 @@ public static class BusinessTime
 
     public static DateOnly StartOfWeek(DateTimeOffset moment)
     {
-        var day = DateOnly.FromDateTime(From(moment).DateTime);
+        var day = Today(moment);
         var daysSinceMonday = ((int)day.DayOfWeek + 6) % 7;
         return day.AddDays(-daysSinceMonday);
     }
