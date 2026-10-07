@@ -476,6 +476,45 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Store_Client_Signature_When_Readable_Photo_Of_Assigned_Technician_Is_Given()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var photoId = Guid.CreateVersion7();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3), clientSignature: new ClientSignature(photoId, TechnicianId, IsReadableImage: true));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.ClientSignaturePhotoId.ShouldBe(photoId);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void Should_Reject_Completing_Work_Order_When_Client_Signature_Is_Invalid(bool uploadedByAssignedTechnician, bool isReadableImage)
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var signature = new ClientSignature(Guid.CreateVersion7(), uploadedByAssignedTechnician ? TechnicianId : Guid.CreateVersion7(), isReadableImage);
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3), clientSignature: signature);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.InvalidClientSignature);
+        workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
+        workOrder.ClientSignaturePhotoId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_Ignore_Client_Signature_When_Completion_Is_Retried()
+    {
+        var workOrder = CreateCompletedWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(4), clientSignature: new ClientSignature(Guid.CreateVersion7(), TechnicianId, IsReadableImage: true));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.ClientSignaturePhotoId.ShouldBeNull();
+    }
+
+    [Fact]
     public void Should_Reject_Completing_WorkOrder_When_No_ServiceEntry()
     {
         var workOrder = CreateInProgressWorkOrder();

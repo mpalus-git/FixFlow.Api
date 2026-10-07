@@ -1,4 +1,6 @@
 using System.Net.Http.Headers;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 
 namespace FixFlow.Api.IntegrationTests.Photos;
 
@@ -14,6 +16,18 @@ public static class PhotoRequests
         content[1] = 0xD8;
         content[2] = 0xFF;
         return content;
+    }
+
+    public static byte[] ReadableJpeg()
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+        return Document.Create(document => document.Page(page =>
+            {
+                page.Size(240, 80);
+                page.Content().AlignCenter().AlignMiddle().Text("Jan Nowak");
+            }))
+            .GenerateImages(new ImageGenerationSettings { ImageFormat = ImageFormat.Jpeg, RasterDpi = 72 })
+            .First();
     }
 
     public static async Task<HttpResponseMessage> PutPhotoAsync(this HttpClient client, Guid photoId, byte[] content, string mediaType = "image/jpeg")

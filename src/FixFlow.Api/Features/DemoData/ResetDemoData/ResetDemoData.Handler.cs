@@ -41,9 +41,9 @@ public sealed partial class ResetDemoDataHandler(
         dbContext.ChangeTracker.Clear();
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.Photos.ExecuteDeleteAsync(cancellationToken);
         await dbContext.ServiceEntries.ExecuteDeleteAsync(cancellationToken);
         await dbContext.WorkOrders.ExecuteDeleteAsync(cancellationToken);
+        await dbContext.Photos.ExecuteDeleteAsync(cancellationToken);
         await dbContext.Devices.ExecuteDeleteAsync(cancellationToken);
         await dbContext.Clients.ExecuteDeleteAsync(cancellationToken);
         await dbContext.Parts.ExecuteDeleteAsync(cancellationToken);

@@ -18,7 +18,7 @@ public static class GetServiceProtocolEndpoint
             })
             .WithName("GetServiceProtocol")
             .WithSummary("Download the service protocol")
-            .WithDescription("Returns the service protocol of a completed or invoiced work order as a PDF document in Polish, named after the work order number, for example protokol-ZL-2026-0042.pdf. The protocol lists the client, the device, all service entries with work time, the net used parts with amounts in PLN and fields for signatures. Technicians can only download protocols of work orders assigned to them; other work orders are reported as not found.")
+            .WithDescription("Returns the service protocol of a completed or invoiced work order as a PDF document in Polish, named after the work order number, for example protokol-ZL-2026-0042.pdf. The protocol lists the client, the device, all service entries with work time, the net used parts with amounts in PLN and fields for signatures, with the client's signature image when it was given at completion. Technicians can only download protocols of work orders assigned to them; other work orders are reported as not found.")
             .Produces<Stream>(StatusCodes.Status200OK, PdfContentType)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)

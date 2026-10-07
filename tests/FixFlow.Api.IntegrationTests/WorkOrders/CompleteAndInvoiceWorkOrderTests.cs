@@ -5,6 +5,7 @@ using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 using FixFlow.Api.Features.WorkOrders.UpdateWorkOrder;
+using FixFlow.Api.IntegrationTests.Photos;
 using FixFlow.Api.IntegrationTests.ServiceEntries;
 
 namespace FixFlow.Api.IntegrationTests.WorkOrders;
@@ -70,6 +71,34 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.ETag().ShouldBe(invoiceResponse.ETag());
         (await response.ReadWorkOrderAsync()).Status.ShouldBe(WorkOrderStatus.Invoiced);
+    }
+
+    [Fact]
+    public async Task Should_Store_Client_Signature_When_Technician_Completes_With_Signature_Photo()
+    {
+        using var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
+        var signaturePhotoId = Guid.CreateVersion7();
+        using var uploadResponse = await scenario.TechnicianClient.PutPhotoAsync(signaturePhotoId, PhotoRequests.ReadableJpeg());
+
+        using var response = await scenario.TechnicianClient.PostCompleteAsync(scenario.WorkOrder.Id, new CompleteWorkOrderRequest(ClientSignaturePhotoId: signaturePhotoId));
+
+        uploadResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await response.ReadWorkOrderAsync()).ClientSignaturePhotoId.ShouldBe(signaturePhotoId);
+    }
+
+    [Fact]
+    public async Task Should_Return_Validation_Problem_When_Signature_Photo_Belongs_To_Another_Technician()
+    {
+        using var scenario = await CreateWorkOrderInProgressWithServiceEntryAsync();
+        using var otherTechnicianClient = await CreateAuthenticatedClientAsync(Roles.Technician);
+        var signaturePhotoId = Guid.CreateVersion7();
+        using var uploadResponse = await otherTechnicianClient.PutPhotoAsync(signaturePhotoId, PhotoRequests.ReadableJpeg());
+
+        using var response = await scenario.TechnicianClient.PostCompleteAsync(scenario.WorkOrder.Id, new CompleteWorkOrderRequest(ClientSignaturePhotoId: signaturePhotoId));
+
+        await response.ShouldBeValidationProblemAsync("clientSignaturePhotoId");
+        (await scenario.TechnicianClient.GetWorkOrderAsync(scenario.WorkOrder.Id)).Status.ShouldBe(WorkOrderStatus.InProgress);
     }
 
     [Fact]

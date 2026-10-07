@@ -29,7 +29,8 @@ public sealed record WorkOrderResponse(
     [property: Description("UTC time when the work order was created.")] DateTimeOffset CreatedAt,
     [property: Description("UTC time when the technician started the work; null before the work is started.")] DateTimeOffset? StartedAt,
     [property: Description("UTC time when the work order was completed; null before completion.")] DateTimeOffset? CompletedAt,
-    [property: Description("UTC time when the work order was invoiced; null before invoicing.")] DateTimeOffset? InvoicedAt)
+    [property: Description("UTC time when the work order was invoiced; null before invoicing.")] DateTimeOffset? InvoicedAt,
+    [property: Description("Identifier of the photo of the client's signature given at completion, available at /api/v1/photos/{photoId}; null when no signature was given.")] Guid? ClientSignaturePhotoId)
 {
     public static WorkOrderResponse FromRow(WorkOrderRow row) => new(
         row.WorkOrder.Id,
@@ -53,7 +54,8 @@ public sealed record WorkOrderResponse(
         row.WorkOrder.CreatedAt,
         row.WorkOrder.StartedAt,
         row.WorkOrder.CompletedAt,
-        row.WorkOrder.InvoicedAt);
+        row.WorkOrder.InvoicedAt,
+        row.WorkOrder.ClientSignaturePhotoId);
 }
 
 public static class WorkOrderResponses

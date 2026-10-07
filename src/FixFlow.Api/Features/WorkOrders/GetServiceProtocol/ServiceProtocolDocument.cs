@@ -206,15 +206,28 @@ public sealed class ServiceProtocolDocument(ServiceProtocol protocol) : IDocumen
         });
     }
 
-    private static void ComposeSignatures(IContainer container)
+    private void ComposeSignatures(IContainer container)
     {
         container.Row(row =>
         {
             row.Spacing(60);
-            row.RelativeItem().PaddingTop(35).BorderTop(1).AlignCenter().Text("Podpis technika");
-            row.RelativeItem().PaddingTop(35).BorderTop(1).AlignCenter().Text("Podpis klienta");
+            row.RelativeItem().Element(signature => ComposeSignature(signature, "Podpis technika", image: null));
+            row.RelativeItem().Element(signature => ComposeSignature(signature, "Podpis klienta", protocol.ClientSignature));
         });
     }
+
+    private static void ComposeSignature(IContainer container, string label, byte[]? image) =>
+        container.Column(column =>
+        {
+            column.Item().Height(35).AlignCenter().AlignBottom().Element(area =>
+            {
+                if (image is not null)
+                {
+                    area.Image(image).FitArea();
+                }
+            });
+            column.Item().BorderTop(1).AlignCenter().Text(label);
+        });
 
     private static IContainer SectionTitle(IContainer container) =>
         container.PaddingBottom(4).DefaultTextStyle(style => style.FontSize(12).Bold());

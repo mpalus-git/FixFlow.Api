@@ -47,10 +47,19 @@ public sealed class GetServiceProtocolHandler(FixFlowDbContext dbContext, TimePr
             technicianName,
             serviceEntries,
             await DescribeUsedPartsAsync(serviceEntries, cancellationToken),
+            await LoadClientSignatureAsync(workOrder.ClientSignaturePhotoId, cancellationToken),
             timeProvider.GetUtcNow());
 
         return ServiceProtocolFile.For(workOrder, new ServiceProtocolDocument(protocol).GeneratePdf());
     }
+
+    private async Task<byte[]?> LoadClientSignatureAsync(Guid? photoId, CancellationToken cancellationToken) =>
+        photoId is null
+            ? null
+            : await dbContext.Photos
+                .Where(photo => photo.Id == photoId)
+                .Select(photo => photo.Content)
+                .SingleAsync(cancellationToken);
 
     private async Task<List<ProtocolPartLine>> DescribeUsedPartsAsync(List<ServiceEntry> serviceEntries, CancellationToken cancellationToken)
     {

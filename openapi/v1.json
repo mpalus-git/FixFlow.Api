@@ -2869,7 +2869,7 @@
           "WorkOrders"
         ],
         "summary": "Download the service protocol",
-        "description": "Returns the service protocol of a completed or invoiced work order as a PDF document in Polish, named after the work order number, for example protokol-ZL-2026-0042.pdf. The protocol lists the client, the device, all service entries with work time, the net used parts with amounts in PLN and fields for signatures. Technicians can only download protocols of work orders assigned to them; other work orders are reported as not found.",
+        "description": "Returns the service protocol of a completed or invoiced work order as a PDF document in Polish, named after the work order number, for example protokol-ZL-2026-0042.pdf. The protocol lists the client, the device, all service entries with work time, the net used parts with amounts in PLN and fields for signatures, with the client's signature image when it was given at completion. Technicians can only download protocols of work orders assigned to them; other work orders are reported as not found.",
         "operationId": "GetServiceProtocol",
         "parameters": [
           {
@@ -4214,6 +4214,14 @@
             ],
             "description": "Time when the work order was completed, for example recorded offline by the mobile client. Cannot be earlier than the start of the work order or the end of its last work entry and cannot be later than the server time plus the allowed clock skew; a time within the skew is stored as the server time. When omitted, the server time is used.",
             "format": "date-time"
+          },
+          "clientSignaturePhotoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of a JPEG photo of the client's signature, uploaded beforehand through PUT /api/v1/photos/{photoId} by the technician assigned to the work order. The signature is shown in the service protocol. Optional.",
+            "format": "uuid"
           }
         },
         "description": "Optional details of completing a work order."
@@ -5638,7 +5646,8 @@
           "createdAt",
           "startedAt",
           "completedAt",
-          "invoicedAt"
+          "invoicedAt",
+          "clientSignaturePhotoId"
         ],
         "type": "object",
         "properties": {
@@ -5756,6 +5765,14 @@
             ],
             "description": "UTC time when the work order was invoiced; null before invoicing.",
             "format": "date-time"
+          },
+          "clientSignaturePhotoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Identifier of the photo of the client's signature given at completion, available at /api/v1/photos/{photoId}; null when no signature was given.",
+            "format": "uuid"
           }
         },
         "description": "Service work order with basic details of its device, client and technician."
