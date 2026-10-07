@@ -92,6 +92,9 @@ public sealed class AssignAndUnassignTechnicianTests(FixFlowApiFactory factory) 
         var unassignedWorkOrder = await response.ReadWorkOrderAsync();
         unassignedWorkOrder.Status.ShouldBe(WorkOrderStatus.New);
         unassignedWorkOrder.TechnicianId.ShouldBeNull();
+        unassignedWorkOrder.TechnicianEmail.ShouldBeNull();
+        unassignedWorkOrder.TechnicianName.ShouldBeNull();
+        response.ETag().ShouldBe(await client.GetETagAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken));
         using var technicianClient = await CreateAuthenticatedClientAsync(technician);
         (await technicianClient.ListWorkOrdersAsync()).TotalCount.ShouldBe(0);
     }

@@ -2,7 +2,6 @@ using System.ComponentModel;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
-using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders;
 
@@ -52,16 +51,17 @@ public sealed record WorkOrderResponse(
 
 public static class WorkOrderResponses
 {
+    public static Versioned<WorkOrderResponse> VersionedResponse(this FixFlowDbContext dbContext, WorkOrderRow row) =>
+        dbContext.Versioned(row.WorkOrder, WorkOrderResponse.FromRow(row));
+
     public static async Task<Versioned<WorkOrderResponse>> VersionedWorkOrderResponseAsync(
         this FixFlowDbContext dbContext,
         WorkOrder workOrder,
         CancellationToken cancellationToken)
     {
-        var row = await dbContext.WorkOrders
-            .Where(candidate => candidate.Id == workOrder.Id)
-            .WithRelatedDetails(dbContext)
-            .SingleAsync(cancellationToken);
+        var row = await dbContext.WorkOrders.FindRowAsync(workOrder.Id, dbContext, cancellationToken)
+            ?? throw new InvalidOperationException($"Work order {workOrder.Id} was not found after saving.");
 
-        return dbContext.Versioned(workOrder, WorkOrderResponse.FromRow(row));
+        return dbContext.VersionedResponse(row);
     }
 }

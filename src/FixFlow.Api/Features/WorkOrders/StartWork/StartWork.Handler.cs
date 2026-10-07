@@ -19,13 +19,13 @@ public sealed class StartWorkHandler(FixFlowDbContext dbContext, TimeProvider ti
         ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
-        var workOrder = await dbContext.WorkOrders
-            .VisibleTo(user)
-            .SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
-        if (workOrder is null)
+        var row = await dbContext.WorkOrders.VisibleTo(user).FindRowAsync(workOrderId, dbContext, cancellationToken);
+        if (row is null)
         {
             return WorkOrderErrors.NotFound;
         }
+
+        var workOrder = row.WorkOrder;
 
         var technicianId = user.GetUserId();
         var technicianHasWorkInProgress = await dbContext.WorkOrders.AnyAsync(
@@ -52,6 +52,6 @@ public sealed class StartWorkHandler(FixFlowDbContext dbContext, TimeProvider ti
             return saving.Errors;
         }
 
-        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
+        return dbContext.VersionedResponse(row);
     }
 }

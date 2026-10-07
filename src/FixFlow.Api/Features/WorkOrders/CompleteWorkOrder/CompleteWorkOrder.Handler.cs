@@ -11,13 +11,13 @@ public sealed class CompleteWorkOrderHandler(FixFlowDbContext dbContext, TimePro
 {
     public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, ClaimsPrincipal user, CancellationToken cancellationToken)
     {
-        var workOrder = await dbContext.WorkOrders
-            .VisibleTo(user)
-            .SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
-        if (workOrder is null)
+        var row = await dbContext.WorkOrders.VisibleTo(user).FindRowAsync(workOrderId, dbContext, cancellationToken);
+        if (row is null)
         {
             return WorkOrderErrors.NotFound;
         }
+
+        var workOrder = row.WorkOrder;
 
         var hasServiceEntries = await dbContext.ServiceEntries.AnyAsync(entry => entry.WorkOrderId == workOrderId, cancellationToken);
 
@@ -33,6 +33,6 @@ public sealed class CompleteWorkOrderHandler(FixFlowDbContext dbContext, TimePro
             return saving.Errors;
         }
 
-        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
+        return dbContext.VersionedResponse(row);
     }
 }

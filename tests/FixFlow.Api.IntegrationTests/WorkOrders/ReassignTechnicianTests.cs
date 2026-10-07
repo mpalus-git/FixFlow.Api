@@ -25,6 +25,7 @@ public sealed class ReassignTechnicianTests(FixFlowApiFactory factory) : Integra
         reassignedWorkOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
         reassignedWorkOrder.TechnicianId.ShouldBe(otherTechnician.Id);
         reassignedWorkOrder.TechnicianName.ShouldBe(otherTechnician.FullName);
+        reassignedWorkOrder.TechnicianEmail.ShouldBe(otherTechnician.Email);
         reassignedWorkOrder.DueDate.ShouldBe(newDueDate);
         response.ETag().ShouldBe(await client.GetETagAsync(WorkOrderRequests.WorkOrderUri(workOrder.Id), TestContext.Current.CancellationToken));
         using var previousTechnicianClient = await CreateAuthenticatedClientAsync(technician);

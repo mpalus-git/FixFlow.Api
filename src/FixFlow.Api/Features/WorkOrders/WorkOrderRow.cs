@@ -1,5 +1,6 @@
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
+using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders;
 
@@ -18,10 +19,31 @@ public sealed class WorkOrderRow
     public string? TechnicianEmail { get; init; }
 
     public string? TechnicianName { get; init; }
+
+    public WorkOrderRow WithTechnician(ActiveTechnician? technician) => new()
+    {
+        WorkOrder = WorkOrder,
+        DeviceSerialNumber = DeviceSerialNumber,
+        DeviceModel = DeviceModel,
+        ClientId = ClientId,
+        ClientName = ClientName,
+        TechnicianEmail = technician?.Email,
+        TechnicianName = technician?.FullName,
+    };
 }
 
 public static class WorkOrderRows
 {
+    public static Task<WorkOrderRow?> FindRowAsync(
+        this IQueryable<WorkOrder> workOrders,
+        Guid workOrderId,
+        FixFlowDbContext dbContext,
+        CancellationToken cancellationToken) =>
+        workOrders
+            .Where(workOrder => workOrder.Id == workOrderId)
+            .WithRelatedDetails(dbContext)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public static IQueryable<WorkOrderRow> WithRelatedDetails(this IQueryable<WorkOrder> workOrders, FixFlowDbContext dbContext) =>
         from workOrder in workOrders
         join device in dbContext.Devices on workOrder.DeviceId equals device.Id
