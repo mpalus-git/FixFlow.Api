@@ -23,7 +23,8 @@ public sealed class UploadPhotoHandler(FixFlowDbContext dbContext, TimeProvider 
         }
 
         var technicianId = user.GetUserId();
-        var creation = Photo.Create(photoId, technicianId, content.Value, timeProvider.GetUtcNow());
+        var now = timeProvider.GetUtcNow();
+        var creation = Photo.Create(photoId, technicianId, content.Value, now);
         if (creation.IsError)
         {
             return creation.Errors;
@@ -32,6 +33,16 @@ public sealed class UploadPhotoHandler(FixFlowDbContext dbContext, TimeProvider 
         if (await FindRetriedPhotoAsync(photoId, technicianId, cancellationToken) is { } retriedPhoto)
         {
             return retriedPhoto;
+        }
+
+        var windowStart = now - Photo.DailyLimitWindow;
+        var uploadsWithinWindow = await dbContext.Photos.CountAsync(
+            photo => photo.TechnicianId == technicianId && photo.UploadedAt > windowStart,
+            cancellationToken);
+        var dailyLimit = Photo.EnsureWithinDailyLimit(uploadsWithinWindow);
+        if (dailyLimit.IsError)
+        {
+            return dailyLimit.Errors;
         }
 
         dbContext.Photos.Add(creation.Value);

@@ -28,6 +28,7 @@ PdfGeneration.Configure();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 2 * 1024 * 1024);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardLimit = builder.Configuration.GetValue("ForwardedHeaders:ForwardLimit", 1));
 builder.Services.AddPersistence(builder.Configuration);

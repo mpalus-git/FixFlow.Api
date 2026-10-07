@@ -6,6 +6,10 @@ public sealed class Photo
 {
     public const int MaxSizeBytes = 1024 * 1024;
 
+    public const int MaxDailyUploadsPerTechnician = 100;
+
+    public static readonly TimeSpan DailyLimitWindow = TimeSpan.FromDays(1);
+
     private static readonly byte[] JpegSignature = [0xFF, 0xD8, 0xFF];
 
     private Photo()
@@ -48,6 +52,9 @@ public sealed class Photo
             UploadedAt = now,
         };
     }
+
+    public static ErrorOr<Success> EnsureWithinDailyLimit(int uploadsOfTechnicianWithinWindow) =>
+        uploadsOfTechnicianWithinWindow < MaxDailyUploadsPerTechnician ? Result.Success : PhotoErrors.DailyLimitExceeded;
 
     public ErrorOr<Success> EnsureIsRetryOf(Guid technicianId) =>
         TechnicianId == technicianId ? Result.Success : PhotoErrors.IdConflict;

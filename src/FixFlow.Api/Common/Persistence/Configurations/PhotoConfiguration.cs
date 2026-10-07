@@ -18,5 +18,6 @@ public sealed class PhotoConfiguration : IEntityTypeConfiguration<Photo>
             .WithMany()
             .HasForeignKey(photo => photo.TechnicianId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(photo => new { photo.TechnicianId, photo.UploadedAt });
     }
 }
