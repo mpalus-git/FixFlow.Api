@@ -2,7 +2,6 @@ using ErrorOr;
 using FixFlow.Api.Common.Concurrency;
 using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
-using Microsoft.EntityFrameworkCore;
 
 namespace FixFlow.Api.Features.WorkOrders.UnassignTechnician;
 
@@ -10,11 +9,13 @@ public sealed class UnassignTechnicianHandler(FixFlowDbContext dbContext)
 {
     public async Task<ErrorOr<Versioned<WorkOrderResponse>>> HandleAsync(Guid workOrderId, CancellationToken cancellationToken)
     {
-        var workOrder = await dbContext.WorkOrders.SingleOrDefaultAsync(workOrder => workOrder.Id == workOrderId, cancellationToken);
-        if (workOrder is null)
+        var row = await dbContext.WorkOrders.FindRowAsync(workOrderId, dbContext, cancellationToken);
+        if (row is null)
         {
             return WorkOrderErrors.NotFound;
         }
+
+        var workOrder = row.WorkOrder;
 
         var unassignment = workOrder.Unassign();
         if (unassignment.IsError)
@@ -28,6 +29,6 @@ public sealed class UnassignTechnicianHandler(FixFlowDbContext dbContext)
             return saving.Errors;
         }
 
-        return await dbContext.VersionedWorkOrderResponseAsync(workOrder, cancellationToken);
+        return dbContext.VersionedResponse(row.WithTechnician(null));
     }
 }

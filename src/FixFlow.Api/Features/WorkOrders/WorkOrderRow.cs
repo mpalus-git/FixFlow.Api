@@ -19,6 +19,17 @@ public sealed class WorkOrderRow
     public string? TechnicianEmail { get; init; }
 
     public string? TechnicianName { get; init; }
+
+    public WorkOrderRow WithTechnician(ActiveTechnician? technician) => new()
+    {
+        WorkOrder = WorkOrder,
+        DeviceSerialNumber = DeviceSerialNumber,
+        DeviceModel = DeviceModel,
+        ClientId = ClientId,
+        ClientName = ClientName,
+        TechnicianEmail = technician?.Email,
+        TechnicianName = technician?.FullName,
+    };
 }
 
 public static class WorkOrderRows
