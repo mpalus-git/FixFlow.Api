@@ -31,11 +31,23 @@ public sealed class RefreshToken
 
     public bool IsActive(DateTimeOffset now) => !IsRevoked && now < ExpiresAt;
 
-    public ErrorOr<RefreshToken> Rotate(string newTokenHash, DateTimeOffset now, TimeSpan lifetime)
+    public ErrorOr<RefreshToken> Rotate(
+        string newTokenHash,
+        DateTimeOffset now,
+        TimeSpan lifetime,
+        TimeSpan reuseGracePeriod = default,
+        bool familyIsActive = false)
     {
         if (IsRevoked)
         {
-            return ReplacedByTokenId is null ? RefreshTokenErrors.Revoked : RefreshTokenErrors.Reused;
+            if (ReplacedByTokenId is null)
+            {
+                return RefreshTokenErrors.Revoked;
+            }
+
+            return IsReusedWithinGracePeriod(now, reuseGracePeriod, familyIsActive)
+                ? Create(UserId, FamilyId, newTokenHash, now, lifetime)
+                : RefreshTokenErrors.Reused;
         }
 
         if (now >= ExpiresAt)
@@ -54,6 +66,9 @@ public sealed class RefreshToken
     {
         RevokedAt ??= now;
     }
+
+    private bool IsReusedWithinGracePeriod(DateTimeOffset now, TimeSpan reuseGracePeriod, bool familyIsActive) =>
+        familyIsActive && now - RevokedAt < reuseGracePeriod && now < ExpiresAt;
 
     private static RefreshToken Create(Guid userId, Guid familyId, string tokenHash, DateTimeOffset now, TimeSpan lifetime) => new()
     {

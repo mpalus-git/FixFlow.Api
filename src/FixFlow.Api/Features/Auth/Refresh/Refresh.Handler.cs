@@ -38,8 +38,34 @@ public sealed class RefreshHandler(
             return RefreshTokenErrors.Invalid;
         }
 
+        var rotation = await RotateAsync(currentToken, now, afterConcurrentRotation: false, cancellationToken);
+        if (rotation.IsError)
+        {
+            return rotation.Errors;
+        }
+
+        var accessToken = accessTokenIssuer.Issue(user, await userManager.GetRolesAsync(user));
+
+        return new AuthTokensResponse(accessToken.Value, accessToken.ExpiresAt, rotation.Value.Secret, rotation.Value.Token.ExpiresAt);
+    }
+
+    private async Task<ErrorOr<IssuedRefreshToken>> RotateAsync(
+        RefreshToken currentToken,
+        DateTimeOffset now,
+        bool afterConcurrentRotation,
+        CancellationToken cancellationToken)
+    {
+        var options = jwtOptions.Value;
         var replacementSecret = RefreshTokenSecret.Generate();
-        var rotation = currentToken.Rotate(RefreshTokenSecret.Hash(replacementSecret), now, jwtOptions.Value.RefreshTokenLifetime);
+        var familyIsActive = currentToken.IsRevoked && await dbContext.RefreshTokens.AnyAsync(
+            token => token.FamilyId == currentToken.FamilyId && token.RevokedAt == null && token.ExpiresAt > now,
+            cancellationToken);
+        var rotation = currentToken.Rotate(
+            RefreshTokenSecret.Hash(replacementSecret),
+            now,
+            options.RefreshTokenLifetime,
+            options.RefreshTokenReuseGracePeriod,
+            familyIsActive);
         if (rotation.IsError)
         {
             if (rotation.FirstError == RefreshTokenErrors.Reused)
@@ -54,6 +80,13 @@ public sealed class RefreshHandler(
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+            return new IssuedRefreshToken(replacementSecret, rotation.Value);
+        }
+        catch (DbUpdateConcurrencyException) when (!afterConcurrentRotation)
+        {
+            dbContext.ChangeTracker.Clear();
+            var rotatedToken = await dbContext.RefreshTokens.SingleAsync(token => token.Id == currentToken.Id, cancellationToken);
+            return await RotateAsync(rotatedToken, now, afterConcurrentRotation: true, cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -61,9 +94,7 @@ public sealed class RefreshHandler(
             await dbContext.RevokeRefreshTokenFamilyAsync(currentToken.FamilyId, now, cancellationToken);
             return RefreshTokenErrors.Reused;
         }
-
-        var accessToken = accessTokenIssuer.Issue(user, await userManager.GetRolesAsync(user));
-
-        return new AuthTokensResponse(accessToken.Value, accessToken.ExpiresAt, replacementSecret, rotation.Value.ExpiresAt);
     }
+
+    private sealed record IssuedRefreshToken(string Secret, RefreshToken Token);
 }

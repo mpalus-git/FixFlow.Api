@@ -5,6 +5,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.Auth;
 using FixFlow.Api.Domain.Users;
 using FixFlow.Api.Features.Auth;
+using FixFlow.Api.Features.Auth.Logout;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,7 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Should_Revoke_Whole_Token_Family_When_Already_Used_Refresh_Token_Is_Submitted()
+    public async Task Should_Revoke_Whole_Token_Family_When_Already_Used_Refresh_Token_Is_Submitted_After_Grace_Period()
     {
         var user = await CreateUserAsync(Roles.Technician);
         using var client = Factory.CreateClient();
@@ -43,6 +44,7 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
         using var firstRefresh = await client.PostRefreshAsync(loginTokens.RefreshToken);
         var rotatedTokens = await firstRefresh.Content.ReadFromJsonAsync<AuthTokensResponse>(TestContext.Current.CancellationToken);
         rotatedTokens.ShouldNotBeNull();
+        await MoveRotationBeforeGracePeriodAsync(loginTokens.RefreshToken);
 
         using var reuseResponse = await client.PostRefreshAsync(loginTokens.RefreshToken);
         using var rotatedTokenResponse = await client.PostRefreshAsync(rotatedTokens.RefreshToken);
@@ -52,6 +54,66 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
         await using var scope = Factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
         (await dbContext.RefreshTokens.AllAsync(token => token.RevokedAt != null, TestContext.Current.CancellationToken)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_Return_Valid_Token_Pairs_When_Same_Refresh_Token_Is_Used_Twice_Within_Grace_Period()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        using var client = Factory.CreateClient();
+        var loginTokens = await client.LoginAsync(user);
+
+        using var firstResponse = await client.PostRefreshAsync(loginTokens.RefreshToken);
+        using var secondResponse = await client.PostRefreshAsync(loginTokens.RefreshToken);
+
+        var firstTokens = await ReadTokensAsync(firstResponse);
+        var secondTokens = await ReadTokensAsync(secondResponse);
+        firstTokens.RefreshToken.ShouldNotBe(secondTokens.RefreshToken);
+        using var firstFollowUp = await client.PostRefreshAsync(firstTokens.RefreshToken);
+        using var secondFollowUp = await client.PostRefreshAsync(secondTokens.RefreshToken);
+        firstFollowUp.StatusCode.ShouldBe(HttpStatusCode.OK);
+        secondFollowUp.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Should_Return_Token_Pairs_For_Both_Requests_When_Same_Refresh_Token_Is_Used_Concurrently()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        using var client = Factory.CreateClient();
+        var loginTokens = await client.LoginAsync(user);
+
+        var responses = await Task.WhenAll(client.PostRefreshAsync(loginTokens.RefreshToken), client.PostRefreshAsync(loginTokens.RefreshToken));
+
+        try
+        {
+            responses.Select(response => response.StatusCode).ShouldBe([HttpStatusCode.OK, HttpStatusCode.OK]);
+            await using var scope = Factory.Services.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+            (await dbContext.RefreshTokens.CountAsync(token => token.RevokedAt == null, TestContext.Current.CancellationToken)).ShouldBe(2);
+        }
+        finally
+        {
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_Reject_Reuse_Within_Grace_Period_When_Session_Was_Logged_Out()
+    {
+        var user = await CreateUserAsync(Roles.Technician);
+        using var client = Factory.CreateClient();
+        var loginTokens = await client.LoginAsync(user);
+        using var refreshResponse = await client.PostRefreshAsync(loginTokens.RefreshToken);
+        var rotatedTokens = await ReadTokensAsync(refreshResponse);
+        using var logoutResponse = await client.PostAsJsonAsync(new Uri("/api/v1/auth/logout", UriKind.Relative), new LogoutRequest(rotatedTokens.RefreshToken), TestContext.Current.CancellationToken);
+
+        using var response = await client.PostRefreshAsync(loginTokens.RefreshToken);
+
+        logoutResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await response.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, RefreshTokenErrors.Reused.Code);
     }
 
     [Fact]
@@ -140,6 +202,22 @@ public sealed class RefreshTests(FixFlowApiFactory factory) : IntegrationTestBas
         await firstContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await Should.ThrowAsync<DbUpdateConcurrencyException>(() => secondContext.SaveChangesAsync(TestContext.Current.CancellationToken));
+    }
+
+    private static async Task<AuthTokensResponse> ReadTokensAsync(HttpResponseMessage response)
+    {
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<AuthTokensResponse>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
+    }
+
+    private async Task MoveRotationBeforeGracePeriodAsync(string secret)
+    {
+        var tokenHash = RefreshTokenSecret.Hash(secret);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FixFlowDbContext>();
+        await dbContext.RefreshTokens
+            .Where(token => token.TokenHash == tokenHash)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(token => token.RevokedAt, DateTimeOffset.UtcNow.AddMinutes(-1)), TestContext.Current.CancellationToken);
     }
 
     private async Task ActivateUserDirectlyAsync(Guid userId)
