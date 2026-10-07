@@ -15,7 +15,7 @@ public static class StartWorkEndpoint
             })
             .WithName("StartWork")
             .WithSummary("Start work on a work order")
-            .WithDescription("Moves a work order assigned to the calling technician from Assigned to InProgress. A technician can have only one work order in progress at a time. The body is optional: without it the work starts at the server time, with startedAt the work starts at the time given by the client, for example recorded offline. Work orders of other technicians are reported as not found. Available to technicians only.")
+            .WithDescription("Moves a work order assigned to the calling technician from Assigned to InProgress. A technician can have only one work order in progress at a time. The body is optional: without it the work starts at the server time, with startedAt the work starts at the time given by the client, for example recorded offline. Starting a work order that the same technician has already started, completed or invoiced returns its current state without changes, so a queued start can be safely sent again; startedAt is then not compared. Work orders of other technicians are reported as not found. Available to technicians only.")
             .RequireAuthorization(AuthorizationPolicies.TechnicianOnly)
             .Produces<WorkOrderResponse>()
             .ProducesValidationProblem()

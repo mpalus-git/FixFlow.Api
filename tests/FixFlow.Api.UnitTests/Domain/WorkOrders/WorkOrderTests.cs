@@ -358,15 +358,29 @@ public sealed class WorkOrderTests
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
     }
 
+    [Theory]
+    [InlineData(WorkOrderStatus.InProgress)]
+    [InlineData(WorkOrderStatus.Completed)]
+    [InlineData(WorkOrderStatus.Invoiced)]
+    public void Should_Keep_Work_Order_Unchanged_When_Same_Technician_Retries_Start(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: true, Now.AddHours(5));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(status);
+        workOrder.StartedAt.ShouldBe(Now);
+    }
+
     [Fact]
-    public void Should_Reject_Starting_Work_When_Work_Order_Is_Already_In_Progress()
+    public void Should_Reject_Starting_Work_When_Work_Order_In_Progress_Belongs_To_Another_Technician()
     {
         var workOrder = CreateInProgressWorkOrder();
 
-        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now.AddHours(2));
+        var result = workOrder.Start(Guid.CreateVersion7(), technicianHasWorkInProgress: false, Now.AddHours(2));
 
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
-        workOrder.StartedAt.ShouldBe(Now);
     }
 
     [Fact]
@@ -406,6 +420,62 @@ public sealed class WorkOrderTests
     }
 
     [Fact]
+    public void Should_Complete_Work_Order_At_Requested_Time_When_It_Is_Between_Last_Work_And_Now()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var now = Now.AddHours(3);
+
+        var result = workOrder.Complete(hasServiceEntries: true, now, Now.AddHours(2), MaxClockSkew, lastWorkFinishedAt: Now.AddHours(1));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.CompletedAt.ShouldBe(Now.AddHours(2));
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_Requested_Time_Is_Before_Start()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3), Now.AddMinutes(-1), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.CompletedBeforeStart);
+        workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_Requested_Time_Is_Before_End_Of_Last_Work()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddHours(3), Now.AddHours(1), MaxClockSkew, lastWorkFinishedAt: Now.AddHours(2));
+
+        result.FirstError.ShouldBe(WorkOrderErrors.CompletedBeforeWorkFinished);
+    }
+
+    [Fact]
+    public void Should_Store_Current_Time_When_Requested_Completion_Is_In_Future_Within_Clock_Skew()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var now = Now.AddHours(3);
+
+        var result = workOrder.Complete(hasServiceEntries: true, now, now.Add(MaxClockSkew), MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.CompletedAt.ShouldBe(now);
+    }
+
+    [Fact]
+    public void Should_Reject_Completing_Work_Order_When_Requested_Time_Is_In_Future_Beyond_Clock_Skew()
+    {
+        var workOrder = CreateInProgressWorkOrder();
+        var now = Now.AddHours(3);
+
+        var result = workOrder.Complete(hasServiceEntries: true, now, now.Add(MaxClockSkew).AddSeconds(1), MaxClockSkew);
+
+        result.FirstError.ShouldBe(WorkOrderErrors.CompletedInFuture);
+    }
+
+    [Fact]
     public void Should_Reject_Completing_WorkOrder_When_No_ServiceEntry()
     {
         var workOrder = CreateInProgressWorkOrder();
@@ -415,6 +485,21 @@ public sealed class WorkOrderTests
         result.FirstError.ShouldBe(WorkOrderErrors.NoServiceEntries);
         workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
         workOrder.CompletedAt.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(WorkOrderStatus.Completed)]
+    [InlineData(WorkOrderStatus.Invoiced)]
+    public void Should_Keep_Work_Order_Unchanged_When_Completion_Is_Retried(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+        var completedAt = workOrder.CompletedAt;
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddDays(2), Now.AddDays(2), MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(status);
+        workOrder.CompletedAt.ShouldBe(completedAt);
     }
 
     [Fact]

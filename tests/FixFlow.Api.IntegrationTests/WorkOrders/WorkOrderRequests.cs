@@ -4,6 +4,7 @@ using FixFlow.Api.Common.Persistence;
 using FixFlow.Api.Domain.WorkOrders;
 using FixFlow.Api.Features.WorkOrders;
 using FixFlow.Api.Features.WorkOrders.AssignTechnician;
+using FixFlow.Api.Features.WorkOrders.CompleteWorkOrder;
 using FixFlow.Api.Features.WorkOrders.CreateWorkOrder;
 using FixFlow.Api.Features.WorkOrders.ListWorkOrders;
 using FixFlow.Api.Features.WorkOrders.StartWork;
@@ -63,6 +64,13 @@ public static class WorkOrderRequests
 
     public static Task<HttpResponseMessage> PostTransitionAsync(this HttpClient client, Guid workOrderId, string transition) =>
         client.PostAsync(new Uri($"/api/v1/work-orders/{workOrderId}/{transition}", UriKind.Relative), null, TestContext.Current.CancellationToken);
+
+    public static Task<HttpResponseMessage> PostCompleteAsync(this HttpClient client, Guid workOrderId, CompleteWorkOrderRequest request) =>
+        client.PostAsJsonAsync(
+            new Uri($"/api/v1/work-orders/{workOrderId}/complete", UriKind.Relative),
+            request,
+            ApiJson.Options,
+            TestContext.Current.CancellationToken);
 
     public static Task<HttpResponseMessage> PostStartAsync(this HttpClient client, Guid workOrderId, StartWorkRequest request) =>
         client.PostAsJsonAsync(
