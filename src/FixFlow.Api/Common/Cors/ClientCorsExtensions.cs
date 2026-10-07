@@ -13,6 +13,8 @@ public sealed class ClientCorsOptions
 
 public static class ClientCorsExtensions
 {
+    private static readonly TimeSpan PreflightMaxAge = TimeSpan.FromHours(2);
+
     public static IServiceCollection AddClientCors(this IServiceCollection services)
     {
         services.AddOptions<ClientCorsOptions>().BindConfiguration(ClientCorsOptions.SectionName);
@@ -23,7 +25,8 @@ public static class ClientCorsExtensions
                     .WithOrigins(clientCorsOptions.Value.AllowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .WithExposedHeaders(HeaderNames.RetryAfter, HeaderNames.ETag)));
+                    .WithExposedHeaders(HeaderNames.RetryAfter, HeaderNames.ETag, HeaderNames.ContentDisposition)
+                    .SetPreflightMaxAge(PreflightMaxAge)));
 
         return services;
     }
