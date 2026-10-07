@@ -132,7 +132,7 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
     }
 
     [Fact]
-    public async Task Should_Return_Conflict_Problem_When_Work_Order_Is_Already_In_Progress()
+    public async Task Should_Return_Current_State_When_Start_Is_Retried()
     {
         var (workOrders, technician) = await CreateAssignedWorkOrdersAsync(1);
         using var technicianClient = await CreateAuthenticatedClientAsync(technician);
@@ -141,7 +141,9 @@ public sealed class StartWorkTests(FixFlowApiFactory factory) : IntegrationTestB
         using var response = await technicianClient.PostTransitionAsync(workOrders[0].Id, "start");
 
         firstResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "WorkOrder.InvalidStatusTransition");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.ETag().ShouldBe(firstResponse.ETag());
+        (await response.ReadWorkOrderAsync()).StartedAt.ShouldBe((await firstResponse.ReadWorkOrderAsync()).StartedAt);
     }
 
     [Fact]

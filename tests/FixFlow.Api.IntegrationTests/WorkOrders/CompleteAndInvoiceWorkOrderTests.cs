@@ -59,6 +59,20 @@ public sealed class CompleteAndInvoiceWorkOrderTests(FixFlowApiFactory factory) 
     }
 
     [Fact]
+    public async Task Should_Return_Current_State_When_Completion_Is_Retried_After_Invoicing()
+    {
+        using var scenario = await CreateCompletedWorkOrderAsync();
+        using var invoiceResponse = await scenario.DispatcherClient.PostTransitionAsync(scenario.WorkOrder.Id, "invoice");
+
+        using var response = await scenario.TechnicianClient.PostTransitionAsync(scenario.WorkOrder.Id, "complete");
+
+        invoiceResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.ETag().ShouldBe(invoiceResponse.ETag());
+        (await response.ReadWorkOrderAsync()).Status.ShouldBe(WorkOrderStatus.Invoiced);
+    }
+
+    [Fact]
     public async Task Should_Reject_Completing_WorkOrder_When_No_ServiceEntry()
     {
         using var scenario = await CreateWorkOrderInProgressAsync();

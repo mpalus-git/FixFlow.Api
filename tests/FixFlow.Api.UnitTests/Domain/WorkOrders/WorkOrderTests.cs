@@ -358,15 +358,29 @@ public sealed class WorkOrderTests
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
     }
 
+    [Theory]
+    [InlineData(WorkOrderStatus.InProgress)]
+    [InlineData(WorkOrderStatus.Completed)]
+    [InlineData(WorkOrderStatus.Invoiced)]
+    public void Should_Keep_Work_Order_Unchanged_When_Same_Technician_Retries_Start(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+
+        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: true, Now.AddHours(5));
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(status);
+        workOrder.StartedAt.ShouldBe(Now);
+    }
+
     [Fact]
-    public void Should_Reject_Starting_Work_When_Work_Order_Is_Already_In_Progress()
+    public void Should_Reject_Starting_Work_When_Work_Order_In_Progress_Belongs_To_Another_Technician()
     {
         var workOrder = CreateInProgressWorkOrder();
 
-        var result = workOrder.Start(TechnicianId, technicianHasWorkInProgress: false, Now.AddHours(2));
+        var result = workOrder.Start(Guid.CreateVersion7(), technicianHasWorkInProgress: false, Now.AddHours(2));
 
         result.FirstError.Code.ShouldBe("WorkOrder.InvalidStatusTransition");
-        workOrder.StartedAt.ShouldBe(Now);
     }
 
     [Fact]
@@ -471,6 +485,21 @@ public sealed class WorkOrderTests
         result.FirstError.ShouldBe(WorkOrderErrors.NoServiceEntries);
         workOrder.Status.ShouldBe(WorkOrderStatus.InProgress);
         workOrder.CompletedAt.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(WorkOrderStatus.Completed)]
+    [InlineData(WorkOrderStatus.Invoiced)]
+    public void Should_Keep_Work_Order_Unchanged_When_Completion_Is_Retried(WorkOrderStatus status)
+    {
+        var workOrder = CreateWorkOrderInStatus(status);
+        var completedAt = workOrder.CompletedAt;
+
+        var result = workOrder.Complete(hasServiceEntries: true, Now.AddDays(2), Now.AddDays(2), MaxClockSkew);
+
+        result.IsError.ShouldBeFalse();
+        workOrder.Status.ShouldBe(status);
+        workOrder.CompletedAt.ShouldBe(completedAt);
     }
 
     [Fact]

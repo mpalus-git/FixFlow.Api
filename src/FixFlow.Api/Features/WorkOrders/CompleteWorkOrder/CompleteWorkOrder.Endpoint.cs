@@ -14,7 +14,7 @@ public static class CompleteWorkOrderEndpoint
             })
             .WithName("CompleteWorkOrder")
             .WithSummary("Complete a work order")
-            .WithDescription("Moves a work order from InProgress to Completed. The work order must have at least one service entry. The body is optional: without it the work order is completed at the server time, with completedAt at the time given by the client, for example recorded offline. After completion no service entries can be added and the work order cannot be edited. Available to the assigned technician and, as a fallback, to dispatchers and administrators; work orders of other technicians are reported as not found.")
+            .WithDescription("Moves a work order from InProgress to Completed. The work order must have at least one service entry. The body is optional: without it the work order is completed at the server time, with completedAt at the time given by the client, for example recorded offline. Completing a work order that is already completed or invoiced returns its current state without changes, so a queued completion can be safely sent again; completedAt is then not compared. After completion no service entries can be added and the work order cannot be edited. Available to the assigned technician and, as a fallback, to dispatchers and administrators; work orders of other technicians are reported as not found.")
             .Produces<WorkOrderResponse>()
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)

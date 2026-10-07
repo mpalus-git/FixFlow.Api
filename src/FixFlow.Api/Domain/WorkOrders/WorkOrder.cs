@@ -169,7 +169,9 @@ public sealed class WorkOrder
     {
         if (Status != WorkOrderStatus.Assigned)
         {
-            return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.InProgress);
+            return IsStartedBy(technicianId)
+                ? Result.Updated
+                : WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.InProgress);
         }
 
         if (TechnicianId != technicianId)
@@ -206,6 +208,11 @@ public sealed class WorkOrder
         TimeSpan maxClockSkew = default,
         DateTimeOffset? lastWorkFinishedAt = null)
     {
+        if (Status is WorkOrderStatus.Completed or WorkOrderStatus.Invoiced)
+        {
+            return Result.Updated;
+        }
+
         if (Status != WorkOrderStatus.InProgress)
         {
             return WorkOrderErrors.InvalidStatusTransition(Status, WorkOrderStatus.Completed);
@@ -272,6 +279,10 @@ public sealed class WorkOrder
 
         return Result.Success;
     }
+
+    private bool IsStartedBy(Guid technicianId) =>
+        TechnicianId == technicianId
+        && Status is WorkOrderStatus.InProgress or WorkOrderStatus.Completed or WorkOrderStatus.Invoiced;
 
     private bool IsAcceptableDueDate(DateTimeOffset dueDate, DateTimeOffset now) => dueDate == DueDate || dueDate > now;
 
