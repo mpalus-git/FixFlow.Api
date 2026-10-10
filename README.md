@@ -1,6 +1,8 @@
 # FixFlow.Api
 
 [![CI](https://github.com/mpalus-git/FixFlow.Api/actions/workflows/ci.yml/badge.svg)](https://github.com/mpalus-git/FixFlow.Api/actions/workflows/ci.yml)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](global.json)
+[![PostgreSQL 18](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](docker-compose.yml)
 
 ## Opis systemu
 
